@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modify this file to customize your launch splash screen -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:width="500dp" android:height="720dp">
+        <shape android:shape="rectangle" >
+            <gradient
+                android:endColor="#130101"
+                android:gradientRadius="1000"
+                android:startColor="#4d2618"
+                android:type="radial" >
+            </gradient>
+        </shape>
+    </item>
+
+    <item android:width="313dp"
+        android:height="280dp"
+        android:top="100dp"
+        android:right="15dp"
+        android:left="15dp"
+        android:drawable="@drawable/launch_image"
+        android:gravity="center_horizontal">
+
+        <!--<bitmap-->
+        <!--android:gravity="center"-->
+        <!--android:src="@drawable/launch_image" />-->
+    </item>
+    <item
+        android:width="120dp"
+        android:height="90dp"
+        android:drawable="@drawable/pandras_logo"
+        android:gravity="center_horizontal | bottom"
+        android:bottom="35dp">
+    </item>
+</layer-list>

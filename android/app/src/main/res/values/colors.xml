@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">@color/color1Gradient</color>
+    <color name="colorPrimaryDark">@color/color1Gradient</color>
+    <color name="colorAccent">@color/color2Gradient</color>
+
+    <color name="colorTextContent">#444444</color>
+
+
+    <color name="color1Gradient">#88b455</color>
+    <color name="color2Gradient">#366301</color>
+    <color name="color2GradientForBalance">#20330a</color>
+
+    <color name="colorGreenBackground">#c4dea5</color>
+
+    <color name="colorTransparent">#002c450e</color>
+
+    <color name="darkRed">#450f0e</color>
+    <color name="darkRedForBalance">#630101</color>
+    <color name="lightRedForBalance">#b45555</color>
+
+    <color name="red_btn_bg_pressed_color">#CD5B55</color>
+    <color name="error_stroke_color">#F27474</color>
+
+
+    <color name="colorFab">#90D13B</color>
+
+    <color name="colorAppTitle">#d1dec1</color>
+</resources>
