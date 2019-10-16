@@ -54,7 +54,7 @@ class _BottomBarViewState extends State<BottomBarView>
                 child: Column(
                   children: <Widget>[
                     SizedBox(
-                      height: 62,
+                      height: 42,
                       child: Padding(
                         padding: EdgeInsets.only(left: 8, right: 8, top: 4),
                         child: Row(
@@ -121,7 +121,7 @@ class _BottomBarViewState extends State<BottomBarView>
               EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
           child: SizedBox(
             width: 38 * 2.0,
-            height: 38 + 62.0,
+            height: 8 + 62.0,
             child: Container(
               alignment: Alignment.topCenter,
               color: Colors.transparent,

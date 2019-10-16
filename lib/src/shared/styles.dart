@@ -22,6 +22,12 @@ const contrastText = TextStyle(color: primaryColor, fontFamily: 'Poppins');
 const contrastTextBold = TextStyle(
     color: primaryColor, fontFamily: 'Poppins', fontWeight: FontWeight.w600);
 
+const h2 = TextStyle(
+    color: Colors.white,
+    fontSize: 18,
+    fontWeight: FontWeight.w700,
+    fontFamily: 'Poppins');
+
 const h3 = TextStyle(
     color: Colors.black,
     fontSize: 24,
@@ -33,19 +39,18 @@ const h4 = TextStyle(
     fontSize: 18,
     fontWeight: FontWeight.w700,
     fontFamily: 'Poppins');
-    
+
 const h5 = TextStyle(
     color: Colors.black,
-    fontSize: 18,
+    fontSize: 12,
     fontWeight: FontWeight.w500,
     fontFamily: 'Poppins');
 
-    const h6 = TextStyle(
+const h6 = TextStyle(
     color: Colors.black,
     fontSize: 16,
     fontWeight: FontWeight.w500,
     fontFamily: 'Poppins');
-
 
 const priceText = TextStyle(
     color: Colors.black,
@@ -55,12 +60,29 @@ const priceText = TextStyle(
 
 const foodNameText = TextStyle(
     color: Colors.black,
-    fontSize: 17,
+    fontSize: 14,
+    fontWeight: FontWeight.w800,
+    fontFamily: 'Poppins');
+
+const minorFoodNameText = TextStyle(
+    color: Colors.black,
+    fontSize: 14,
+    fontWeight: FontWeight.w800,
+    fontFamily: 'Poppins');
+
+const foodIngredientsText = TextStyle(
+    color: Colors.black,
+    fontSize: 12,
     fontWeight: FontWeight.w600,
     fontFamily: 'Poppins');
 
-const tabLinkStyle =
-    TextStyle(fontWeight: FontWeight.w500);
+const foodNotesText = TextStyle(
+    color: Colors.black,
+    fontSize: 10,
+    fontWeight: FontWeight.w600,
+    fontFamily: 'Poppins');
+
+const tabLinkStyle = TextStyle(fontWeight: FontWeight.w500);
 
 const taglineText = TextStyle(color: Colors.grey, fontFamily: 'Poppins');
 const categoryText = TextStyle(

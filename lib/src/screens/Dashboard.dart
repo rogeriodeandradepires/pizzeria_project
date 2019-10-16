@@ -1,12 +1,20 @@
+import 'dart:convert';
+
 import 'package:dom_marino_app/src/bottomNavigationView/bottomBarView.dart';
+import 'package:dom_marino_app/src/models/category_result_model.dart';
+import 'package:dom_marino_app/src/models/product_result_model.dart';
 import 'package:dom_marino_app/src/models/tabIconData.dart';
 import 'package:flutter/material.dart';
 import '../shared/styles.dart';
 import '../shared/colors.dart';
 import '../shared/fryo_icons.dart';
 import './ProductPage.dart';
-import '../shared/Product.dart';
+import '../shared/ProductOld.dart';
 import '../shared/partials.dart';
+import 'package:http/http.dart';
+
+List<Category> all_categories_obj_list = new List();
+List<Product> all_products_obj_list = new List();
 
 class Dashboard extends StatefulWidget {
   final String pageTitle;
@@ -19,6 +27,8 @@ class Dashboard extends StatefulWidget {
 
 class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   int _selectedIndex = 0;
+  var _selectedCategory = "";
+  var _selectedCategoryName = "";
   AnimationController animationController;
   List<TabIconData> tabIconsList = TabIconData.tabIconsList;
 
@@ -41,6 +51,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     animationController =
         AnimationController(duration: Duration(milliseconds: 600), vsync: this);
     super.initState();
+//    WidgetsBinding.instance
+//        .addPostFrameCallback((_) => getProducts());
   }
 
   @override
@@ -87,12 +99,12 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         ),
 //              Text('Fryo', style: logoWhiteStyle, textAlign: TextAlign.center),
         actions: <Widget>[
-          IconButton(
-            padding: EdgeInsets.all(0),
-            onPressed: () {},
-            iconSize: 21,
-            icon: Icon(Fryo.magnifier),
-          ),
+//          IconButton(
+//            padding: EdgeInsets.all(0),
+//            onPressed: () {},
+//            iconSize: 21,
+//            icon: Icon(Fryo.magnifier),
+//          ),
           IconButton(
             padding: EdgeInsets.all(0),
             onPressed: () {},
@@ -158,264 +170,303 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       _selectedIndex = index;
     });
   }
-}
 
-Widget storeTab(BuildContext context) {
-  // will pick it up from here
-  // am to start another template
-  List<Product> foods = [
-    Product(
-        name: "Hamburger",
-        image: "images/3.png",
-        price: "\$25.00",
-        userLiked: true,
-        discount: 10),
-    Product(
-        name: "Pasta",
-        image: "images/5.png",
-        price: "\$150.00",
+  Future getProducts() async {
+    String category = _selectedCategoryName;
+    String url = 'https://dom-marino-webservice.appspot.com/list_' + category;
+//    print(url);
+
+    Response response = await get(url);
+    // sample info available in response
+    int statusCode = response.statusCode;
+    Map<String, String> headers = response.headers;
+    String contentType = headers['content-type'];
+    dynamic all_products = json.decode(response.body);
+
+    if (response.statusCode == 200) {
+      all_products_obj_list = new List();
+      all_products.forEach((product) {
+        all_products_obj_list.add(Product.fromJson(product));
+//        print(product);
+      });
+    } else {
+      // If that response was not OK, throw an error.
+      throw Exception('Failed to load products');
+    }
+
+    all_products_obj_list.sort((a, b) {
+      return a.description.toLowerCase().compareTo(b.description.toLowerCase());
+    });
+
+    return all_products_obj_list;
+  }
+
+  Future getCategories() async {
+    String url = 'https://dom-marino-webservice.appspot.com/list_categories';
+    Response response = await get(url);
+    // sample info available in response
+    int statusCode = response.statusCode;
+    Map<String, String> headers = response.headers;
+    String contentType = headers['content-type'];
+    dynamic all_categories = json.decode(response.body);
+
+    if (response.statusCode == 200) {
+      all_categories_obj_list = new List();
+      all_categories.forEach((category) {
+        all_categories_obj_list.add(Category.fromJson(category));
+//        print(category);
+      });
+    } else {
+      // If that response was not OK, throw an error.
+      throw Exception('Failed to load category');
+    }
+
+    all_categories_obj_list.sort((a, b) {
+      return a.title.toLowerCase().compareTo(b.title.toLowerCase());
+    });
+
+    all_categories_obj_list = all_categories_obj_list.reversed.toList();
+
+    if (_selectedCategory=="") {
+      _selectedCategory = all_categories_obj_list.elementAt(0).description;
+      _selectedCategoryName = all_categories_obj_list.elementAt(0).name;
+    }
+
+//    getProducts();
+
+    return all_categories_obj_list;
+  }
+
+  Widget storeTab(BuildContext context) {
+    // will pick it up from here
+    // am to start another template
+    List<ProductOld> foods = [
+      ProductOld(
+          name: "Hamburger",
+          image: "images/3.png",
+          price: "\$25.00",
+          ingredients: "",
+          userLiked: true,
+          discount: null),
+      ProductOld(
+          name: "Pasta",
+          image: "images/5.png",
+          price: "\$150.00",
+          ingredients: "",
+          userLiked: false,
+          discount: null),
+      ProductOld(
+        name: "Akara",
+        image: 'images/2.png',
+        price: '\$10.99',
+        ingredients: "",
         userLiked: false,
-        discount: 7.8),
-    Product(
-      name: "Akara",
-      image: 'images/2.png',
-      price: '\$10.99',
-      userLiked: false,
-    ),
-    Product(
-        name: "Strawberry",
-        image: "images/1.png",
-        price: '\$50.00',
-        userLiked: true,
-        discount: 14)
-  ];
-
-  List<Product> drinks = [
-    Product(
-        name: "Coca-Cola",
-        image: "images/6.png",
-        price: "\$45.12",
-        userLiked: true,
-        discount: 2),
-    Product(
-        name: "Lemonade",
-        image: "images/7.png",
-        price: "\$28.00",
-        userLiked: false,
-        discount: 5.2),
-    Product(
-        name: "Vodka",
-        image: "images/8.png",
-        price: "\$78.99",
-        userLiked: false),
-    Product(
-        name: "Tequila",
-        image: "images/9.png",
-        price: "\$168.99",
-        userLiked: true,
-        discount: 3.4)
-  ];
-
-  return ListView(children: <Widget>[
-    headerTopCategories(),
-    deals('Hot Deals', onViewMore: () {}, items: <Widget>[
-      foodItem(foods[0], onTapped: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) {
-              return new ProductPage(
-                productData: foods[0],
-              );
-            },
-          ),
-        );
-      }, onLike: () {}),
-      foodItem(foods[1], onTapped: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) {
-              return new ProductPage(
-                productData: foods[1],
-              );
-            },
-          ),
-        );
-      }, imgWidth: 250, onLike: () {}),
-      foodItem(foods[2], onTapped: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) {
-              return new ProductPage(
-                productData: foods[2],
-              );
-            },
-          ),
-        );
-      }, imgWidth: 200, onLike: () {}),
-      foodItem(foods[3], onTapped: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) {
-              return new ProductPage(
-                productData: foods[3],
-              );
-            },
-          ),
-        );
-      }, onLike: () {}),
-    ]),
-    deals('Drinks Parol', onViewMore: () {}, items: <Widget>[
-      foodItem(drinks[0], onTapped: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) {
-              return new ProductPage(
-                productData: drinks[0],
-              );
-            },
-          ),
-        );
-      }, onLike: () {}, imgWidth: 60),
-      foodItem(drinks[1], onTapped: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) {
-              return new ProductPage(
-                productData: drinks[1],
-              );
-            },
-          ),
-        );
-      }, onLike: () {}, imgWidth: 75),
-      foodItem(drinks[2], onTapped: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) {
-              return new ProductPage(
-                productData: drinks[2],
-              );
-            },
-          ),
-        );
-      }, imgWidth: 110, onLike: () {}),
-      foodItem(drinks[3], onTapped: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) {
-              return new ProductPage(
-                productData: drinks[3],
-              );
-            },
-          ),
-        );
-      }, onLike: () {}),
-    ])
-  ]);
-}
-
-Widget sectionHeader(String headerTitle, {onViewMore}) {
-  return Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: <Widget>[
-      Container(
-        margin: EdgeInsets.only(left: 15, top: 10),
-        child: Text(headerTitle, style: h4),
       ),
-      Container(
-        margin: EdgeInsets.only(left: 15, top: 2),
-        child: FlatButton(
-          onPressed: onViewMore,
-          child: Text('View all ›', style: contrastText),
-        ),
-      )
-    ],
-  );
-}
+      ProductOld(
+          name: "Strawberry",
+          image: "images/1.png",
+          price: '\$50.00',
+          ingredients: "",
+          userLiked: true,
+          discount: null)
+    ];
 
-// wrap the horizontal listview inside a sizedBox..
-Widget headerTopCategories() {
-  return Column(
-    mainAxisAlignment: MainAxisAlignment.center,
-    crossAxisAlignment: CrossAxisAlignment.center,
-    children: <Widget>[
-      sectionHeader('Todas as Categorias', onViewMore: () {}),
-      SizedBox(
-        height: 130,
-        child: ListView(
-          scrollDirection: Axis.horizontal,
-          shrinkWrap: true,
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: ListView(
+          physics: const NeverScrollableScrollPhysics(),
           children: <Widget>[
-            headerCategoryItem('Promoções', Fryo.dinner, onPressed: () {}),
-            headerCategoryItem('Pizzas Tradicionais', Fryo.food, onPressed: () {}),
-            headerCategoryItem('Pizzas Gourmet', Fryo.poop, onPressed: () {}),
-            headerCategoryItem('Bordas', Fryo.poop, onPressed: () {}),
-            headerCategoryItem('Bebidas', Fryo.coffee_cup, onPressed: () {}),
-            headerCategoryItem('Pizzas Doces', Fryo.leaf, onPressed: () {}),
-            headerCategoryItem('Flapts', Fryo.leaf, onPressed: () {}),
-          ],
-        ),
-      )
-    ],
-  );
-}
+        headerTopCategories(),
+        deals(_selectedCategory, onViewMore: () {}, items: <Widget>[
+          FutureBuilder(
+            builder: (context, productSnap) {
+              if (productSnap.connectionState == ConnectionState.none &&
+                  productSnap.hasData == null) {
+                //print('product snapshot data is: ${productSnap.data}');
+                return Container();
+              }
 
-Widget headerCategoryItem(String name, IconData icon, {onPressed}) {
-  return Container(
-    margin: EdgeInsets.only(left: 15),
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.center,
+              return ListView.builder(
+                scrollDirection: Axis.vertical,
+                physics: const AlwaysScrollableScrollPhysics(),
+                shrinkWrap: true,
+                itemCount:
+                    productSnap.data != null ? productSnap.data.length : 0,
+                itemBuilder: (context, index) {
+                  Product product = productSnap.data[index];
+                  return foodItem(context, product, onTapped: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return new ProductPage(
+                            productData: product,
+                          );
+                        },
+                      ),
+                    );
+                  }, onLike: () {});
+                },
+              );
+            },
+            future: getProducts(),
+          )
+        ]),
+      ]),
+    );
+  }
+
+  Widget sectionHeader(String headerTitle, {onViewMore}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Container(
-            margin: EdgeInsets.only(bottom: 10),
-            width: 86,
-            height: 86,
-            child: FloatingActionButton(
-              shape: CircleBorder(),
-              heroTag: name,
-              onPressed: onPressed,
-              backgroundColor: Color(0xff4c2717),
-              child: Icon(icon, size: 35, color: Colors.white),
-            )),
-        Text(name + ' ›', style: categoryText)
+          margin: EdgeInsets.only(left: 5, top: 15),
+          child: Text(headerTitle, style: h4),
+        ),
+//      Container(
+//        margin: EdgeInsets.only(left: 15, top: 2),
+//        child: FlatButton(
+//          onPressed: onViewMore,
+//          child: Text('View all ›', style: contrastText),
+//        ),
+//      )
       ],
-    ),
-  );
-}
+    );
+  }
 
-Widget deals(String dealTitle, {onViewMore, List<Widget> items}) {
-  return Container(
-    margin: EdgeInsets.only(top: 5),
-    child: Column(
+// wrap the horizontal listview inside a sizedBox..
+  Widget headerTopCategories() {
+//  List<Widget> all_header_categories = new List();
+    List<Widget> all_header_categories = [];
+
+//    all_categories_obj_list.forEach((category) {
+//      all_header_categories.add(
+//          headerCategoryItem(category.title, Fryo.dinner, onPressed: () {}));
+////    print(category.title);
+//    });
+
+    return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: <Widget>[
-        sectionHeader(dealTitle, onViewMore: onViewMore),
+        sectionHeader('Todas as Categorias', onViewMore: () {}),
         SizedBox(
-          height: 250,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
+            height: 110,
+            child: FutureBuilder(
+              builder: (context, categorySnap) {
+                if (categorySnap.connectionState == ConnectionState.none &&
+                    categorySnap.hasData == null) {
+                  //print('category snapshot data is: ${categorySnap.data}');
+                  return Container();
+                }
+                return ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  shrinkWrap: true,
+                  itemCount:
+                      categorySnap.data != null ? categorySnap.data.length : 0,
+                  itemBuilder: (context, index) {
+                    Category category = categorySnap.data[index];
+                    if (index == 0) {
+                      if (_selectedCategory=="") {
+                        _selectedCategory = category.description;
+                        _selectedCategoryName = category.name;
+                      }
+                    }
+                    return headerCategoryItem(
+                        category.description, category.icon, onPressed: () {
+                      setState(() {
+                        _selectedCategory = category.description;
+                        _selectedCategoryName = category.name;
+                      });
+                    });
+                  },
+                );
+              },
+              future: getCategories(),
+            ))
+      ],
+    );
+  }
+
+  Widget headerCategoryItem(String name, String iconUrl, {onPressed}) {
+    var nameRows = name.split(" ");
+    var secondRowofName = "";
+
+    if (nameRows.length > 1 && nameRows.length < 3) {
+      secondRowofName = nameRows[1];
+    } else {
+      if (nameRows.length == 3) {
+        secondRowofName = nameRows[1] + " " + nameRows[2];
+      }
+    }
+
+    return Container(
+      margin: EdgeInsets.only(left: 5, right: 5),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          Container(
+              margin: EdgeInsets.only(bottom: 5, right: 10, left: 10),
+              width: 50,
+              height: 50,
+              child: FloatingActionButton(
+                shape: CircleBorder(),
+                heroTag: name,
+                onPressed: onPressed,
+                backgroundColor: Color(0xff4c2717),
+                child: Image.network(iconUrl, height: 35, width: 35),
+              )),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              Text(nameRows[0] + ' ›', style: categoryText),
+              Text(secondRowofName, style: categoryText),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget deals(String dealTitle, {onViewMore, List<Widget> items}) {
+
+    items.add(generateDummyListItem());
+
+    return Container(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          sectionHeader(dealTitle, onViewMore: onViewMore),
+          ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            scrollDirection: Axis.vertical,
+            shrinkWrap: true,
             children: (items != null)
                 ? items
                 : <Widget>[
                     Container(
                       margin: EdgeInsets.only(left: 15),
-                      child: Text('No items available at this moment.',
+                      child: Text('Nenhum item disponível neste momento.',
                           style: taglineText),
                     )
                   ],
-          ),
-        )
-      ],
-    ),
-  );
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget generateDummyListItem() {
+    return new SizedBox(
+      height: 345,
+      child: Container(
+//        color: Colors.red,
+      ),
+    );
+  }
 }
