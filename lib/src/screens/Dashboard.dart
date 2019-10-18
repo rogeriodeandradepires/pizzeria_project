@@ -31,6 +31,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   var _selectedCategoryName = "";
   AnimationController animationController;
   List<TabIconData> tabIconsList = TabIconData.tabIconsList;
+  ListView globalProductsListView;
+  ScrollController _controller;
 
   Widget tabBody = new Container(
     decoration: new BoxDecoration(
@@ -43,6 +45,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
   @override
   void initState() {
+    _controller = ScrollController();
+
     tabIconsList.forEach((tab) {
       tab.isSelected = false;
     });
@@ -123,51 +127,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
               ),
             ),
           ),
-//          _tabs[_selectedIndex],
-          Stack(
-            children: <Widget>[
-              Positioned(top: 0, child: headerTopCategories()),
-              Positioned(top:140, child: sectionHeader(_selectedCategory, onViewMore: null)),
-              Positioned(
-                top:180,
-                height: MediaQuery.of(context).size.height,
-                width: MediaQuery.of(context).size.width,
-                child: FutureBuilder(
-                  builder: (context, productSnap) {
-                    if (productSnap.connectionState == ConnectionState.none &&
-                        productSnap.hasData == null) {
-                      //print('product snapshot data is: ${productSnap.data}');
-                      return Container();
-                    }
-
-                    return ListView.builder(
-                      scrollDirection: Axis.vertical,
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      shrinkWrap: true,
-                      itemCount:
-                          productSnap.data != null ? productSnap.data.length : 0,
-                      itemBuilder: (context, index) {
-                        Product product = productSnap.data[index];
-                        return foodItem(context, product, onTapped: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) {
-                                return new ProductPage(
-                                  productData: product,
-                                );
-                              },
-                            ),
-                          );
-                        }, onLike: () {});
-                      },
-                    );
-                  },
-                  future: getProducts(),
-                ),
-              ),
-            ],
-          ),
+          _tabs[_selectedIndex],
           bottomBar(),
         ],
       ),
@@ -271,7 +231,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
     all_categories_obj_list = all_categories_obj_list.reversed.toList();
 
-    if (_selectedCategory == "") {
+    if (_selectedCategory=="") {
       _selectedCategory = all_categories_obj_list.elementAt(0).description;
       _selectedCategoryName = all_categories_obj_list.elementAt(0).name;
     }
@@ -315,48 +275,60 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           discount: null)
     ];
 
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: ListView(
-          physics: const NeverScrollableScrollPhysics(),
-          children: <Widget>[
-            headerTopCategories(),
-            sectionHeader(_selectedCategory, onViewMore: null),
-            FutureBuilder(
-              builder: (context, productSnap) {
-                if (productSnap.connectionState == ConnectionState.none &&
-                    productSnap.hasData == null) {
-                  //print('product snapshot data is: ${productSnap.data}');
-                  return Container();
-                }
+    return ListView(
+        physics: const NeverScrollableScrollPhysics(),
+        children: <Widget>[
+          headerTopCategories(),
+          deals(_selectedCategory, onViewMore: () {}, items: <Widget>[
+            Container(
+              height: MediaQuery.of(context).size.height,
+              child: FutureBuilder(
+                builder: (context, productSnap) {
+                  if (productSnap.connectionState == ConnectionState.none &&
+                      productSnap.hasData == null) {
+                    //print('product snapshot data is: ${productSnap.data}');
+                    return Container();
+                  }
 
-                return ListView.builder(
-                  scrollDirection: Axis.vertical,
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  shrinkWrap: true,
-                  itemCount:
-                      productSnap.data != null ? productSnap.data.length : 0,
-                  itemBuilder: (context, index) {
-                    Product product = productSnap.data[index];
-                    return foodItem(context, product, onTapped: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) {
-                            return new ProductPage(
-                              productData: product,
-                            );
-                          },
-                        ),
-                      );
-                    }, onLike: () {});
-                  },
-                );
-              },
-              future: getProducts(),
-            ),
+                  globalProductsListView = ListView.builder(
+                    controller: _controller,
+                    scrollDirection: Axis.vertical,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    itemCount:
+                    productSnap.data != null ? productSnap.data.length+1 : 0,
+                    itemBuilder: (context, index) {
+                      Product product;
+
+                      if (index<productSnap.data.length) {
+                        product = productSnap.data[index];
+
+                        return foodItem(context, product, onTapped: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) {
+                                return new ProductPage(
+                                  productData: product,
+                                );
+                              },
+                            ),
+                          );
+                        }, onLike: () {});
+                      }else{
+                        return generateDummyListItem();
+                      }
+
+                    },
+                  );
+
+                  return globalProductsListView;
+                },
+                future: getProducts(),
+              ),
+            )
           ]),
-    );
+        ]);
   }
 
   Widget sectionHeader(String headerTitle, {onViewMore}) {
@@ -365,7 +337,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Container(
-          margin: EdgeInsets.only(left: 5, top: 15),
+          margin: EdgeInsets.only(left: 5, top: 5),
           child: Text(headerTitle, style: h4),
         ),
 //      Container(
@@ -396,7 +368,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       children: <Widget>[
         sectionHeader('Todas as Categorias', onViewMore: () {}),
         SizedBox(
-            height: 110,
+            height: 100,
             child: FutureBuilder(
               builder: (context, categorySnap) {
                 if (categorySnap.connectionState == ConnectionState.none &&
@@ -408,11 +380,11 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                   scrollDirection: Axis.horizontal,
                   shrinkWrap: true,
                   itemCount:
-                      categorySnap.data != null ? categorySnap.data.length : 0,
+                  categorySnap.data != null ? categorySnap.data.length : 0,
                   itemBuilder: (context, index) {
                     Category category = categorySnap.data[index];
                     if (index == 0) {
-                      if (_selectedCategory == "") {
+                      if (_selectedCategory=="") {
                         _selectedCategory = category.description;
                         _selectedCategoryName = category.name;
                       }
@@ -420,6 +392,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                     return headerCategoryItem(
                         category.description, category.icon, onPressed: () {
                       setState(() {
+                        globalProductsListView.controller.jumpTo(0);
                         _selectedCategory = category.description;
                         _selectedCategoryName = category.name;
                       });
@@ -476,7 +449,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   }
 
   Widget deals(String dealTitle, {onViewMore, List<Widget> items}) {
-    items.add(generateDummyListItem());
+
+//    items.add(generateDummyListItem());
 
     return Container(
       child: Column(
@@ -491,12 +465,12 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             children: (items != null)
                 ? items
                 : <Widget>[
-                    Container(
-                      margin: EdgeInsets.only(left: 15),
-                      child: Text('Nenhum item disponível neste momento.',
-                          style: taglineText),
-                    )
-                  ],
+              Container(
+                margin: EdgeInsets.only(left: 15),
+                child: Text('Nenhum item disponível neste momento.',
+                    style: taglineText),
+              )
+            ],
           )
         ],
       ),
@@ -505,10 +479,10 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
   Widget generateDummyListItem() {
     return new SizedBox(
-      height: 345,
+      height: 320,
       child: Container(
 //        color: Colors.red,
-          ),
+      ),
     );
   }
 }
