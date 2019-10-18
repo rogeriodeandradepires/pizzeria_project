@@ -123,7 +123,51 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
               ),
             ),
           ),
-          _tabs[_selectedIndex],
+//          _tabs[_selectedIndex],
+          Stack(
+            children: <Widget>[
+              Positioned(top: 0, child: headerTopCategories()),
+              Positioned(top:140, child: sectionHeader(_selectedCategory, onViewMore: null)),
+              Positioned(
+                top:180,
+                height: MediaQuery.of(context).size.height,
+                width: MediaQuery.of(context).size.width,
+                child: FutureBuilder(
+                  builder: (context, productSnap) {
+                    if (productSnap.connectionState == ConnectionState.none &&
+                        productSnap.hasData == null) {
+                      //print('product snapshot data is: ${productSnap.data}');
+                      return Container();
+                    }
+
+                    return ListView.builder(
+                      scrollDirection: Axis.vertical,
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      shrinkWrap: true,
+                      itemCount:
+                          productSnap.data != null ? productSnap.data.length : 0,
+                      itemBuilder: (context, index) {
+                        Product product = productSnap.data[index];
+                        return foodItem(context, product, onTapped: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) {
+                                return new ProductPage(
+                                  productData: product,
+                                );
+                              },
+                            ),
+                          );
+                        }, onLike: () {});
+                      },
+                    );
+                  },
+                  future: getProducts(),
+                ),
+              ),
+            ],
+          ),
           bottomBar(),
         ],
       ),
@@ -227,7 +271,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
     all_categories_obj_list = all_categories_obj_list.reversed.toList();
 
-    if (_selectedCategory=="") {
+    if (_selectedCategory == "") {
       _selectedCategory = all_categories_obj_list.elementAt(0).description;
       _selectedCategoryName = all_categories_obj_list.elementAt(0).name;
     }
@@ -276,43 +320,42 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       child: ListView(
           physics: const NeverScrollableScrollPhysics(),
           children: <Widget>[
-        headerTopCategories(),
-        deals(_selectedCategory, onViewMore: () {}, items: <Widget>[
-          FutureBuilder(
-            builder: (context, productSnap) {
-              if (productSnap.connectionState == ConnectionState.none &&
-                  productSnap.hasData == null) {
-                //print('product snapshot data is: ${productSnap.data}');
-                return Container();
-              }
+            headerTopCategories(),
+            sectionHeader(_selectedCategory, onViewMore: null),
+            FutureBuilder(
+              builder: (context, productSnap) {
+                if (productSnap.connectionState == ConnectionState.none &&
+                    productSnap.hasData == null) {
+                  //print('product snapshot data is: ${productSnap.data}');
+                  return Container();
+                }
 
-              return ListView.builder(
-                scrollDirection: Axis.vertical,
-                physics: const AlwaysScrollableScrollPhysics(),
-                shrinkWrap: true,
-                itemCount:
-                    productSnap.data != null ? productSnap.data.length : 0,
-                itemBuilder: (context, index) {
-                  Product product = productSnap.data[index];
-                  return foodItem(context, product, onTapped: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) {
-                          return new ProductPage(
-                            productData: product,
-                          );
-                        },
-                      ),
-                    );
-                  }, onLike: () {});
-                },
-              );
-            },
-            future: getProducts(),
-          )
-        ]),
-      ]),
+                return ListView.builder(
+                  scrollDirection: Axis.vertical,
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  shrinkWrap: true,
+                  itemCount:
+                      productSnap.data != null ? productSnap.data.length : 0,
+                  itemBuilder: (context, index) {
+                    Product product = productSnap.data[index];
+                    return foodItem(context, product, onTapped: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) {
+                            return new ProductPage(
+                              productData: product,
+                            );
+                          },
+                        ),
+                      );
+                    }, onLike: () {});
+                  },
+                );
+              },
+              future: getProducts(),
+            ),
+          ]),
     );
   }
 
@@ -369,7 +412,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                   itemBuilder: (context, index) {
                     Category category = categorySnap.data[index];
                     if (index == 0) {
-                      if (_selectedCategory=="") {
+                      if (_selectedCategory == "") {
                         _selectedCategory = category.description;
                         _selectedCategoryName = category.name;
                       }
@@ -433,7 +476,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   }
 
   Widget deals(String dealTitle, {onViewMore, List<Widget> items}) {
-
     items.add(generateDummyListItem());
 
     return Container(
@@ -466,7 +508,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       height: 345,
       child: Container(
 //        color: Colors.red,
-      ),
+          ),
     );
   }
 }
