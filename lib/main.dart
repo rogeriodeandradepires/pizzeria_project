@@ -18,7 +18,8 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.brown,
       ),
-      home: Dashboard(pageTitle: 'Bem vindo'),
+//      home: Dashboard(pageTitle: 'Bem vindo'),
+      home: SignUpPage(pageTitle: 'Bem vindo'),
       routes: <String, WidgetBuilder> {
         '/signup': (BuildContext context) =>  SignUpPage(),
         '/signin': (BuildContext context) =>  SignInPage(),

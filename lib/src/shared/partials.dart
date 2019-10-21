@@ -53,9 +53,12 @@ getContainer(BuildContext context, onLike, double imgWidth, Product product,
                 child: Hero(
                     transitionOnUserGestures: true,
                     tag: product.description + (product.ingredients!=null?product.ingredients:""),
-                    child: Image.network(
-                      product.imageUrl,
-                      fit: BoxFit.contain,
+                    child: ClipRRect(
+                      borderRadius: new BorderRadius.circular(8.0),
+                      child: Image.network(
+                        product.imageUrl,
+                        fit: BoxFit.contain,
+                      ),
                     ))
             ),
 //            Positioned(

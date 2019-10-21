@@ -142,8 +142,19 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         ),
         BottomBarView(
           tabIconsList: tabIconsList,
-          addClick: () {},
+          addClick: () {
+//            print("clicou no carrinho");
+          },
           changeIndex: (index) {
+
+            if(index == 1){
+              Navigator.pushNamed(context, '/signin');
+            }
+
+            if(index == 2){
+              Navigator.pushNamed(context, '/signup');
+            }
+
             if (index == 0 || index == 2) {
               animationController.reverse().then((data) {
                 if (!mounted) return;
@@ -232,8 +243,10 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     all_categories_obj_list = all_categories_obj_list.reversed.toList();
 
     if (_selectedCategory=="") {
-      _selectedCategory = all_categories_obj_list.elementAt(0).description;
-      _selectedCategoryName = all_categories_obj_list.elementAt(0).name;
+      setState(() {
+        _selectedCategory = all_categories_obj_list.elementAt(0).description;
+        _selectedCategoryName = all_categories_obj_list.elementAt(0).name;
+      });
     }
 
 //    getProducts();
