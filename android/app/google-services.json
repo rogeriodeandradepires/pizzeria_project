@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "643134120120",
+    "firebase_url": "https://dom-marino-ws.firebaseio.com",
+    "project_id": "dom-marino-ws",
+    "storage_bucket": "dom-marino-ws.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:643134120120:android:fef67d064a6f7e0ef0144d",
+        "android_client_info": {
+          "package_name": "br.com.pandras.dom_marino_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "643134120120-odh9prhp3li3hfq5cmcjp0525rtg5pkm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDWZhZio8k6jxBpDZy0xTo4JUxhArU9lwA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "643134120120-odh9prhp3li3hfq5cmcjp0525rtg5pkm.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
