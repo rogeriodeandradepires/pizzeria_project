@@ -16,21 +16,25 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ScopedModel<UserModel>(
       model:UserModel(),
-      child:MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Dom Marino',
-        theme: ThemeData(
-          primarySwatch: Colors.brown,
-        ),
-        //home: Dashboard(pageTitle: 'Bem vindo'),
-        home: SignInPage(),
-        routes: <String, WidgetBuilder> {
-          '/signup': (BuildContext context) =>  SignUpPage(),
-          '/signin': (BuildContext context) =>  SignInPage(),
-          '/dashboard': (BuildContext context) => Dashboard(),
-          '/productPage': (BuildContext context) => ProductPage(),
+      child:ScopedModelDescendant<UserModel>(
+        builder: (context, child, model){
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: 'Dom Marino',
+            theme: ThemeData(
+              primarySwatch: Colors.brown,
+            ),
+            home: Dashboard(pageTitle: 'Bem vindo'),
+            //home: SignInPage(),
+            routes: <String, WidgetBuilder> {
+              '/signup': (BuildContext context) =>  !model.isLoggedIn() ? SignUpPage():Dashboard(),
+              '/signin': (BuildContext context) =>  SignInPage(),
+              '/dashboard': (BuildContext context) => Dashboard(),
+              '/productPage': (BuildContext context) => SignInPage(),
+            },
+          );
         },
-      ),
+      )
     );
   }
 }

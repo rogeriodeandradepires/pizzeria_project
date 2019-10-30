@@ -143,7 +143,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         BottomBarView(
           tabIconsList: tabIconsList,
           addClick: () {
-//            print("clicou no carrinho");
+            print("clicou no carrinho");
+            //WHRS
           },
           changeIndex: (index) {
 
