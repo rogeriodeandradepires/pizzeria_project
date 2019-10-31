@@ -47,6 +47,7 @@ flutter:
   # assets:
   assets:
     - images/logo_icon_wide_minor.png
+    - images/loading_pizza_faster.gif
     - images/main_bg.png
     - images/title_logo_icon_wide_minor.png
     - images/leading_logo_icon_wide.png

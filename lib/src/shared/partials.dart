@@ -52,15 +52,17 @@ getContainer(BuildContext context, onLike, double imgWidth, Product product,
                         new BorderRadius.all(const Radius.circular(5.0))),
                 child: Hero(
                     transitionOnUserGestures: true,
-                    tag: product.description + (product.ingredients!=null?product.ingredients:""),
+                    tag: product.description +
+                        (product.ingredients != null
+                            ? product.ingredients
+                            : ""),
                     child: ClipRRect(
                       borderRadius: new BorderRadius.circular(8.0),
                       child: Image.network(
                         product.imageUrl,
                         fit: BoxFit.contain,
                       ),
-                    ))
-            ),
+                    ))),
 //            Positioned(
 //                // descontos
 //                top: 10,
@@ -82,7 +84,7 @@ getContainer(BuildContext context, onLike, double imgWidth, Product product,
         ),
       ),
       Container(
-        width: MediaQuery.of(context).size.width * 0.5,
+        width: MediaQuery.of(context).size.width * 0.65,
         child: Stack(
           children: <Widget>[
             (!isProductPage)
@@ -90,9 +92,7 @@ getContainer(BuildContext context, onLike, double imgWidth, Product product,
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      Text(
-                          product.description,
-                          style: minorFoodNameText),
+                      Text(product.description, style: minorFoodNameText),
                       checkIngredients(context, product),
                       checkNotes(context, product),
                       checkSizes(context, product),
@@ -100,20 +100,28 @@ getContainer(BuildContext context, onLike, double imgWidth, Product product,
                     ],
                   )
                 : Text(' '),
-//              Positioned(
-//                right: -25,
-//                top: -5,
-//                child: FlatButton(
-//                  padding: EdgeInsets.all(5),
-//                  shape: CircleBorder(),
-//                  onPressed: onLike,
-//                  child: Icon(
-//                    (product.userLiked) ? Icons.favorite : Icons.favorite_border,
-//                    color: (product.userLiked) ? Colors.red : darkText,
-//                    size: 25,
-//                  ),
-//                ),
-//              ),
+            product.description.contains("Escolha")
+                ? Container()
+                : Positioned(
+                    right: -30,
+                    top: -5,
+                    child: FlatButton(
+                      padding: EdgeInsets.all(5),
+                      shape: CircleBorder(),
+                      onPressed: onLike,
+                      child: Icon(
+                        (product.userLiked != null)
+                            ? (product.userLiked
+                                ? Icons.favorite
+                                : Icons.favorite_border)
+                            : (Icons.favorite_border),
+                        color: (product.userLiked != null)
+                            ? (product.userLiked ? Colors.red : darkText)
+                            : darkText,
+                        size: 25,
+                      ),
+                    ),
+                  ),
           ],
         ),
       ),
@@ -123,13 +131,17 @@ getContainer(BuildContext context, onLike, double imgWidth, Product product,
 
 Widget getProductPrice(Product product) {
   String retorno;
-  if (product.price != null && product.price != "") {
-    retorno = "R\$ " + product.price.replaceAll(".", ",");
-    return Text(retorno, style: foodNameText);
-  }
+  if (!product.description.contains("Escolha")) {
+    if (product.price != null && product.price != "") {
+      retorno = "R\$ " + product.price.replaceAll(".", ",");
+      return Text(retorno, style: foodNameText);
+    }
 
-  if (product.price_broto != null) {
-    return generatePricesGrid(product.price_broto, product.price_inteira);
+    if (product.price_broto != null) {
+      return generatePricesGrid(product.price_broto, product.price_inteira);
+    }
+  } else {
+    return Text(product.price, style: foodNameText);
   }
 }
 

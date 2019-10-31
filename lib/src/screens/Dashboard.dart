@@ -13,6 +13,8 @@ import '../shared/ProductOld.dart';
 import '../shared/partials.dart';
 import 'package:http/http.dart';
 
+import 'TutorialOverlay.dart';
+
 List<Category> all_categories_obj_list = new List();
 List<Product> all_products_obj_list = new List();
 
@@ -146,14 +148,13 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 //            print("clicou no carrinho");
           },
           changeIndex: (index) {
-
-            if(index == 1){
-              Navigator.pushNamed(context, '/signin');
-            }
-
-            if(index == 2){
-              Navigator.pushNamed(context, '/signup');
-            }
+//            if(index == 1){
+//              Navigator.pushNamed(context, '/signin');
+//            }
+//
+//            if(index == 2){
+//              Navigator.pushNamed(context, '/signup');
+//            }
 
             if (index == 0 || index == 2) {
               animationController.reverse().then((data) {
@@ -240,9 +241,27 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       return a.title.toLowerCase().compareTo(b.title.toLowerCase());
     });
 
-    all_categories_obj_list = all_categories_obj_list.reversed.toList();
 
-    if (_selectedCategory=="") {
+    List<Category> temp_all_categories_obj_list = new List();
+    temp_all_categories_obj_list.addAll(all_categories_obj_list);
+    Category temp_last_category = temp_all_categories_obj_list.elementAt(temp_all_categories_obj_list.length-1);
+    temp_all_categories_obj_list.removeAt(temp_all_categories_obj_list.length-1);
+    Category temp_category;
+
+    for (Category category in all_categories_obj_list) {
+      if (category.name=="two_flavored_pizzas") {
+        Category other_category = category;
+        temp_category = category;
+        temp_all_categories_obj_list.remove(other_category);
+      }
+    }
+
+    temp_all_categories_obj_list.add(temp_category);
+    temp_all_categories_obj_list.add(temp_last_category);
+
+    all_categories_obj_list = temp_all_categories_obj_list.reversed.toList();
+
+    if (_selectedCategory == "") {
       setState(() {
         _selectedCategory = all_categories_obj_list.elementAt(0).description;
         _selectedCategoryName = all_categories_obj_list.elementAt(0).name;
@@ -301,41 +320,48 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                       productSnap.hasData == null) {
                     //print('product snapshot data is: ${productSnap.data}');
                     return Container();
+                  } else if (productSnap.hasData) {
+                    globalProductsListView = ListView.builder(
+                      controller: _controller,
+                      scrollDirection: Axis.vertical,
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      shrinkWrap: true,
+                      itemCount: productSnap.data != null
+                          ? productSnap.data.length + 1
+                          : 0,
+                      itemBuilder: (context, index) {
+                        Product product;
+
+                        if (index < productSnap.data.length) {
+                          product = productSnap.data[index];
+
+                          return foodItem(context, product, onTapped: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) {
+                                  return new ProductPage(
+                                    productData: product,
+                                    category: _selectedCategory,
+                                  );
+                                },
+                              ),
+                            );
+                          }, onLike: () {});
+                        } else {
+                          return generateDummyListItem();
+                        }
+                      },
+                    );
+
+                    return globalProductsListView;
                   }
 
-                  globalProductsListView = ListView.builder(
-                    controller: _controller,
-                    scrollDirection: Axis.vertical,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    shrinkWrap: true,
-                    itemCount:
-                    productSnap.data != null ? productSnap.data.length+1 : 0,
-                    itemBuilder: (context, index) {
-                      Product product;
-
-                      if (index<productSnap.data.length) {
-                        product = productSnap.data[index];
-
-                        return foodItem(context, product, onTapped: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) {
-                                return new ProductPage(
-                                  productData: product,
-                                );
-                              },
-                            ),
-                          );
-                        }, onLike: () {});
-                      }else{
-                        return generateDummyListItem();
-                      }
-
-                    },
+                  return Container(
+                    margin: EdgeInsets.only(left:110, right:110, bottom:300),
+                    child: _showOverlay(context),
                   );
 
-                  return globalProductsListView;
                 },
                 future: getProducts(),
               ),
@@ -388,29 +414,36 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                     categorySnap.hasData == null) {
                   //print('category snapshot data is: ${categorySnap.data}');
                   return Container();
-                }
-                return ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  shrinkWrap: true,
-                  itemCount:
-                  categorySnap.data != null ? categorySnap.data.length : 0,
-                  itemBuilder: (context, index) {
-                    Category category = categorySnap.data[index];
-                    if (index == 0) {
-                      if (_selectedCategory=="") {
-                        _selectedCategory = category.description;
-                        _selectedCategoryName = category.name;
+                }else if (categorySnap.hasData){
+                  return ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    shrinkWrap: true,
+                    itemCount:
+                    categorySnap.data != null ? categorySnap.data.length : 0,
+                    itemBuilder: (context, index) {
+                      Category category = categorySnap.data[index];
+                      if (index == 0) {
+                        if (_selectedCategory == "") {
+                          _selectedCategory = category.description;
+                          _selectedCategoryName = category.name;
+                        }
                       }
-                    }
-                    return headerCategoryItem(
-                        category.description, category.icon, onPressed: () {
-                      setState(() {
-                        globalProductsListView.controller.jumpTo(0);
-                        _selectedCategory = category.description;
-                        _selectedCategoryName = category.name;
+                      return headerCategoryItem(
+                          category.description, category.icon, onPressed: () {
+                        setState(() {
+                          globalProductsListView.controller.jumpTo(0);
+                          _selectedCategory = category.description;
+                          _selectedCategoryName = category.name;
+                        });
                       });
-                    });
-                  },
+                    },
+                  );
+                }
+
+
+                return Container(
+                  padding: EdgeInsets.only(top:10, bottom:10),
+                  child: _showOverlay(context),
                 );
               },
               future: getCategories(),
@@ -462,7 +495,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   }
 
   Widget deals(String dealTitle, {onViewMore, List<Widget> items}) {
-
 //    items.add(generateDummyListItem());
 
     return Container(
@@ -478,12 +510,12 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             children: (items != null)
                 ? items
                 : <Widget>[
-              Container(
-                margin: EdgeInsets.only(left: 15),
-                child: Text('Nenhum item disponível neste momento.',
-                    style: taglineText),
-              )
-            ],
+                    Container(
+                      margin: EdgeInsets.only(left: 15),
+                      child: Text('Nenhum item disponível neste momento.',
+                          style: taglineText),
+                    )
+                  ],
           )
         ],
       ),
@@ -495,7 +527,16 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       height: 320,
       child: Container(
 //        color: Colors.red,
-      ),
+          ),
+    );
+  }
+
+  Widget _showOverlay(BuildContext context) {
+//    Navigator.of(context).push(TutorialOverlay());
+
+    return Image.asset(
+      'images/loading_pizza_faster.gif',
+      fit: BoxFit.scaleDown,
     );
   }
 }

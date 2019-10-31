@@ -70,6 +70,12 @@ const minorFoodNameText = TextStyle(
     fontWeight: FontWeight.w800,
     fontFamily: 'Poppins');
 
+const chooseFlavorFoodNameText = TextStyle(
+    color: Colors.black,
+    fontSize: 11,
+    fontWeight: FontWeight.w800,
+    fontFamily: 'Poppins');
+
 const foodIngredientsText = TextStyle(
     color: Colors.black,
     fontSize: 12,
@@ -79,6 +85,18 @@ const foodIngredientsText = TextStyle(
 const foodNotesText = TextStyle(
     color: Colors.black,
     fontSize: 10,
+    fontWeight: FontWeight.w600,
+    fontFamily: 'Poppins');
+
+const chooseFlavorFoodNotesText = TextStyle(
+    color: Colors.black,
+    fontSize: 11,
+    fontWeight: FontWeight.w600,
+    fontFamily: 'Poppins');
+
+const chooseFlavorFoodingredientsText = TextStyle(
+    color: Colors.black,
+    fontSize: 9,
     fontWeight: FontWeight.w600,
     fontFamily: 'Poppins');
 
