@@ -179,7 +179,7 @@ class _ProductPageState extends State<ProductPage> {
                               : Container(),
                           Container(
                             width: 180,
-                            margin: EdgeInsets.only(top:10),
+                            margin: EdgeInsets.only(top: 10),
                             child: froyoFlatBtn('Adicionar ao Pedido', () {}),
                           )
                         ],
@@ -367,74 +367,10 @@ class _ProductPageState extends State<ProductPage> {
                     );
                   });
             } else {
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  Product pizzaEdgeToReturn = global_pizzaEdgeChosen;
-                  ChoosePizzaEdgeDialog dialog = ChoosePizzaEdgeDialog(
-                    returnedProduct: pizzaEdgeToReturn,
-                    onReturnedProductChanged: (pizzaEdgeToReturn) {
-                      global_pizzaEdgeChosen = pizzaEdgeToReturn;
-
-                      if (pizzaEdgeToReturn != null) {
-                        if (pizzaEdgeToReturn.price_broto != "--" &&
-                            pizzaEdgeToReturn.price_inteira != "--") {
-                          if (pizzaEdgeToReturn.price_broto != null) {
-                            brotoPrice_global =
-                                (double.parse(brotoPrice_global) -
-                                        global_previous_pizzaEdgeBrotoPrice)
-                                    .toStringAsFixed(2);
-
-                            inteiraPrice_global =
-                                (double.parse(inteiraPrice_global) -
-                                        global_previous_pizzaEdgeinteiraPrice)
-                                    .toStringAsFixed(2);
-
-                            global_previous_pizzaEdgeBrotoPrice =
-                                double.parse(pizzaEdgeToReturn.price_broto);
-                            global_previous_pizzaEdgeinteiraPrice =
-                                double.parse(pizzaEdgeToReturn.price_inteira);
-
-                            setState(() {
-                              brotoPrice_global =
-                                  (double.parse(brotoPrice_global) +
-                                          double.parse(
-                                              pizzaEdgeToReturn.price_broto))
-                                      .toStringAsFixed(2);
-
-                              inteiraPrice_global =
-                                  (double.parse(inteiraPrice_global) +
-                                          double.parse(
-                                              pizzaEdgeToReturn.price_inteira))
-                                      .toStringAsFixed(2);
-                            });
-                          } else {
-                            //remover borda
-                            setState(() {
-                              global_pizzaEdgeChosen = pizzaEdgeToReturn;
-                              brotoPrice_global =
-                                  (double.parse(brotoPrice_global) -
-                                          global_previous_pizzaEdgeBrotoPrice)
-                                      .toStringAsFixed(2);
-
-                              inteiraPrice_global =
-                                  (double.parse(inteiraPrice_global) -
-                                          global_previous_pizzaEdgeinteiraPrice)
-                                      .toStringAsFixed(2);
-                            });
-
-                            global_previous_pizzaEdgeBrotoPrice = 0;
-                            global_previous_pizzaEdgeinteiraPrice = 0;
-                          }
-                        }
-                      }
-                    },
-                  );
-
-                  return dialog;
-                },
-              );
+              showPizzaEdgeDialog();
             }
+          } else if (widget.category.contains("Pizza")) {
+            showPizzaEdgeDialog();
           }
         },
         child: Card(
@@ -593,9 +529,7 @@ class _ProductPageState extends State<ProductPage> {
                     child: Hero(
                         transitionOnUserGestures: true,
                         tag: product.description +
-                            (product.ingredients != null
-                                ? product.ingredients
-                                : ""),
+                            (product.id),
                         child: ClipRRect(
                           borderRadius: new BorderRadius.circular(8.0),
                           child: Image.network(
@@ -645,5 +579,110 @@ class _ProductPageState extends State<ProductPage> {
     }
 
     return retorno;
+  }
+
+  void showPizzaEdgeDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        Product pizzaEdgeToReturn = global_pizzaEdgeChosen;
+        ChoosePizzaEdgeDialog dialog = ChoosePizzaEdgeDialog(
+          returnedProduct: pizzaEdgeToReturn,
+          onReturnedProductChanged: (pizzaEdgeToReturn) {
+            global_pizzaEdgeChosen = pizzaEdgeToReturn;
+
+            if (pizzaEdgeToReturn != null) {
+              if (pizzaEdgeToReturn.price_broto != "--" &&
+                  pizzaEdgeToReturn.price_inteira != "--") {
+                if (pizzaEdgeToReturn.price_broto != null) {
+                  if (widget.productData.description.contains("Escolha")) {
+
+                    brotoPrice_global = (double.parse(brotoPrice_global) -
+                        global_previous_pizzaEdgeBrotoPrice)
+                        .toStringAsFixed(2);
+
+                    inteiraPrice_global = (double.parse(inteiraPrice_global) -
+                        global_previous_pizzaEdgeinteiraPrice)
+                        .toStringAsFixed(2);
+
+                    global_previous_pizzaEdgeBrotoPrice =
+                        double.parse(pizzaEdgeToReturn.price_broto);
+                    global_previous_pizzaEdgeinteiraPrice =
+                        double.parse(pizzaEdgeToReturn.price_inteira);
+
+                    setState(() {
+                      brotoPrice_global = (double.parse(brotoPrice_global) +
+                          double.parse(pizzaEdgeToReturn.price_broto))
+                          .toStringAsFixed(2);
+
+                      inteiraPrice_global = (double.parse(inteiraPrice_global) +
+                          double.parse(pizzaEdgeToReturn.price_inteira))
+                          .toStringAsFixed(2);
+                    });
+                  }else{//description não contém escolha
+
+                    widget.productData.price_broto = (double.parse(widget.productData.price_broto) -
+                        global_previous_pizzaEdgeBrotoPrice)
+                        .toStringAsFixed(2);
+
+                    widget.productData.price_inteira = (double.parse(widget.productData.price_inteira) -
+                        global_previous_pizzaEdgeinteiraPrice)
+                        .toStringAsFixed(2);
+
+                    global_previous_pizzaEdgeBrotoPrice =
+                        double.parse(pizzaEdgeToReturn.price_broto);
+                    global_previous_pizzaEdgeinteiraPrice =
+                        double.parse(pizzaEdgeToReturn.price_inteira);
+
+                    setState(() {
+                      widget.productData.price_broto = (double.parse(widget.productData.price_broto) +
+                          double.parse(pizzaEdgeToReturn.price_broto))
+                          .toStringAsFixed(2);
+
+                      widget.productData.price_inteira = (double.parse(widget.productData.price_inteira) +
+                          double.parse(pizzaEdgeToReturn.price_inteira))
+                          .toStringAsFixed(2);
+                    });
+                  }
+                } else {
+                  //remover borda
+                  if(widget.productData.description.contains("Escolha")){
+                    setState(() {
+                      global_pizzaEdgeChosen = pizzaEdgeToReturn;
+                      brotoPrice_global = (double.parse(brotoPrice_global) -
+                          global_previous_pizzaEdgeBrotoPrice)
+                          .toStringAsFixed(2);
+
+                      inteiraPrice_global = (double.parse(inteiraPrice_global) -
+                          global_previous_pizzaEdgeinteiraPrice)
+                          .toStringAsFixed(2);
+                    });
+
+                    global_previous_pizzaEdgeBrotoPrice = 0;
+                    global_previous_pizzaEdgeinteiraPrice = 0;
+                  }else{//description nao contem Escolha
+                    setState(() {
+                      global_pizzaEdgeChosen = pizzaEdgeToReturn;
+                      widget.productData.price_broto = (double.parse(widget.productData.price_broto) -
+                          global_previous_pizzaEdgeBrotoPrice)
+                          .toStringAsFixed(2);
+
+                      widget.productData.price_inteira = (double.parse(widget.productData.price_inteira) -
+                          global_previous_pizzaEdgeinteiraPrice)
+                          .toStringAsFixed(2);
+                    });
+
+                    global_previous_pizzaEdgeBrotoPrice = 0;
+                    global_previous_pizzaEdgeinteiraPrice = 0;
+                  }
+                }
+              }
+            }
+          },
+        );
+
+        return dialog;
+      },
+    );
   }
 }

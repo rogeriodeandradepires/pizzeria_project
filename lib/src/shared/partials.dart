@@ -22,6 +22,7 @@ Widget foodItem(BuildContext context, Product product,
 
 getContainer(BuildContext context, onLike, double imgWidth, Product product,
     bool isProductPage, onTapped) {
+
   return Wrap(
     direction: Axis.horizontal,
     spacing: 8.0,
@@ -101,27 +102,29 @@ getContainer(BuildContext context, onLike, double imgWidth, Product product,
                   )
                 : Text(' '),
             product.description.contains("Escolha")
-                ? Container()
-                : Positioned(
-                    right: -30,
-                    top: -5,
-                    child: FlatButton(
-                      padding: EdgeInsets.all(5),
-                      shape: CircleBorder(),
-                      onPressed: onLike,
-                      child: Icon(
-                        (product.userLiked != null)
-                            ? (product.userLiked
-                                ? Icons.favorite
-                                : Icons.favorite_border)
-                            : (Icons.favorite_border),
-                        color: (product.userLiked != null)
-                            ? (product.userLiked ? Colors.red : darkText)
-                            : darkText,
-                        size: 25,
+                ? Container() //se for
+                : product.description.contains("RODÍZIO")
+                    ? Container()
+                    : Positioned(
+                        right: -25,
+                        top: -5,
+                        child: FlatButton(
+                          padding: EdgeInsets.all(5),
+                          shape: CircleBorder(),
+                          onPressed: onLike,
+                          child: Icon(
+                            (product.userLiked != null)
+                                ? (product.userLiked
+                                    ? Icons.favorite
+                                    : Icons.favorite_border)
+                                : (Icons.favorite_border),
+                            color: (product.userLiked != null)
+                                ? (product.userLiked ? Colors.red : darkText)
+                                : darkText,
+                            size: 25,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
           ],
         ),
       ),
