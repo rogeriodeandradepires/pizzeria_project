@@ -71,9 +71,14 @@ class DatabaseHelper {
     return await db.query(table);
   }
 
-  Future<List<Map<String, dynamic>>> retrieveAllFavorites() async {
+  Future<List<Map<String, dynamic>>> retrieveAllFavorites(String uid) async {
     Database db = await instance.database;
-    List<Map<String, dynamic>> records = await db.rawQuery("SELECT * FROM $table WHERE $columnIsLiked=\"1\"");
+    List<Map<String, dynamic>> records;
+    if (uid!=null) {
+      records = await db.rawQuery("SELECT * FROM $table WHERE $columnUserId=\"$uid\" AND $columnIsLiked=\"1\"");
+    }else{
+      records = await db.rawQuery("SELECT * FROM $table WHERE $columnIsLiked=\"1\"");
+    }
 
     return records;
   }

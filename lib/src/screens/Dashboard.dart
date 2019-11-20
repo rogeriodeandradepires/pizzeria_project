@@ -38,6 +38,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   final dbHelper = DatabaseHelper.instance;
   List<Map<String, dynamic>> allFavorites;
   FirebaseUser user;
+  FirebaseAuth fbAuth = FirebaseAuth.instance;
 
   Widget tabBody = new Container(
     decoration: new BoxDecoration(
@@ -50,9 +51,13 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
   @override
   void initState() {
-//    FirebaseAuth.instance.signOut();
-    checkIfUserIsLoggedIn();
-    retrieveAllFavorites();
+    fbAuth.onAuthStateChanged.listen((newUser) {
+      setState(() {
+        user = newUser;
+      });
+    });
+
+    retrieveAllFavorites(null);
 
     _controller = ScrollController();
 
@@ -175,8 +180,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
               });
             } else if (index == 1 || index == 3) {
               animationController.reverse().then((data) {
-
-                if (index==3) {
+                if (index == 3) {
                   FirebaseAuth.instance.signOut();
                   user = null;
                 }
@@ -199,6 +203,70 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+  Future<Widget> getFavoritedProducts(
+      List<Map<String, dynamic>> favoriteList) async {
+    print("entrou na lista");
+    String subListTitle = "";
+    List<Product> favoritedProducts = new List();
+    List<Widget> thisList = new List();
+
+    for (Map<String, dynamic> favorited in favoriteList) {
+//      print("entrou no item");
+//      if (subListTitle != favorited['category']) {
+//        print("entrou no item");
+//        subListTitle = favorited['category'];
+      Product retrievedProduct =
+          await getProduct(favorited['categoryName'], favorited['productId']);
+      favoritedProducts.add(retrievedProduct);
+//      }
+    }
+
+    favoritedProducts.forEach((product) {
+      thisList.add(foodItem(context, product));
+    });
+
+    return deals(subListTitle, onViewMore: () {}, items: thisList);
+  }
+
+  Future<Product> getProduct(String category, String id) async {
+//    String category = _selectedCategoryName;
+
+    var queryParameters = {
+      'id': '$id',
+    };
+
+    String url = 'https://dom-marino-webservice.appspot.com/list_' + category;
+    var uri = Uri.https(
+        'dom-marino-webservice.appspot.com', 'list_$category', queryParameters);
+//    print(url);
+
+    Response response = await get(uri);
+    // sample info available in response
+    int statusCode = response.statusCode;
+    Map<String, String> headers = response.headers;
+    String contentType = headers['content-type'];
+    dynamic all_products = json.decode(response.body);
+
+//    print(all_products.toString());
+
+    if (response.statusCode == 200) {
+      all_products_obj_list = new List();
+
+      all_products_obj_list.add(Product.fromJson(all_products));
+
+      return Product.fromJson(all_products);
+    } else {
+      // If that response was not OK, throw an error.
+      throw Exception('Failed to load product');
+    }
+
+//    all_products_obj_list.sort((a, b) {
+//      return a.description.toLowerCase().compareTo(b.description.toLowerCase());
+//    });
+
+    return null;
   }
 
   Future getProducts(String category) async {
@@ -330,19 +398,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                             }
                           }
 
-//                          Future<Map<String, dynamic>> favorite =
-//                              dbHelper.searchFavorite(product.id);
-//                          favorite.then((value) {
-//                            print("recuperou");
-//                            if (value != null) {
-//                              if (value['isUserLiked'] == 0) {
-//                                product.userLiked = false;
-//                              } else {
-//                                product.userLiked = true;
-//                              }
-//                            }
-//                          });
-
                           return foodItem(context, product, onTapped: () {
                             Navigator.push(
                               context,
@@ -373,7 +428,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 //                                print("favorite is null, insert to db");
                                 if (user != null) {
                                   Map<String, dynamic> row = {
-                                    DatabaseHelper.columnId: user.uid+product.id,
+                                    DatabaseHelper.columnId:
+                                        user.uid + product.id,
                                     DatabaseHelper.columnCategory:
                                         _selectedCategory,
                                     DatabaseHelper.columnCategoryName:
@@ -397,13 +453,15 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                   //se é favorito
                                   if (user != null) {
                                     Map<String, dynamic> row = {
-                                      DatabaseHelper.columnId: user.uid+product.id,
+                                      DatabaseHelper.columnId:
+                                          user.uid + product.id,
                                       DatabaseHelper.columnCategory:
                                           _selectedCategory,
                                       DatabaseHelper.columnCategoryName:
                                           _selectedCategoryName,
                                       DatabaseHelper.columnUserId: user.uid,
-                                      DatabaseHelper.columnProductId: product.id,
+                                      DatabaseHelper.columnProductId:
+                                          product.id,
                                       DatabaseHelper.columnIsLiked: 0
                                     };
 
@@ -419,13 +477,15 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                   //se não é favorito
                                   if (user != null) {
                                     Map<String, dynamic> row = {
-                                      DatabaseHelper.columnId: user.uid+product.id,
+                                      DatabaseHelper.columnId:
+                                          user.uid + product.id,
                                       DatabaseHelper.columnCategory:
                                           _selectedCategory,
                                       DatabaseHelper.columnCategoryName:
                                           _selectedCategoryName,
                                       DatabaseHelper.columnUserId: user.uid,
-                                      DatabaseHelper.columnProductId: product.id,
+                                      DatabaseHelper.columnProductId:
+                                          product.id,
                                       DatabaseHelper.columnIsLiked: 1
                                     };
 
@@ -438,7 +498,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                 } //else se ainda não é favorito
                               } //else se o favorito está no db
 
-                              retrieveAllFavorites();
+                              retrieveAllFavorites(user.uid);
                             } else {
                               //não está logado
                               Navigator.pushNamed(context, '/signin');
@@ -467,22 +527,15 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   }
 
   Widget favoritesTab(BuildContext context) {
+    List<Widget> favoritesWidgetLists = <Widget>[];
+    favoritesWidgetLists.add(sectionHeader('Favoritos', onViewMore: () {}));
+    List<Widget> thisList = buildFavoritesLists();
+    favoritesWidgetLists.addAll(thisList);
+
     return ListView(
-        physics: const NeverScrollableScrollPhysics(),
-        children: <Widget>[
-          sectionHeader('Favoritos', onViewMore: () {}),
-          deals(_selectedCategory, onViewMore: () {}, items: <Widget>[
-            Container(
-              height: MediaQuery.of(context).size.height,
-              child: FutureBuilder(
-                builder: (context, productSnap) {
-                  return generateDealsItems(context, productSnap);
-                },
-                future: getProducts(_selectedCategoryName),
-              ),
-            )
-          ]),
-        ]);
+      physics: const NeverScrollableScrollPhysics(),
+      children: favoritesWidgetLists,
+    );
   }
 
   Widget sectionHeader(String headerTitle, {onViewMore}) {
@@ -652,15 +705,15 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   }
 
   Future<bool> checkIfUserIsLoggedIn() async {
-    user = await FirebaseAuth.instance.currentUser();
+    user = await fbAuth.currentUser();
     bool isLogged = user != null;
 
 //    print(isLogged ? user.uid : null);
     return isLogged;
   }
 
-  Future<void> retrieveAllFavorites() async {
-    allFavorites = await dbHelper.retrieveAllFavorites();
+  Future<void> retrieveAllFavorites(String uid) async {
+    allFavorites = await dbHelper.retrieveAllFavorites(uid);
 
 //    print(allFavorites.length);
   }
@@ -714,7 +767,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                     await dbHelper.searchFavorite(user.uid, product.id);
                 if (favorite == null) {
                   Map<String, dynamic> row = {
-                    DatabaseHelper.columnId: user.uid+product.id,
+                    DatabaseHelper.columnId: user.uid + product.id,
                     DatabaseHelper.columnCategory: _selectedCategory,
                     DatabaseHelper.columnCategoryName: _selectedCategoryName,
                     DatabaseHelper.columnUserId: user.uid,
@@ -733,7 +786,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                       favorite['userId'] == user.uid) {
                     //se já é favorito
                     Map<String, dynamic> row = {
-                      DatabaseHelper.columnId: user.uid+product.id,
+                      DatabaseHelper.columnId: user.uid + product.id,
                       DatabaseHelper.columnCategory: _selectedCategory,
                       DatabaseHelper.columnCategoryName: _selectedCategoryName,
                       DatabaseHelper.columnUserId: user.uid,
@@ -749,7 +802,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                   } else {
                     //se ainda não é favorito
                     Map<String, dynamic> row = {
-                      DatabaseHelper.columnId: user.uid+product.id,
+                      DatabaseHelper.columnId: user.uid + product.id,
                       DatabaseHelper.columnCategory: _selectedCategory,
                       DatabaseHelper.columnCategoryName: _selectedCategoryName,
                       DatabaseHelper.columnUserId: user.uid,
@@ -764,7 +817,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                     });
                   } //else se ainda não é favorito
                 } //else se o favorito está no db
-                retrieveAllFavorites();
+                retrieveAllFavorites(user.uid);
               } else {
                 //não está logado
                 Navigator.pushNamed(context, '/signin');
@@ -784,5 +837,72 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       margin: EdgeInsets.only(left: 110, right: 110, bottom: 300),
       child: _showOverlay(context),
     );
+  }
+
+  List<Widget> buildFavoritesLists() {
+    List<FutureBuilder> thisList = new List();
+
+    List<Widget> favoritesWidgetLists = <Widget>[];
+
+    if (user != null && allFavorites != null) {
+      retrieveAllFavorites(user.uid);
+      List<Map<String, dynamic>> orderedFavorites = new List();
+      orderedFavorites.addAll(allFavorites);
+      List<List<Map<String, dynamic>>> finalFavorites = new List();
+      orderedFavorites.sort((a, b) => a['category'].compareTo(b['category']));
+      int start = 0, end = 0;
+
+      for (int i = 0; i < orderedFavorites.length; i++) {
+        if (i != orderedFavorites.length - 1) {
+          if (orderedFavorites[i]['category'] !=
+              orderedFavorites[i + 1]['category']) {
+            end = i + 1;
+            finalFavorites.add(orderedFavorites.sublist(start, end));
+            start = end;
+          }
+        } else {
+          finalFavorites
+              .add(orderedFavorites.sublist(end, orderedFavorites.length));
+        }
+      }
+
+      for (List<Map<String, dynamic>> favoriteList in finalFavorites) {
+//        Map<String, dynamic> section = favoriteList[0];
+//        sectionHeader(section['category']);
+        thisList.add(FutureBuilder(
+          builder: (context, productSnap) {
+            if (productSnap.connectionState == ConnectionState.none &&
+                productSnap.hasData == null) {
+              return Container();
+            } else if (productSnap.hasData) {
+              return ListView.builder(
+                scrollDirection: Axis.horizontal,
+                shrinkWrap: true,
+                itemCount: productSnap.data != null
+                    ? productSnap.data.length
+                    : 0,
+                itemBuilder: (context, index) {
+                  Category category = productSnap.data[index];
+                  return headerCategoryItem(
+                      category.description, category.icon, onPressed: () {
+                    setState(() {
+                      globalProductsListView.controller.jumpTo(0);
+                      _selectedCategory = category.description;
+                      _selectedCategoryName = category.name;
+                    });
+                  });
+                },
+              );
+            }
+          },
+          future: getFavoritedProducts(favoriteList),
+        )); // = getFavoritedProducts(favoriteList);
+//        favoritesWidgetLists.add(thisList);
+      }
+    }
+
+//    return favoritesWidgetLists;
+
+    return thisList;
   }
 }
