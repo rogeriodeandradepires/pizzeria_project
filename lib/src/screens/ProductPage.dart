@@ -82,7 +82,7 @@ class _ProductPageState extends State<ProductPage> {
                               alignment: Alignment.center,
                               child: checkIngredients(widget.productData)),
                           checkNotes(widget.productData),
-                          widget.category.contains("Pizza")
+                          (widget.category.contains("Pizza") && !widget.category.contains("Doce"))
                               ? getEdgesButton(widget.productData)
                               : Container(),
                           Center(child: getProductPrice(widget.productData)),
@@ -180,7 +180,7 @@ class _ProductPageState extends State<ProductPage> {
                           Container(
                             width: 180,
                             margin: EdgeInsets.only(top: 10),
-                            child: froyoFlatBtn('Adicionar ao Pedido', () {}),
+                            child: froyoFlatBtn('Adicionar ao Pedido', isCategoryAllowed(widget.category) ? null : (){}),
                           )
                         ],
                       ),
@@ -239,7 +239,7 @@ class _ProductPageState extends State<ProductPage> {
     if (product.notes != null && product.notes != "") {
       retorno = Container(
         width: MediaQuery.of(context).size.width / 2,
-        child: Text(product.notes, style: foodNotesText),
+        child: Text(product.notes, style: foodNotesText, textAlign: TextAlign.justify,),
       );
     } else {
       retorno = Container();
@@ -684,5 +684,10 @@ class _ProductPageState extends State<ProductPage> {
         return dialog;
       },
     );
+  }
+
+  bool isCategoryAllowed(String category) {
+    return (category.contains("Promoções") || category.contains("Borda"));
+
   }
 }

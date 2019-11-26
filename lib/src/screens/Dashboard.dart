@@ -207,7 +207,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
   Future<Widget> getFavoritedProducts(
       List<Map<String, dynamic>> favoriteList) async {
-    print("entrou na lista");
+    ScrollController _thisController = ScrollController();
+    ListView retorno;
+//    print("entrou na lista");
     String subListTitle = "";
 //    List<Product> favoritedProducts = new List();
     List<Widget> thisList = new List();
@@ -220,7 +222,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       Product retrievedProduct =
           await getProduct(favorited['categoryName'], favorited['productId']);
       retrievedProduct.userLiked = true;
-      thisList.add(foodItem(context, retrievedProduct, onTapped: () {
+      Widget thisItem;
+      thisItem = foodItem(context, retrievedProduct, onTapped: () {
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -237,81 +240,40 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         if (isLogged) {
           Map<String, dynamic> favorite;
           try {
-            favorite = await dbHelper.searchFavorite(user.uid, retrievedProduct.id);
+            favorite =
+                await dbHelper.searchFavorite(user.uid, retrievedProduct.id);
           } on Exception catch (e, s) {
             print(
                 "Exception: " + e.toString() + ", Stacktrace: " + s.toString());
           }
 
-          if (favorite == null) {
-//                                print("favorite is null, insert to db");
-            if (user != null) {
-              Map<String, dynamic> row = {
-                DatabaseHelper.columnId: user.uid + retrievedProduct.id,
-                DatabaseHelper.columnCategory: favorited['category'],
-                DatabaseHelper.columnCategoryName: favorited['categoryName'],
-                DatabaseHelper.columnUserId: user.uid,
-                DatabaseHelper.columnProductId: retrievedProduct.id,
-                DatabaseHelper.columnIsLiked: 1
-              };
+          //se o favorito está no db
+          if (favorite['isUserLiked'] == 1) {
+            //se é favorito
+            Map<String, dynamic> row = {
+              DatabaseHelper.columnId: user.uid + retrievedProduct.id,
+              DatabaseHelper.columnCategory: favorited['category'],
+              DatabaseHelper.columnCategoryName: favorited['categoryName'],
+              DatabaseHelper.columnUserId: user.uid,
+              DatabaseHelper.columnProductId: retrievedProduct.id,
+              DatabaseHelper.columnIsLiked: 0
+            };
 
-              await dbHelper.insert(row);
+            await dbHelper.update(row);
+            await retrieveAllFavorites(user.uid);
 
-              setState(() {
-                retrievedProduct.userLiked = true;
-              });
-            }
-          } else {
-            //se o favorito está no db
-            if (favorite['isUserLiked'] == 1) {
-              //se já é favorito
-//                                  print("favorite is not null, remove flag");
-              //se é favorito
-              if (user != null) {
-                Map<String, dynamic> row = {
-                  DatabaseHelper.columnId: user.uid + retrievedProduct.id,
-                  DatabaseHelper.columnCategory: favorited['category'],
-                  DatabaseHelper.columnCategoryName: favorited['categoryName'],
-                  DatabaseHelper.columnUserId: user.uid,
-                  DatabaseHelper.columnProductId: retrievedProduct.id,
-                  DatabaseHelper.columnIsLiked: 0
-                };
+            setState(() {
+              retrievedProduct.userLiked = false;
+              thisList.remove(thisItem);
+            });
+          } //se é favorito
 
-                await dbHelper.update(row);
-
-                setState(() {
-                  retrievedProduct.userLiked = false;
-                });
-              }
-            } else {
-              //se ainda não é favorito
-//                                  print("favorite is not null, set new flag");
-              //se não é favorito
-              if (user != null) {
-                Map<String, dynamic> row = {
-                  DatabaseHelper.columnId: user.uid + retrievedProduct.id,
-                  DatabaseHelper.columnCategory: favorited['category'],
-                  DatabaseHelper.columnCategoryName: favorited['categoryName'],
-                  DatabaseHelper.columnUserId: user.uid,
-                  DatabaseHelper.columnProductId: retrievedProduct.id,
-                  DatabaseHelper.columnIsLiked: 1
-                };
-
-                await dbHelper.update(row);
-
-                setState(() {
-                  retrievedProduct.userLiked = true;
-                });
-              }
-            } //else se ainda não é favorito
-          } //else se o favorito está no db
-
-          retrieveAllFavorites(user.uid);
         } else {
           //não está logado
           Navigator.pushNamed(context, '/signin');
         }
-      }));
+      });
+      thisList.add(thisItem);
     }
 
 //    favoritedProducts.forEach((product) {
@@ -322,12 +284,20 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 //      return a.description.toLowerCase().compareTo(b.description.toLowerCase());
 //    });
 
-    Container retorno = new Container(
-        child: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: thisList,
-    ));
+//    Container retorno = new Container(
+//        child: Column(
+//      mainAxisAlignment: MainAxisAlignment.center,
+//      crossAxisAlignment: CrossAxisAlignment.center,
+//      mainAxisSize: MainAxisSize.min,
+//      children: thisList,
+//    ));
+
+    retorno = ListView(
+        key: UniqueKey(),
+        controller: _thisController,
+        shrinkWrap: true,
+        physics: ClampingScrollPhysics(),
+        children: thisList);
 
     return retorno;
   }
@@ -349,26 +319,20 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     int statusCode = response.statusCode;
     Map<String, String> headers = response.headers;
     String contentType = headers['content-type'];
-    dynamic all_products = json.decode(response.body);
+    dynamic allProducts = json.decode(response.body);
 
 //    print(all_products.toString());
 
     if (response.statusCode == 200) {
       all_products_obj_list = new List();
 
-      all_products_obj_list.add(Product.fromJson(all_products));
+      all_products_obj_list.add(Product.fromJson(allProducts));
 
-      return Product.fromJson(all_products);
+      return Product.fromJson(allProducts);
     } else {
       // If that response was not OK, throw an error.
       throw Exception('Failed to load product');
     }
-
-//    all_products_obj_list.sort((a, b) {
-//      return a.description.toLowerCase().compareTo(b.description.toLowerCase());
-//    });
-
-    return null;
   }
 
   Future getProducts(String category) async {
@@ -816,7 +780,10 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   }
 
   Future<void> retrieveAllFavorites(String uid) async {
-    allFavorites = await dbHelper.retrieveAllFavorites(uid);
+    List<Map<String, dynamic>> tempAllFavorites =
+        await dbHelper.retrieveAllFavorites(uid);
+    allFavorites = new List();
+    allFavorites.addAll(tempAllFavorites);
 
 //    print(allFavorites.length);
   }
@@ -826,50 +793,52 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
     if (user != null && allFavorites != null) {
       retrieveAllFavorites(user.uid);
-      List<Map<String, dynamic>> orderedFavorites = new List();
-      orderedFavorites.addAll(allFavorites);
+//      List<Map<String, dynamic>> orderedFavorites = new List();
+//      orderedFavorites.addAll(allFavorites);
       List<List<Map<String, dynamic>>> finalFavorites = new List();
-      orderedFavorites.sort((a, b) => a['category'].compareTo(b['category']));
+      allFavorites.sort((a, b) => a['category'].compareTo(b['category']));
+      allFavorites = allFavorites.reversed.toList();
       int start = 0, end = 0;
 
-      for (int i = 0; i < orderedFavorites.length; i++) {
-        if (i != orderedFavorites.length - 1) {
-          if (orderedFavorites[i]['category'] !=
-              orderedFavorites[i + 1]['category']) {
+      for (int i = 0; i < allFavorites.length; i++) {
+        if (i != allFavorites.length - 1) {
+          if (allFavorites[i]['category'] != allFavorites[i + 1]['category']) {
             end = i + 1;
-            finalFavorites.add(orderedFavorites.sublist(start, end));
+            finalFavorites.add(allFavorites.sublist(start, end));
             start = end;
           }
         } else {
-          finalFavorites
-              .add(orderedFavorites.sublist(end, orderedFavorites.length));
+          finalFavorites.add(allFavorites.sublist(end, allFavorites.length));
         }
       }
 
       for (List<Map<String, dynamic>> favoriteList in finalFavorites) {
-        Container thisFuture = Container(
-            height: double.parse((160 * favoriteList.length).toString()),
-            width: MediaQuery.of(context).size.width,
-            child: FutureBuilder(
-              builder: (context, productSnap) {
-                print("builder");
-                print(productSnap);
-                if (productSnap.connectionState == ConnectionState.none &&
-                    productSnap.hasData == null) {
-                  print("null");
-                  return Container();
-                } else if (productSnap.hasData) {
+        Widget thisFuture = FutureBuilder(
+          builder: (context, productSnap) {
+//                print("builder");
+//                print(productSnap);
+            if (productSnap.connectionState == ConnectionState.none &&
+                productSnap.hasData == null) {
+//                  print("null");
+              return Container();
+            } else if (productSnap.hasData) {
 //                  print("hasData");
-                  return Container(
-                      width: MediaQuery.of(context).size.width,
-                      child: productSnap.data); //foodItem(context, product);
-                } else {
-//                  print("outro");
-                  return Container();
-                }
-              },
-              future: getFavoritedProducts(favoriteList),
-            ));
+              return Container(
+                width: MediaQuery.of(context).size.width,
+                child: productSnap.data,
+              );
+            }
+
+            return Container(
+              width: 100,
+              height: 100,
+              margin: EdgeInsets.only(bottom: 50),
+              child: _showOverlay(context),
+            );
+
+          },
+          future: getFavoritedProducts(favoriteList),
+        );
         columnChildren.add(thisFuture);
       }
     }
@@ -882,6 +851,13 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
     columnChildren.add(generateDummyListItem(60));
 
+    bool isFavoritesEmpty = false;
+
+    if (columnChildren.length==1) {
+      columnChildren.removeAt(0);
+      isFavoritesEmpty = true;
+    }
+
     ListView createdLists = new ListView(
       controller: null,
       shrinkWrap: true,
@@ -892,7 +868,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
     return Container(
       height: 500,
-      child: createdLists,
+      width: MediaQuery.of(context).size.width,
+      child: isFavoritesEmpty ? Center(child: Text('Nenhum item disponível neste momento.', textAlign: TextAlign.center,style: noneItemText)) : createdLists,
     );
   }
 

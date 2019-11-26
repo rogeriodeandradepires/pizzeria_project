@@ -108,6 +108,12 @@ const categoryText = TextStyle(
     fontWeight: FontWeight.w700,
     fontFamily: 'Poppins');
 
+const noneItemText = TextStyle(
+    color: Color(0xff444444),
+    fontSize: 18,
+    fontWeight: FontWeight.w700,
+    fontFamily: 'Poppins');
+
 const inputFieldTextStyle =
     TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w500);
 
