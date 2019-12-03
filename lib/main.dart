@@ -1,4 +1,5 @@
 import 'package:dom_marino_app/src/models/user_model.dart';
+import 'package:dom_marino_app/src/screens/CartPage.dart';
 import 'package:dom_marino_app/src/shared/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
@@ -31,6 +32,7 @@ class MyApp extends StatelessWidget {
               '/signin': (BuildContext context) =>  SignInPage(),
               '/dashboard': (BuildContext context) => Dashboard(),
               '/productPage': (BuildContext context) => SignInPage(),
+              '/cartPage': (BuildContext context) => CartPage(),
             },
           );
         },

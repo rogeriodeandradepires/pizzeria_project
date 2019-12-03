@@ -1,6 +1,8 @@
 import 'dart:math';
 
 import 'package:dom_marino_app/src/models/product_result_model.dart';
+import 'package:dom_marino_app/src/shared/database_helper.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../shared/styles.dart';
@@ -15,8 +17,16 @@ class ProductPage extends StatefulWidget {
   final String pageTitle;
   final String category;
   final Product productData;
+  final dbHelper;
+  final FirebaseUser user;
 
-  ProductPage({Key key, this.pageTitle, this.productData, this.category})
+  ProductPage(
+      {Key key,
+      this.pageTitle,
+      this.productData,
+      this.category,
+      this.dbHelper,
+      this.user})
       : super(key: key);
 
   @override
@@ -41,6 +51,9 @@ class _ProductPageState extends State<ProductPage> {
   Product global_product;
   String observations;
   bool hasObservations = false;
+  String sizePriceSelected = "";
+
+  TextEditingController observationsController = new TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -71,119 +84,7 @@ class _ProductPageState extends State<ProductPage> {
                       padding: EdgeInsets.only(
                           top: 60, bottom: 20, left: 10, right: 10),
                       width: MediaQuery.of(context).size.width * 0.85,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: <Widget>[
-                          Center(
-                              child: Text(widget.productData.description,
-                                  style: h4)),
-                          Align(
-                              alignment: Alignment.center,
-                              child: checkIngredients(widget.productData)),
-                          checkNotes(widget.productData),
-                          (widget.category.contains("Pizza") && !widget.category.contains("Doce"))
-                              ? getEdgesButton(widget.productData)
-                              : Container(),
-                          Center(child: getProductPrice(widget.productData)),
-                          Container(
-                            margin: EdgeInsets.only(top: 5),
-                            child: Column(
-                              children: <Widget>[
-                                Container(
-                                  child: Text('Quantidade', style: h6),
-                                  margin: EdgeInsets.only(bottom: 15),
-                                ),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: <Widget>[
-                                    Container(
-                                      width: 55,
-                                      height: 55,
-                                      child: OutlineButton(
-                                        borderSide:
-                                            BorderSide(color: Colors.black38),
-                                        onPressed: () {
-                                          setState(() {
-                                            _quantity += 1;
-                                          });
-                                        },
-                                        child: Icon(Icons.add),
-                                      ),
-                                    ),
-                                    Container(
-                                      margin:
-                                          EdgeInsets.only(left: 20, right: 20),
-                                      child:
-                                          Text(_quantity.toString(), style: h3),
-                                    ),
-                                    Container(
-                                      width: 55,
-                                      height: 55,
-                                      child: OutlineButton(
-                                        borderSide:
-                                            BorderSide(color: Colors.black38),
-                                        onPressed: () {
-                                          setState(() {
-                                            if (_quantity == 1) return;
-                                            _quantity -= 1;
-                                          });
-                                        },
-                                        child: Icon(Icons.remove),
-                                      ),
-                                    )
-                                  ],
-                                )
-                              ],
-                            ),
-                          ),
-                          widget.category.contains("Pizza")
-                              ? Wrap(
-                                  direction: Axis.horizontal,
-                                  crossAxisAlignment: WrapCrossAlignment.center,
-                                  alignment: WrapAlignment.start,
-                                  children: <Widget>[
-                                    Checkbox(
-                                      value: hasObservations,
-                                      onChanged: (bool value) {
-                                        setState(() {
-                                          hasObservations = value;
-                                        });
-                                      },
-                                    ),
-                                    Text('Observações', style: h6),
-                                  ],
-                                )
-                              : Container(),
-                          widget.category.contains("Pizza")
-                              ? Card(
-                                  color: Colors.white.withOpacity(0.65),
-                                  //Color(0xfffff2ca).withOpacity(0.65),
-                                  elevation: 5,
-                                  child: hasObservations
-                                      ? Container(
-                                          padding: EdgeInsets.all(10),
-                                          height: 70,
-                                          width:
-                                              MediaQuery.of(context).size.width,
-                                          child: TextField(
-                                              maxLength: 40,
-                                              style: new TextStyle(
-                                                  fontSize: 14.0,
-                                                  height: 2.0,
-                                                  color: Colors.black)),
-                                        )
-                                      : Container(),
-                                )
-                              : Container(),
-                          Container(
-                            width: 180,
-                            margin: EdgeInsets.only(top: 10),
-                            child: froyoFlatBtn('Adicionar ao Pedido', isCategoryAllowed(widget.category) ? null : (){}),
-                          )
-                        ],
-                      ),
+                      child: getPageColumn(),
                       decoration: BoxDecoration(
                           image: new DecorationImage(
                             image: new AssetImage("images/main_bg.png"),
@@ -239,7 +140,11 @@ class _ProductPageState extends State<ProductPage> {
     if (product.notes != null && product.notes != "") {
       retorno = Container(
         width: MediaQuery.of(context).size.width / 2,
-        child: Text(product.notes, style: foodNotesText, textAlign: TextAlign.justify,),
+        child: Text(
+          product.notes,
+          style: foodNotesText,
+          textAlign: TextAlign.justify,
+        ),
       );
     } else {
       retorno = Container();
@@ -301,41 +206,90 @@ class _ProductPageState extends State<ProductPage> {
 
   Widget generatePricesGrid() {
     return new Container(
+      margin: EdgeInsets.only(top: 10),
       child: new Row(
         children: <Widget>[
           Expanded(
-            child: Container(
-              margin: EdgeInsets.only(left: 50),
-              child: new Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  new Container(
-                    child: new Text("Broto", style: h4),
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  sizePriceSelected = "Broto";
+                });
+              },
+              child: Container(
+                margin: EdgeInsets.only(right: 5),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(4.0)),
+                  border: Border.all(
+                    color: (sizePriceSelected == "" ||
+                            sizePriceSelected == "Inteira")
+                        ? Colors.grey[500]
+                        : Colors.black,
                   ),
-                  new Container(
-                    child: new Text(
-                        "R\$ " + brotoPrice_global.replaceAll(".", ","),
-                        style: h4),
-                  ),
-                ],
+                ),
+                child: new Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    new Container(
+                      child: new Text("Broto",
+                          style: (sizePriceSelected == "" ||
+                                  sizePriceSelected == "Inteira")
+                              ? noneItemText
+                              : h4),
+                    ),
+                    new Container(
+                      child: new Text(
+                          "R\$ " + brotoPrice_global.replaceAll(".", ","),
+                          style: (sizePriceSelected == "" ||
+                                  sizePriceSelected == "Inteira")
+                              ? noneItemText
+                              : h4),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
           Expanded(
-            child: Container(
-              margin: EdgeInsets.only(left: 20),
-              child: new Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  new Container(
-                    child: new Text("Inteira", style: h4),
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  sizePriceSelected = "Inteira";
+                });
+              },
+              child: Container(
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(4.0)),
+                  border: Border.all(
+                    color: (sizePriceSelected == "" ||
+                            sizePriceSelected == "Broto")
+                        ? Colors.grey[500]
+                        : Colors.black,
                   ),
-                  new Container(
-                    child: new Text(
-                        "R\$ " + inteiraPrice_global.replaceAll(".", ","),
-                        style: h4),
-                  )
-                ],
+                ),
+                margin: EdgeInsets.only(left: 5),
+                child: new Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    new Container(
+                      child: new Text("Inteira",
+                          style: (sizePriceSelected == "" ||
+                                  sizePriceSelected == "Broto")
+                              ? noneItemText
+                              : h4),
+                    ),
+                    new Container(
+                      child: new Text(
+                          "R\$ " + inteiraPrice_global.replaceAll(".", ","),
+                          style: (sizePriceSelected == "" ||
+                                  sizePriceSelected == "Broto")
+                              ? noneItemText
+                              : h4),
+                    )
+                  ],
+                ),
               ),
             ),
           )
@@ -452,11 +406,11 @@ class _ProductPageState extends State<ProductPage> {
 
     if (flavorOrder == "1º" && product1ToReturn != null) {
 //      firstFlavorChosen =
-      return foodItemFlavorChosen(
-          "two_flavored_pizzas", context, product1ToReturn);
+      return foodItemFlavorChosen("two_flavored_pizzas", context,
+          product1ToReturn, product1ToReturn.description);
     } else if (product2ToReturn != null) {
-      return foodItemFlavorChosen(
-          "two_flavored_pizzas", context, product2ToReturn);
+      return foodItemFlavorChosen("two_flavored_pizzas", context,
+          product2ToReturn, product2ToReturn.description);
 //      secondFlavorChosen =
     }
 
@@ -477,10 +431,9 @@ class _ProductPageState extends State<ProductPage> {
     if (global_pizzaEdgeChosen != null) {
 //      firstFlavorChosen =
       if (global_pizzaEdgeChosen.description != "Nenhuma Borda") {
-        global_pizzaEdgeChosen.description =
-            "Borda de " + global_pizzaEdgeChosen.description;
+        String description = "Borda de " + global_pizzaEdgeChosen.description;
         return foodItemFlavorChosen(
-            "pizza_edges", context, global_pizzaEdgeChosen);
+            "pizza_edges", context, global_pizzaEdgeChosen, description);
       }
     }
 
@@ -494,10 +447,10 @@ class _ProductPageState extends State<ProductPage> {
     return retorno;
   }
 
-  Widget foodItemFlavorChosen(
-      String category, BuildContext context, Product product,
+  Widget foodItemFlavorChosen(String category, BuildContext context,
+      Product product, String description,
       {double imgWidth, onTapped, bool isProductPage = false}) {
-    return Container(
+    return new Container(
       width: MediaQuery.of(context).size.width,
       child: Wrap(
         direction: Axis.horizontal,
@@ -528,8 +481,7 @@ class _ProductPageState extends State<ProductPage> {
                             new BorderRadius.all(const Radius.circular(5.0))),
                     child: Hero(
                         transitionOnUserGestures: true,
-                        tag: product.description +
-                            (product.id),
+                        tag: product.description + (product.id),
                         child: ClipRRect(
                           borderRadius: new BorderRadius.circular(8.0),
                           child: Image.network(
@@ -547,7 +499,7 @@ class _ProductPageState extends State<ProductPage> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Text(product.description, style: chooseFlavorFoodNameText),
+                    Text(description, style: chooseFlavorFoodNameText),
                     checkIngredientsFlavorChosen(context, product),
 //                  checkNotes(context, product),
 //                  checkSizes(context, product),
@@ -568,8 +520,11 @@ class _ProductPageState extends State<ProductPage> {
     if (product.ingredients != null && product.ingredients != "") {
       retorno = Container(
         width: MediaQuery.of(context).size.width / 2,
-        child:
-            Text(product.ingredients, style: chooseFlavorFoodingredientsText),
+        child: Text(
+          product.ingredients,
+          style: chooseFlavorFoodingredientsText,
+          textAlign: TextAlign.justify,
+        ),
       );
     } else {
       retorno = Container(
@@ -596,13 +551,12 @@ class _ProductPageState extends State<ProductPage> {
                   pizzaEdgeToReturn.price_inteira != "--") {
                 if (pizzaEdgeToReturn.price_broto != null) {
                   if (widget.productData.description.contains("Escolha")) {
-
                     brotoPrice_global = (double.parse(brotoPrice_global) -
-                        global_previous_pizzaEdgeBrotoPrice)
+                            global_previous_pizzaEdgeBrotoPrice)
                         .toStringAsFixed(2);
 
                     inteiraPrice_global = (double.parse(inteiraPrice_global) -
-                        global_previous_pizzaEdgeinteiraPrice)
+                            global_previous_pizzaEdgeinteiraPrice)
                         .toStringAsFixed(2);
 
                     global_previous_pizzaEdgeBrotoPrice =
@@ -612,22 +566,25 @@ class _ProductPageState extends State<ProductPage> {
 
                     setState(() {
                       brotoPrice_global = (double.parse(brotoPrice_global) +
-                          double.parse(pizzaEdgeToReturn.price_broto))
+                              double.parse(pizzaEdgeToReturn.price_broto))
                           .toStringAsFixed(2);
 
                       inteiraPrice_global = (double.parse(inteiraPrice_global) +
-                          double.parse(pizzaEdgeToReturn.price_inteira))
+                              double.parse(pizzaEdgeToReturn.price_inteira))
                           .toStringAsFixed(2);
                     });
-                  }else{//description não contém escolha
+                  } else {
+                    //description não contém escolha
 
-                    widget.productData.price_broto = (double.parse(widget.productData.price_broto) -
-                        global_previous_pizzaEdgeBrotoPrice)
-                        .toStringAsFixed(2);
+                    widget.productData.price_broto =
+                        (double.parse(widget.productData.price_broto) -
+                                global_previous_pizzaEdgeBrotoPrice)
+                            .toStringAsFixed(2);
 
-                    widget.productData.price_inteira = (double.parse(widget.productData.price_inteira) -
-                        global_previous_pizzaEdgeinteiraPrice)
-                        .toStringAsFixed(2);
+                    widget.productData.price_inteira =
+                        (double.parse(widget.productData.price_inteira) -
+                                global_previous_pizzaEdgeinteiraPrice)
+                            .toStringAsFixed(2);
 
                     global_previous_pizzaEdgeBrotoPrice =
                         double.parse(pizzaEdgeToReturn.price_broto);
@@ -635,41 +592,46 @@ class _ProductPageState extends State<ProductPage> {
                         double.parse(pizzaEdgeToReturn.price_inteira);
 
                     setState(() {
-                      widget.productData.price_broto = (double.parse(widget.productData.price_broto) +
-                          double.parse(pizzaEdgeToReturn.price_broto))
-                          .toStringAsFixed(2);
+                      widget.productData.price_broto =
+                          (double.parse(widget.productData.price_broto) +
+                                  double.parse(pizzaEdgeToReturn.price_broto))
+                              .toStringAsFixed(2);
 
-                      widget.productData.price_inteira = (double.parse(widget.productData.price_inteira) +
-                          double.parse(pizzaEdgeToReturn.price_inteira))
-                          .toStringAsFixed(2);
+                      widget.productData.price_inteira =
+                          (double.parse(widget.productData.price_inteira) +
+                                  double.parse(pizzaEdgeToReturn.price_inteira))
+                              .toStringAsFixed(2);
                     });
                   }
                 } else {
                   //remover borda
-                  if(widget.productData.description.contains("Escolha")){
+                  if (widget.productData.description.contains("Escolha")) {
                     setState(() {
                       global_pizzaEdgeChosen = pizzaEdgeToReturn;
                       brotoPrice_global = (double.parse(brotoPrice_global) -
-                          global_previous_pizzaEdgeBrotoPrice)
+                              global_previous_pizzaEdgeBrotoPrice)
                           .toStringAsFixed(2);
 
                       inteiraPrice_global = (double.parse(inteiraPrice_global) -
-                          global_previous_pizzaEdgeinteiraPrice)
+                              global_previous_pizzaEdgeinteiraPrice)
                           .toStringAsFixed(2);
                     });
 
                     global_previous_pizzaEdgeBrotoPrice = 0;
                     global_previous_pizzaEdgeinteiraPrice = 0;
-                  }else{//description nao contem Escolha
+                  } else {
+                    //description nao contem Escolha
                     setState(() {
                       global_pizzaEdgeChosen = pizzaEdgeToReturn;
-                      widget.productData.price_broto = (double.parse(widget.productData.price_broto) -
-                          global_previous_pizzaEdgeBrotoPrice)
-                          .toStringAsFixed(2);
+                      widget.productData.price_broto =
+                          (double.parse(widget.productData.price_broto) -
+                                  global_previous_pizzaEdgeBrotoPrice)
+                              .toStringAsFixed(2);
 
-                      widget.productData.price_inteira = (double.parse(widget.productData.price_inteira) -
-                          global_previous_pizzaEdgeinteiraPrice)
-                          .toStringAsFixed(2);
+                      widget.productData.price_inteira =
+                          (double.parse(widget.productData.price_inteira) -
+                                  global_previous_pizzaEdgeinteiraPrice)
+                              .toStringAsFixed(2);
                     });
 
                     global_previous_pizzaEdgeBrotoPrice = 0;
@@ -688,6 +650,226 @@ class _ProductPageState extends State<ProductPage> {
 
   bool isCategoryAllowed(String category) {
     return (category.contains("Promoções") || category.contains("Borda"));
+  }
 
+  Widget getPageColumn() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        Center(child: Text(widget.productData.description, style: h4)),
+        Align(
+            alignment: Alignment.center,
+            child: checkIngredients(widget.productData)),
+        checkNotes(widget.productData),
+        (widget.category.contains("Pizza") && !widget.category.contains("Doce"))
+            ? getEdgesButton(widget.productData)
+            : Container(),
+        Center(child: getProductPrice(widget.productData)),
+        Container(
+          margin: EdgeInsets.only(top: 5),
+          child: Column(
+            children: <Widget>[
+              Container(
+                child: Text('Quantidade', style: h6),
+                margin: EdgeInsets.only(bottom: 15),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  Container(
+                    width: 55,
+                    height: 55,
+                    child: OutlineButton(
+                      borderSide: BorderSide(color: Colors.black38),
+                      onPressed: () {
+                        setState(() {
+                          _quantity += 1;
+                        });
+                      },
+                      child: Icon(Icons.add),
+                    ),
+                  ),
+                  Container(
+                    margin: EdgeInsets.only(left: 20, right: 20),
+                    child: Text(_quantity.toString(), style: h3),
+                  ),
+                  Container(
+                    width: 55,
+                    height: 55,
+                    child: OutlineButton(
+                      borderSide: BorderSide(color: Colors.black38),
+                      onPressed: () {
+                        setState(() {
+                          if (_quantity == 1) return;
+                          _quantity -= 1;
+                        });
+                      },
+                      child: Icon(Icons.remove),
+                    ),
+                  )
+                ],
+              )
+            ],
+          ),
+        ),
+        widget.category.contains("Pizza")
+            ? Wrap(
+                direction: Axis.horizontal,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                alignment: WrapAlignment.start,
+                children: <Widget>[
+                  Checkbox(
+                    value: hasObservations,
+                    onChanged: (bool value) {
+                      setState(() {
+                        hasObservations = value;
+                      });
+                    },
+                  ),
+                  Text('Observações', style: h6),
+                ],
+              )
+            : Container(),
+        widget.category.contains("Pizza")
+            ? Card(
+                color: Colors.white.withOpacity(0.65),
+                //Color(0xfffff2ca).withOpacity(0.65),
+                elevation: 5,
+                child: hasObservations
+                    ? Container(
+                        padding: EdgeInsets.all(10),
+                        height: 70,
+                        width: MediaQuery.of(context).size.width,
+                        child: TextField(
+                            controller: observationsController,
+                            maxLength: 40,
+                            style: new TextStyle(
+                                fontSize: 14.0,
+                                height: 2.0,
+                                color: Colors.black)),
+                      )
+                    : Container(),
+              )
+            : Container(),
+        Container(
+          width: 180,
+          margin: EdgeInsets.only(top: 10),
+          child: froyoFlatBtn(
+              'Adicionar ao Pedido',
+              isCategoryAllowed(widget.category)
+                  ? null
+                  : widget.user != null
+                      ? () async {
+                          //método onClick
+                          Map<String, dynamic> cartRow = {
+                            DatabaseHelper.columnUserId: widget.user.uid,
+                            DatabaseHelper.columnDateRegister:
+                                new DateTime.now().toUtc().toString()
+                          };
+
+                          int cartId;
+                          Map<String, dynamic> cart =
+                              await widget.dbHelper.searchCart(widget.user.uid);
+
+                          if (widget.category.contains("Pizza")) {//se é pizza
+                            if (!widget.category.contains("Sabores")) {
+                              checkSizeAndRunDb(cartId, cart, cartRow);
+                            }else{//se é Pizza de 2 Sabores
+                              if (product1ToReturn == null || product2ToReturn == null) {
+                                showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      return CupertinoAlertDialog(
+                                        title: Text('Erro'),
+                                        content: Text('Por favor, escolha os sabores da Pizza'),
+                                        actions: <Widget>[
+                                          FlatButton(
+                                              onPressed: () {
+                                                Navigator.pop(context);
+                                              },
+                                              child: Text('Ok')),
+                                        ],
+                                      );
+                                    });
+                              }else{
+                                checkSizeAndRunDb(cartId, cart, cartRow);
+                              }
+                            }
+                          } else { //se não for pizza
+                            if (cart == null) {
+                              cartId =
+                              await widget.dbHelper.insert(cartRow, "cart");
+                            } else {
+                              cartId = cart['cartId'];
+                            }
+
+                            Map<String, dynamic> productRow = {
+                              DatabaseHelper.columnCartId: cartId,
+                              DatabaseHelper.columnProductId:
+                                  widget.productData.id,
+                              DatabaseHelper.columnProductAmount: _quantity
+                            };
+
+                            await widget.dbHelper
+                                .insert(productRow, "cartItems");
+                          }
+                          Navigator.pop(context);
+                        }
+                      : () {
+                          Navigator.pushNamed(context, '/signin');
+                        }),
+        )
+      ],
+    );
+  }
+
+  Future<void> checkSizeAndRunDb(int cartId, Map<String, dynamic> cart, Map<String, dynamic> cartRow) async {
+    if (sizePriceSelected == "") {
+      showDialog(
+          context: context,
+          builder: (context) {
+            return CupertinoAlertDialog(
+              title: Text('Erro'),
+              content: Text(
+                  'Por favor, escolha o tamanho da Pizza'),
+              actions: <Widget>[
+                FlatButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text('Ok')),
+              ],
+            );
+          });
+    } else {//se tiver selecionado o tamanho
+      if (cart == null) {
+        cartId =
+            await widget.dbHelper.insert(cartRow, "cart");
+      } else {
+        cartId = cart['cartId'];
+      }
+
+      String observations = observationsController.text;
+      String pizzaEdgeId =
+      global_pizzaEdgeChosen != null
+          ? global_pizzaEdgeChosen.id
+          : null;
+
+      Map<String, dynamic> productRow = {
+        DatabaseHelper.columnCartId: cartId,
+        DatabaseHelper.columnProductId:
+        widget.productData.id,
+        DatabaseHelper.columnProductAmount: _quantity,
+        DatabaseHelper.columnProductObservations: observations,
+        DatabaseHelper.columnPizzaEdgeId: pizzaEdgeId,
+        DatabaseHelper.columnProductSize:
+        sizePriceSelected
+      };
+
+      await widget.dbHelper
+          .insert(productRow, "cartItems");
+    }
   }
 }

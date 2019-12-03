@@ -15,6 +15,8 @@ import '../shared/partials.dart';
 import 'package:http/http.dart';
 import 'package:dom_marino_app/src/shared/database_helper.dart';
 
+import 'CartPage.dart';
+
 List<Category> all_categories_obj_list = new List();
 List<Product> all_products_obj_list = new List();
 
@@ -76,6 +78,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   @override
   void dispose() {
     animationController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
@@ -156,9 +159,21 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         ),
         BottomBarView(
           tabIconsList: tabIconsList,
-          addClick: () {
-            print("clicou no carrinho");
-            //WHRS
+          addClick: () async {
+//            print("clicou no carrinho");
+            bool isLogged = await checkIfUserIsLoggedIn();
+            if (isLogged) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return new CartPage(dbHelper: dbHelper, user: user);
+                  },
+                ),
+              );
+            }else{
+              Navigator.pushNamed(context, '/signin');
+            }
           },
           changeIndex: (index) async {
 //
@@ -231,6 +246,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
               return new ProductPage(
                 productData: retrievedProduct,
                 category: favorited['category'],
+                dbHelper: dbHelper,
+                user: user,
               );
             },
           ),
@@ -472,6 +489,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                   return new ProductPage(
                                     productData: product,
                                     category: _selectedCategory,
+                                    dbHelper: dbHelper,
+                                    user: user,
                                   );
                                 },
                               ),
@@ -505,7 +524,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                     DatabaseHelper.columnIsLiked: 1
                                   };
 
-                                  await dbHelper.insert(row);
+                                  await dbHelper.insert(row, "favorites");
 
                                   setState(() {
                                     product.userLiked = true;

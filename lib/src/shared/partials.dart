@@ -22,7 +22,6 @@ Widget foodItem(BuildContext context, Product product,
 
 getContainer(BuildContext context, onLike, double imgWidth, Product product,
     bool isProductPage, onTapped) {
-
   return Wrap(
     direction: Axis.horizontal,
     spacing: 8.0,
@@ -206,7 +205,11 @@ Widget checkNotes(BuildContext context, Product product) {
   if (product.notes != null && product.notes != "") {
     retorno = Container(
       width: MediaQuery.of(context).size.width / 2,
-      child: Text(product.notes, style: foodNotesText),
+      child: Text(
+        product.notes,
+        style: foodNotesText,
+        textAlign: TextAlign.justify,
+      ),
     );
   } else {
     retorno = Container();
@@ -221,7 +224,11 @@ Widget checkIngredients(BuildContext context, product) {
   if (product.ingredients != null && product.ingredients != "") {
     retorno = Container(
       width: MediaQuery.of(context).size.width / 2,
-      child: Text(product.ingredients, style: foodNotesText),
+      child: Text(
+        product.ingredients,
+        style: foodNotesText,
+        textAlign: TextAlign.justify,
+      ),
     );
   } else {
     retorno = Container();

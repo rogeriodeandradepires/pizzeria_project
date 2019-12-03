@@ -34,10 +34,23 @@ const h3 = TextStyle(
     fontWeight: FontWeight.w800,
     fontFamily: 'Poppins');
 
+const cart_title = TextStyle(
+    color: Colors.white,
+    fontSize: 34,
+    height: 0.95,
+    fontWeight: FontWeight.w600,
+    fontFamily: 'Poppins');
+
 const h4 = TextStyle(
     color: Colors.black,
     fontSize: 18,
     fontWeight: FontWeight.w700,
+    fontFamily: 'Poppins');
+
+const white_h4 = TextStyle(
+    color: Colors.white,
+    fontSize: 18,
+    fontWeight: FontWeight.w500,
     fontFamily: 'Poppins');
 
 const h5 = TextStyle(
@@ -109,7 +122,7 @@ const categoryText = TextStyle(
     fontFamily: 'Poppins');
 
 const noneItemText = TextStyle(
-    color: Color(0xff444444),
+    color: Color.fromRGBO(117, 117, 117, 1.0),
     fontSize: 18,
     fontWeight: FontWeight.w700,
     fontFamily: 'Poppins');
