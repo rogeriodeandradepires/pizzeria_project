@@ -83,6 +83,20 @@ const minorFoodNameText = TextStyle(
     fontWeight: FontWeight.w800,
     fontFamily: 'Poppins');
 
+const minorPizzaEdgeText = TextStyle(
+    color: Colors.black,
+    fontSize: 12,
+    height: 0.95,
+    fontWeight: FontWeight.w800,
+    fontFamily: 'Poppins');
+
+const minorCartItemText = TextStyle(
+    color: Color.fromRGBO(117, 117, 117, 1.0),
+    fontSize: 14,
+    fontWeight: FontWeight.w800,
+    height: 0.95,
+    fontFamily: 'Poppins');
+
 const chooseFlavorFoodNameText = TextStyle(
     color: Colors.black,
     fontSize: 11,

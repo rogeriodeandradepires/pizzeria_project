@@ -16,6 +16,7 @@ import 'ChoosePizzaEdgeDialog.dart';
 class ProductPage extends StatefulWidget {
   final String pageTitle;
   final String category;
+  final String categoryName;
   final Product productData;
   final dbHelper;
   final FirebaseUser user;
@@ -25,6 +26,7 @@ class ProductPage extends StatefulWidget {
       this.pageTitle,
       this.productData,
       this.category,
+      this.categoryName,
       this.dbHelper,
       this.user})
       : super(key: key);
@@ -807,6 +809,8 @@ class _ProductPageState extends State<ProductPage> {
 
                             Map<String, dynamic> productRow = {
                               DatabaseHelper.columnCartId: cartId,
+                              DatabaseHelper.columnProductCategory: widget.category,
+                              DatabaseHelper.columnCategoryName: widget.categoryName,
                               DatabaseHelper.columnProductId:
                                   widget.productData.id,
                               DatabaseHelper.columnProductAmount: _quantity
@@ -861,6 +865,8 @@ class _ProductPageState extends State<ProductPage> {
         DatabaseHelper.columnCartId: cartId,
         DatabaseHelper.columnProductId:
         widget.productData.id,
+        DatabaseHelper.columnProductCategory: widget.category,
+        DatabaseHelper.columnCategoryName: widget.categoryName,
         DatabaseHelper.columnProductAmount: _quantity,
         DatabaseHelper.columnProductObservations: observations,
         DatabaseHelper.columnPizzaEdgeId: pizzaEdgeId,

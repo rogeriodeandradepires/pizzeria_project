@@ -15,7 +15,7 @@ import '../shared/partials.dart';
 import 'package:http/http.dart';
 import 'package:dom_marino_app/src/shared/database_helper.dart';
 
-import 'CartPage.dart';
+import 'CartPage2.dart';
 
 List<Category> all_categories_obj_list = new List();
 List<Product> all_products_obj_list = new List();
@@ -246,6 +246,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
               return new ProductPage(
                 productData: retrievedProduct,
                 category: favorited['category'],
+                categoryName: _selectedCategoryName,
                 dbHelper: dbHelper,
                 user: user,
               );
@@ -276,7 +277,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
               DatabaseHelper.columnIsLiked: 0
             };
 
-            await dbHelper.update(row);
+            await dbHelper.update(row, "favorites", "_id");
             await retrieveAllFavorites(user.uid);
 
             setState(() {
@@ -489,6 +490,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                   return new ProductPage(
                                     productData: product,
                                     category: _selectedCategory,
+                                    categoryName: _selectedCategoryName,
                                     dbHelper: dbHelper,
                                     user: user,
                                   );
@@ -550,7 +552,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                       DatabaseHelper.columnIsLiked: 0
                                     };
 
-                                    await dbHelper.update(row);
+                                    await dbHelper.update(row, "favorites", "_id");
 
                                     setState(() {
                                       product.userLiked = false;
@@ -574,7 +576,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                       DatabaseHelper.columnIsLiked: 1
                                     };
 
-                                    await dbHelper.update(row);
+                                    await dbHelper.update(row, "favorites", "_id");
 
                                     setState(() {
                                       product.userLiked = true;

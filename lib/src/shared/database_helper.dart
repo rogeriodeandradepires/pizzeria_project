@@ -28,6 +28,7 @@ class DatabaseHelper {
   static final columnProductObservations = 'productObservations';
   static final columnProductSize = 'productSize';
   static final columnIsTwoFlavoredPizza = 'isTwoFlavoredPizza';
+  static final columnProductCategory = 'productCategory';
 
   // make this a singleton class
   DatabaseHelper._privateConstructor();
@@ -76,6 +77,8 @@ class DatabaseHelper {
           CREATE TABLE $cartItemsTable (
             $columncartItemsId INTEGER PRIMARY KEY AUTOINCREMENT,
             $columnCartId INTEGER NOT NULL,
+            $columnProductCategory TEXT NOT NULL,
+            $columnCategoryName TEXT NOT NULL,
             $columnProductId TEXT NOT NULL,
             $columnProduct2Id TEXT,
             $columnProductObservations TEXT,
@@ -108,6 +111,18 @@ class DatabaseHelper {
     return await db.query(favoritesTable);
   }
 
+  Future<List<Map<String, dynamic>>> retrieveAllCartItems(int cartId) async {
+    Database db = await instance.database;
+    List<Map<String, dynamic>> records;
+
+//    print("cartId="+cartId.toString());
+
+    records = await db.rawQuery("SELECT * FROM $cartItemsTable WHERE $columnCartId=\"$cartId\"");
+
+
+    return records;
+  }
+
   Future<List<Map<String, dynamic>>> retrieveAllFavorites(String uid) async {
     Database db = await instance.database;
     List<Map<String, dynamic>> records;
@@ -137,6 +152,8 @@ class DatabaseHelper {
     Database db = await instance.database;
     List<Map<String, dynamic>> records = await db.rawQuery("SELECT * FROM $cartTable WHERE $columnUserId=\"$uid\"");
 
+//    print("records="+records.first['cartId'].toString());
+
     var retorno = null;
 
     if (records.length!=0) {
@@ -162,10 +179,10 @@ class DatabaseHelper {
 
   // We are assuming here that the id column in the map is set. The other
   // column values will be used to update the row.
-  Future<int> update(Map<String, dynamic> row) async {
+  Future<int> update(Map<String, dynamic> row, String table, String idIdentifier) async {
     Database db = await instance.database;
-    String id = row[columnId];
-    return await db.update(favoritesTable, row, where: '$columnId = ?', whereArgs: [id]);
+    String id = row[idIdentifier].toString();
+    return await db.update(table, row, where: '$idIdentifier = ?', whereArgs: [id]);
   }
 
   // Deletes the row specified by the id. The number of affected rows is
