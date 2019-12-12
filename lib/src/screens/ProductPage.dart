@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:dom_marino_app/src/models/cart_item_result_model.dart';
 import 'package:dom_marino_app/src/models/product_result_model.dart';
 import 'package:dom_marino_app/src/shared/database_helper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -44,6 +45,9 @@ class _ProductPageState extends State<ProductPage> {
   Product product1ToReturn;
   Product product2ToReturn;
 
+  Product product1CategoryName;
+  Product product2CategoryName;
+
   String brotoPrice_global;
   String inteiraPrice_global;
 
@@ -56,6 +60,13 @@ class _ProductPageState extends State<ProductPage> {
   String sizePriceSelected = "";
 
   TextEditingController observationsController = new TextEditingController();
+
+
+  @override
+  void initState() {
+    sizePriceSelected = "";
+    print(widget.productData.id);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -775,17 +786,22 @@ class _ProductPageState extends State<ProductPage> {
                           Map<String, dynamic> cart =
                               await widget.dbHelper.searchCart(widget.user.uid);
 
-                          if (widget.category.contains("Pizza")) {//se é pizza
+                          if (widget.category.contains("Pizza")) {
+                            //se é pizza
                             if (!widget.category.contains("Sabores")) {
+                              //se Não é two_flavored_pizza
                               checkSizeAndRunDb(cartId, cart, cartRow);
-                            }else{//se é Pizza de 2 Sabores
-                              if (product1ToReturn == null || product2ToReturn == null) {
+                            } else {
+                              //se é Pizza de 2 Sabores
+                              if (product1ToReturn == null ||
+                                  product2ToReturn == null) {
                                 showDialog(
                                     context: context,
                                     builder: (context) {
                                       return CupertinoAlertDialog(
                                         title: Text('Erro'),
-                                        content: Text('Por favor, escolha os sabores da Pizza'),
+                                        content: Text(
+                                            'Por favor, escolha os sabores da Pizza'),
                                         actions: <Widget>[
                                           FlatButton(
                                               onPressed: () {
@@ -795,29 +811,65 @@ class _ProductPageState extends State<ProductPage> {
                                         ],
                                       );
                                     });
-                              }else{
-                                checkSizeAndRunDb(cartId, cart, cartRow);
+                              } else {
+                                checkSizeAndRunDb(cartId, cart, cartRow, isTwoFlavoredPizza: true);
                               }
                             }
-                          } else { //se não for pizza
+                          } else {
+                            //se não for pizza
+
                             if (cart == null) {
                               cartId =
-                              await widget.dbHelper.insert(cartRow, "cart");
+                                  await widget.dbHelper.insert(cartRow, "cart");
                             } else {
                               cartId = cart['cartId'];
                             }
 
-                            Map<String, dynamic> productRow = {
-                              DatabaseHelper.columnCartId: cartId,
-                              DatabaseHelper.columnProductCategory: widget.category,
-                              DatabaseHelper.columnCategoryName: widget.categoryName,
-                              DatabaseHelper.columnProductId:
-                                  widget.productData.id,
-                              DatabaseHelper.columnProductAmount: _quantity
-                            };
+                            List<Map<String, dynamic>> allCartItems =
+                                await widget.dbHelper
+                                    .retrieveAllCartItems(cartId);
+                            int equalId = null;
 
-                            await widget.dbHelper
-                                .insert(productRow, "cartItems");
+                            allCartItems.forEach((item) {
+                              if (item['productId'] == widget.productData.id) {
+                                //se já tem item igual
+                                equalId = item['cartItemsId'];
+                              }
+                            });
+
+                            if (equalId != null) {
+                              //se já tem item igual
+                              Map<String, dynamic> productRow =
+                                  await widget.dbHelper.searchCartItem(equalId);
+                              Map<String, dynamic> tempProductRow = new Map();
+                              tempProductRow.addAll(productRow);
+                              tempProductRow["productAmount"] =
+                                  tempProductRow["productAmount"] + 1;
+
+                              await widget.dbHelper.update(
+                                  tempProductRow, "cartItems", "cartItemsId");
+                            } else {
+                              //se ainda não tem item igual
+
+                              Map<String, dynamic> productRow = {
+                                DatabaseHelper.columnCartId: cartId,
+                                DatabaseHelper.columnProductId:
+                                    widget.productData.id,
+                                DatabaseHelper.columnProductCategory:
+                                    widget.category,
+                                DatabaseHelper.columnCategoryName:
+                                    widget.categoryName,
+                                DatabaseHelper.columnProductAmount: _quantity,
+                                DatabaseHelper.columnProductObservations:
+                                    observations,
+                                DatabaseHelper.columnPizzaEdgeId: null,
+                                DatabaseHelper.columnProductSize:
+                                    sizePriceSelected
+                              };
+
+                              await widget.dbHelper
+                                  .insert(productRow, "cartItems");
+                            }
                           }
                           Navigator.pop(context);
                         }
@@ -829,15 +881,16 @@ class _ProductPageState extends State<ProductPage> {
     );
   }
 
-  Future<void> checkSizeAndRunDb(int cartId, Map<String, dynamic> cart, Map<String, dynamic> cartRow) async {
+  Future<void> checkSizeAndRunDb(int cartId, Map<String, dynamic> cart,
+      Map<String, dynamic> cartRow, {bool isTwoFlavoredPizza}) async {
     if (sizePriceSelected == "") {
+      //se não escolheu o tamanho
       showDialog(
           context: context,
           builder: (context) {
             return CupertinoAlertDialog(
               title: Text('Erro'),
-              content: Text(
-                  'Por favor, escolha o tamanho da Pizza'),
+              content: Text('Por favor, escolha o tamanho da Pizza'),
               actions: <Widget>[
                 FlatButton(
                     onPressed: () {
@@ -847,35 +900,124 @@ class _ProductPageState extends State<ProductPage> {
               ],
             );
           });
-    } else {//se tiver selecionado o tamanho
-      if (cart == null) {
-        cartId =
-            await widget.dbHelper.insert(cartRow, "cart");
-      } else {
-        cartId = cart['cartId'];
+    } else {
+      //se tiver selecionado o tamanho
+
+      if (isTwoFlavoredPizza!=null) {
+          //é pizza de 2 sabores
+          String observations = observationsController.text;
+          String pizzaEdgeId =
+          global_pizzaEdgeChosen != null ? global_pizzaEdgeChosen.id : null;
+
+          if (cart == null) {
+            //se não tem carrinho
+            cartId = await widget.dbHelper.insert(cartRow, "cart");
+          } else {
+            //se já tem carrinho
+            cartId = cart['cartId'];
+          }
+
+          List<Map<String, dynamic>> allCartItems =
+          await widget.dbHelper.retrieveAllCartItems(cartId);
+          int equalId = null;
+
+          allCartItems.forEach((item) {
+            if (item['productId'] == widget.productData.id &&
+                item['pizzaEdgeId'] == pizzaEdgeId &&
+                item['productSize'] == sizePriceSelected) {
+              if (item['product1Id']==product1ToReturn.id||item['product1Id']==product2ToReturn.id
+                  &&item['product2Id']==product1ToReturn.id||item['product2Id']==product2ToReturn.id) {
+                //se já tem item igual
+                equalId = item['cartItemsId'];
+              }
+            }
+          });
+
+          if (equalId != null) {
+            //se já tem item igual
+            Map<String, dynamic> productRow =
+            await widget.dbHelper.searchCartItem(equalId);
+            Map<String, dynamic> tempProductRow = new Map();
+            tempProductRow.addAll(productRow);
+            tempProductRow["productAmount"] =
+                tempProductRow["productAmount"] + 1;
+            await widget.dbHelper.update(
+                tempProductRow, "cartItems", "cartItemsId");
+          } else {
+            //se ainda não tem item igual
+
+            Map<String, dynamic> productRow = {
+              DatabaseHelper.columnCartId: cartId,
+              DatabaseHelper.columnProductId: widget.productData.id,
+              DatabaseHelper.columnProduct1Id: product1ToReturn.id,
+              DatabaseHelper.columnProduct2Id: product2ToReturn.id,
+              DatabaseHelper.columnProductCategory: widget.category,
+              DatabaseHelper.columnCategoryName: product1ToReturn.categoryName,
+              DatabaseHelper.columnProduct2CategoryName: product2ToReturn.categoryName,
+              DatabaseHelper.columnProductAmount: _quantity,
+              DatabaseHelper.columnProductObservations: observations,
+              DatabaseHelper.columnPizzaEdgeId: pizzaEdgeId,
+              DatabaseHelper.columnProductSize: sizePriceSelected,
+              DatabaseHelper.columnIsTwoFlavoredPizza: 1
+            };
+
+            await widget.dbHelper.insert(productRow, "cartItems");
+          }
+
+
+      }else{
+        String observations = observationsController.text;
+        String pizzaEdgeId =
+        global_pizzaEdgeChosen != null ? global_pizzaEdgeChosen.id : null;
+
+        if (cart == null) {
+          //se não tem carrinho
+          cartId = await widget.dbHelper.insert(cartRow, "cart");
+        } else {
+          //se já tem carrinho
+          cartId = cart['cartId'];
+        }
+
+        List<Map<String, dynamic>> allCartItems =
+        await widget.dbHelper.retrieveAllCartItems(cartId);
+        int equalId = null;
+
+        allCartItems.forEach((item) {
+          if (item['productId'] == widget.productData.id &&
+              item['pizzaEdgeId'] == pizzaEdgeId &&
+              item['productSize'] == sizePriceSelected) {
+            //se já tem item igual
+            equalId = item['cartItemsId'];
+          }
+        });
+
+        if (equalId != null) {
+          //se já tem item igual
+          Map<String, dynamic> productRow =
+          await widget.dbHelper.searchCartItem(equalId);
+          Map<String, dynamic> tempProductRow = new Map();
+          tempProductRow.addAll(productRow);
+          tempProductRow["productAmount"] =
+              tempProductRow["productAmount"] + 1;
+          await widget.dbHelper.update(
+              tempProductRow, "cartItems", "cartItemsId");
+        } else {
+          //se ainda não tem item igual
+
+          Map<String, dynamic> productRow = {
+            DatabaseHelper.columnCartId: cartId,
+            DatabaseHelper.columnProductId: widget.productData.id,
+            DatabaseHelper.columnProductCategory: widget.category,
+            DatabaseHelper.columnCategoryName: widget.categoryName,
+            DatabaseHelper.columnProductAmount: _quantity,
+            DatabaseHelper.columnProductObservations: observations,
+            DatabaseHelper.columnPizzaEdgeId: pizzaEdgeId,
+            DatabaseHelper.columnProductSize: sizePriceSelected
+          };
+
+          await widget.dbHelper.insert(productRow, "cartItems");
+        }
       }
-
-      String observations = observationsController.text;
-      String pizzaEdgeId =
-      global_pizzaEdgeChosen != null
-          ? global_pizzaEdgeChosen.id
-          : null;
-
-      Map<String, dynamic> productRow = {
-        DatabaseHelper.columnCartId: cartId,
-        DatabaseHelper.columnProductId:
-        widget.productData.id,
-        DatabaseHelper.columnProductCategory: widget.category,
-        DatabaseHelper.columnCategoryName: widget.categoryName,
-        DatabaseHelper.columnProductAmount: _quantity,
-        DatabaseHelper.columnProductObservations: observations,
-        DatabaseHelper.columnPizzaEdgeId: pizzaEdgeId,
-        DatabaseHelper.columnProductSize:
-        sizePriceSelected
-      };
-
-      await widget.dbHelper
-          .insert(productRow, "cartItems");
     }
   }
 }

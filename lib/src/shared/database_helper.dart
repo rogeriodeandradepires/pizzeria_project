@@ -17,9 +17,11 @@ class DatabaseHelper {
   static final columncartItemsId = 'cartItemsId';
   static final columnCategory = 'category';
   static final columnCategoryName = 'categoryName';
+  static final columnProduct2CategoryName = 'product2CategoryName';
   static final columnIsLiked = 'isUserLiked';
   static final columnUserId = 'userId';
   static final columnProductId = 'productId';
+  static final columnProduct1Id = 'product1Id';
   static final columnProduct2Id = 'product2Id';
   static final columnPizzaEdgeId = 'pizzaEdgeId';
   static final columnDateRegister = 'dateRegister';
@@ -79,7 +81,9 @@ class DatabaseHelper {
             $columnCartId INTEGER NOT NULL,
             $columnProductCategory TEXT NOT NULL,
             $columnCategoryName TEXT NOT NULL,
+            $columnProduct2CategoryName TEXT,
             $columnProductId TEXT NOT NULL,
+            $columnProduct1Id TEXT,
             $columnProduct2Id TEXT,
             $columnProductObservations TEXT,
             $columnPizzaEdgeId TEXT,
@@ -163,6 +167,21 @@ class DatabaseHelper {
     return retorno;
   }
 
+  Future<Map<String, dynamic>> searchCartItem(int cartItemId) async {
+    Database db = await instance.database;
+    List<Map<String, dynamic>> records = await db.rawQuery("SELECT * FROM $cartItemsTable WHERE $columncartItemsId=\"$cartItemId\"");
+
+//    print("records="+records.first['cartId'].toString());
+
+    var retorno = null;
+
+    if (records.length!=0) {
+      retorno = records.first;
+    }
+
+    return retorno;
+  }
+
   // All of the methods (insert, query, update, delete) can also be done using
   // raw SQL commands. This method uses a raw query to give the row count.
   Future<int> queryRowCount() async {
@@ -187,8 +206,8 @@ class DatabaseHelper {
 
   // Deletes the row specified by the id. The number of affected rows is
   // returned. This should be 1 as long as the row exists.
-  Future<int> delete(int id) async {
+  Future<int> delete(int id, String table, String column) async {
     Database db = await instance.database;
-    return await db.delete(favoritesTable, where: '$columnId = ?', whereArgs: [id]);
+    return await db.delete(table, where: '$column = ?', whereArgs: [id]);
   }
 }

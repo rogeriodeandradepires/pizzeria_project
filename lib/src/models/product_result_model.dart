@@ -2,6 +2,7 @@ class Product {
   String description;
   String ingredients;
   String category;
+  String categoryName;
   String id;
   String imageUrl;
   String notes;
@@ -16,6 +17,7 @@ class Product {
     this.description,
     this.ingredients,
     this.category,
+    this.categoryName,
     this.id,
     this.imageUrl,
     this.notes,

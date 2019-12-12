@@ -122,13 +122,22 @@ class _CartPageState extends State<CartPage> {
                       height: MediaQuery.of(context).size.height * 0.7,
                       child: StreamBuilder(
                         builder: (context, itemsCount) {
-                          if (itemsCount == 0) {
+//                          print(itemsCount.data);
+
+                          if (itemsCount.data == null) {
+                            return Container(
+                              child: _showOverlay(context),
+                            );
+                          }
+
+                          if (itemsCount.data == 0) {
+                            totalPrice_bloc.totalPriceSink.add("0,00");
                             return Container(
                                 height: 500,
-                                width: MediaQuery.of(context).size.width,
+                                margin: EdgeInsets.only(right: 5),
                                 child: Center(
                                     child: Text(
-                                        'Nenhum item disponível neste momento.',
+                                        'Nenhum item no carrinho neste momento.',
                                         textAlign: TextAlign.center,
                                         style: noneItemText)));
                           } else {
@@ -141,16 +150,6 @@ class _CartPageState extends State<CartPage> {
 //                                  List<Widget> allCartItemsWidget = snapshot.data;
 
                                     if (snapshot.data != null) {
-//                                    List<Widget> columnChildren = new List();
-//                                    columnChildren.add(Text("Items", style: h4));
-//
-//                                    for (int i = 0; i < finalAllCartItemsMap.length; i++) {
-//                                      CartItem tempProduct = CartItem.fromJson(
-//                                          finalAllCartItemsMap[i]);
-//                                      tempProduct.productCategory =
-//                                      finalAllCartItemsMap[i]['productCategory'];
-//                                    }
-
                                       ListView createdLists = new ListView(
                                         controller: null,
                                         shrinkWrap: true,
@@ -230,9 +229,9 @@ class _CartPageState extends State<CartPage> {
   Future<int> retrieveCartId() async {
     Map<String, dynamic> cart =
         await widget.dbHelper.searchCart(widget.user.uid);
-    cartId = await cart['cartId'];
+    cartId = cart != null ? await cart['cartId'] : null;
     retrieveAllCartItems();
-    return cart['cartId'];
+    return cartId;
   }
 
   Future<Widget> buildCartItemsList() async {
@@ -250,14 +249,73 @@ class _CartPageState extends State<CartPage> {
     for (int i = 0; i < finalAllCartItemsMap.length; i++) {
       CartItem tempProduct = CartItem.fromJson(finalAllCartItemsMap[i]);
       tempProduct.productCategory = finalAllCartItemsMap[i]['productCategory'];
+      Product thisProduct;
 
       if (finalAllCartItemsMap[i]['isTwoFlavoredPizza'] == 1) {
+        //se for pizza de 2 sabores
+        thisProduct = await getProduct(
+            category: finalAllCartItemsMap[i]['categoryName'],
+            id: finalAllCartItemsMap[i]['product1Id'],
+            productOrder: "product1");
+        Product product2 = await getProduct(
+            category: finalAllCartItemsMap[i]['product2CategoryName'],
+            id: finalAllCartItemsMap[i]['product2Id'],
+            productOrder: "product2");
+
+        Product retrievedPizzaEdge;
+
+        if (finalAllCartItemsMap[i]['pizzaEdgeId'] != null) {
+          retrievedPizzaEdge = await getProduct(
+              id: finalAllCartItemsMap[i]['pizzaEdgeId'],
+              category: 'pizza_edges');
+        }
+        double tempPizzaEdgePrice = 0.00;
+        double higherPrice;
+
+        if (finalAllCartItemsMap[i]['productSize'] == "Broto") {
+          higherPrice = max(double.parse(thisProduct.price_broto),
+              double.parse(product2.price_broto));
+          if (retrievedPizzaEdge != null) {
+            allPizzaEdgesProduct.add(retrievedPizzaEdge);
+            tempPizzaEdgePrice = double.parse(retrievedPizzaEdge.price_broto);
+          }
+        } else {
+          higherPrice = max(double.parse(thisProduct.price_inteira),
+              double.parse(product2.price_inteira));
+
+          thisProduct.description =
+              thisProduct.description + " + " + product2.description;
+
+          if (retrievedPizzaEdge != null) {
+            allPizzaEdgesProduct.add(retrievedPizzaEdge);
+            tempPizzaEdgePrice = double.parse(retrievedPizzaEdge.price_inteira);
+          }
+        }
+
+        double tempProductPrice =
+            higherPrice * finalAllCartItemsMap[i]['productAmount'];
+        String oldTotalPrice = totalPrice.replaceAll(",", ".");
+        totalPrice = (double.parse(oldTotalPrice) +
+                tempProductPrice +
+                tempPizzaEdgePrice)
+            .toStringAsFixed(2);
+
+        if (finalAllCartItemsMap[i]['productSize'] == "Broto") {
+          thisProduct.price_broto =
+              (tempProductPrice + tempPizzaEdgePrice).toStringAsFixed(2);
+        } else {
+          thisProduct.price_inteira =
+              (tempProductPrice + tempPizzaEdgePrice).toStringAsFixed(2);
+        }
+
+        totalPrice_bloc.totalPriceSink.add(totalPrice.replaceAll(".", ","));
       } else {
-        Product thisProduct;
+        //se não for pizza de 2 sabores
 
         thisProduct = await getProduct(map: finalAllCartItemsMap[i]);
 
-        if (finalAllCartItemsMap[i]['productSize'] == null) {
+        if (finalAllCartItemsMap[i]['productSize'] == null ||
+            finalAllCartItemsMap[i]['productSize'] == "") {
           //se não é pizza
           double tempPrice = double.parse(thisProduct.price) *
               finalAllCartItemsMap[i]['productAmount'];
@@ -279,7 +337,6 @@ class _CartPageState extends State<CartPage> {
             retrievedPizzaEdge = await getProduct(
                 id: finalAllCartItemsMap[i]['pizzaEdgeId'],
                 category: 'pizza_edges');
-//            pizzaEdgePriceBlocs.elementAt(i).pizzaEdgePriceBlocSink//                .add(retrievedPizzaEdge);
           }
           double tempPizzaEdgePrice = 0.00;
           if (finalAllCartItemsMap[i]['productSize'] == "Broto") {
@@ -291,7 +348,6 @@ class _CartPageState extends State<CartPage> {
               totalPrice = (double.parse(oldTotalPrice) + tempPizzaEdgePrice)
                   .toStringAsFixed(2);
 
-              //retrievedPizzaEdge.price_broto = tempPizzaEdgePrice.toStringAsFixed(2);
               allPizzaEdgesProduct.add(retrievedPizzaEdge);
 
               totalPrice_bloc.totalPriceSink
@@ -344,18 +400,17 @@ class _CartPageState extends State<CartPage> {
             }
           }
         }
-
-        Widget thisFuture = Container(
-          width: MediaQuery.of(context).size.width,
-          child: cartItem(context, thisProduct,
-              index: i,
-              size: finalAllCartItemsMap[i]['productSize'],
-              ammount: finalAllCartItemsMap[i],
-              cartItemMap: allCartItemsMap[i]),
-        );
-
-        columnChildren.add(thisFuture);
       }
+      Widget thisFuture = Container(
+        width: MediaQuery.of(context).size.width,
+        child: cartItem(context, thisProduct,
+            index: i,
+            size: finalAllCartItemsMap[i]['productSize'],
+            ammount: finalAllCartItemsMap[i],
+            cartItemMap: allCartItemsMap[i]),
+      );
+
+      columnChildren.add(thisFuture);
     }
 
     columnChildren.add(generateDummyListItem(60));
@@ -364,10 +419,23 @@ class _CartPageState extends State<CartPage> {
   }
 
   Future<Product> getProduct(
-      {Map<String, dynamic> map, String id, String category}) async {
+      {Map<String, dynamic> map,
+      String id,
+      String category,
+      String productOrder}) async {
     if (map != null) {
-      category = map['categoryName'];
-      id = map['productId'];
+      if (map['isTwoFlavoredPizza'] == 1) {
+        if (productOrder == "product1") {
+          id = map['product1Id'];
+          category = map['categoryName'];
+        } else {
+          id = map['product2Id'];
+          category = map['product2CategoryName'];
+        }
+      } else {
+        id = map['productId'];
+        category = map['categoryName'];
+      }
     }
 
     var queryParameters = {
@@ -448,6 +516,121 @@ class _CartPageState extends State<CartPage> {
       Map<String, dynamic> ammount,
       Map<String, dynamic> cartItemMap,
       int index) {
+
+    List<Widget> columnChildren = new List();
+    columnChildren.add(Text(product.description, style: minorFoodNameText));
+
+    if (cartItemMap['pizzaEdgeId'] == null) {
+      columnChildren.add(Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              size != null
+                  ? Text(size, style: minorCartItemText)
+                  : Container(),
+              getItemPrice(
+                  size,
+                  product,
+                  finalAllCartItemsMap[finalAllCartItemsMap
+                      .indexOf(ammount)]["productAmount"]),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              InkWell(
+                onTap: () async {
+                  int index =
+                  finalAllCartItemsMap.indexOf(ammount);
+                  dynamic value = finalAllCartItemsMap[index]
+                  ["productAmount"];
+                  value = value - 1;
+
+                  if (value == 0) {
+                    await widget.dbHelper.delete(
+                        finalAllCartItemsMap[index]
+                        ['cartItemsId'],
+                        "cartItems",
+                        "cartItemsId");
+                  } else {
+                    Map<String, dynamic> newMap = new Map();
+                    newMap.addAll(ammount);
+                    newMap["productAmount"] = value;
+                    await widget.dbHelper.update(
+                        newMap, "cartItems", "cartItemsId");
+                  }
+
+                  setState(() {
+                    retrieveAllCartItems();
+                  });
+                },
+                child: Container(
+                  width: 30,
+                  height: 30,
+                  margin: EdgeInsets.only(right: 5),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    borderRadius:
+                    BorderRadius.all(Radius.circular(4.0)),
+                    border: Border.all(color: Colors.grey[500]),
+                  ),
+                  child: Icon(Icons.remove),
+                ),
+              ),
+              Container(
+                margin: EdgeInsets.only(left: 5, right: 10),
+                child: Text(ammount['productAmount'].toString(),
+                    style: h3),
+              ),
+              InkWell(
+                onTap: () async {
+                  int index =
+                  finalAllCartItemsMap.indexOf(ammount);
+                  dynamic value = finalAllCartItemsMap[index]
+                  ["productAmount"];
+                  value = value + 1;
+                  Map<String, dynamic> newMap = new Map();
+                  newMap.addAll(ammount);
+                  newMap["productAmount"] = value;
+                  await widget.dbHelper
+                      .update(newMap, "cartItems", "cartItemsId");
+
+                  setState(() {
+                    retrieveAllCartItems();
+                  });
+                },
+                child: Container(
+                  width: 30,
+                  height: 30,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    borderRadius:
+                    BorderRadius.all(Radius.circular(4.0)),
+                    border: Border.all(color: Colors.grey[500]),
+                  ),
+                  child: Icon(Icons.add),
+                ),
+              )
+            ],
+          ),
+        ],
+      ));
+    }else{
+      columnChildren.add(checkPizzaEdge(size, ammount, product, cartItemMap, index));
+    }
+
+    if (cartItemMap['productObservations'] != null && cartItemMap['productObservations'] != "") {
+      columnChildren.add(Container(
+        margin: EdgeInsets.only(top: 5,right: 4,bottom: 2),
+        child: Text(cartItemMap['productObservations'],
+          style: minorCartItemObservationsText, textAlign: TextAlign.justify,),
+      ));
+    }
+
     return Wrap(
       direction: Axis.horizontal,
       spacing: 2.0,
@@ -478,7 +661,9 @@ class _CartPageState extends State<CartPage> {
                   child: ClipRRect(
                     borderRadius: new BorderRadius.circular(8.0),
                     child: Image.network(
-                      product.imageUrl,
+                      cartItemMap['isTwoFlavoredPizza'] == 1
+                          ? "https://storage.googleapis.com/dom-marino-ws.appspot.com/categories/custom/two_flavored_pizza_image.png"
+                          : product.imageUrl,
                       fit: BoxFit.contain,
                     ),
                   )),
@@ -490,100 +675,7 @@ class _CartPageState extends State<CartPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(product.description, style: minorFoodNameText),
-              cartItemMap['pizzaEdgeId'] == null
-                  ? Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            size != null
-                                ? Text(size, style: minorCartItemText)
-                                : Container(),
-                            getItemPrice(
-                                size,
-                                product,
-                                finalAllCartItemsMap[finalAllCartItemsMap
-                                    .indexOf(ammount)]["productAmount"]),
-                          ],
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: <Widget>[
-                            InkWell(
-                              onTap: () async {
-                                int index =
-                                    finalAllCartItemsMap.indexOf(ammount);
-                                dynamic value = finalAllCartItemsMap[index]
-                                    ["productAmount"];
-                                value = value - 1;
-                                Map<String, dynamic> newMap = new Map();
-                                newMap.addAll(ammount);
-                                newMap["productAmount"] = value;
-                                await widget.dbHelper
-                                    .update(newMap, "cartItems", "cartItemsId");
-
-                                setState(() {
-                                  retrieveAllCartItems();
-                                });
-                              },
-                              child: Container(
-                                width: 30,
-                                height: 30,
-                                margin: EdgeInsets.only(right: 5),
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(4.0)),
-                                  border: Border.all(color: Colors.grey[500]),
-                                ),
-                                child: Icon(Icons.remove),
-                              ),
-                            ),
-                            Container(
-                              margin: EdgeInsets.only(left: 5, right: 10),
-                              child: Text(ammount['productAmount'].toString(),
-                                  style: h3),
-                            ),
-                            InkWell(
-                              onTap: () async {
-                                int index =
-                                    finalAllCartItemsMap.indexOf(ammount);
-                                dynamic value = finalAllCartItemsMap[index]
-                                    ["productAmount"];
-                                value = value + 1;
-                                Map<String, dynamic> newMap = new Map();
-                                newMap.addAll(ammount);
-                                newMap["productAmount"] = value;
-                                await widget.dbHelper
-                                    .update(newMap, "cartItems", "cartItemsId");
-
-                                setState(() {
-                                  retrieveAllCartItems();
-                                });
-                              },
-                              child: Container(
-                                width: 30,
-                                height: 30,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(4.0)),
-                                  border: Border.all(color: Colors.grey[500]),
-                                ),
-                                child: Icon(Icons.add),
-                              ),
-                            )
-                          ],
-                        ),
-                      ],
-                    )
-                  : checkPizzaEdge(size, ammount, product, cartItemMap, index),
-            ],
+            children: columnChildren,
           ),
         ),
       ],
@@ -595,7 +687,7 @@ class _CartPageState extends State<CartPage> {
 
     Widget retorno;
 
-    if (size == null) {
+    if (size == null || size == "") {
       if (product.price != null) {
         tempPrice = double.parse(product.price) * ammount;
 
@@ -645,232 +737,108 @@ class _CartPageState extends State<CartPage> {
 
   Widget checkPizzaEdge(String size, Map<String, dynamic> ammount,
       Product pizza, Map<String, dynamic> cartItemMap, int index) {
-    if (finalAllCartItemsMap[index]['pizzaEdgeId'] != null) {
-      //tem borda
+    String pizzaEdgeDescription;
 
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Container(
-                width: MediaQuery.of(context).size.width * 0.35,
-                child: Text(allPizzaEdgesProduct.elementAt(index).description,
-                    style: minorPizzaEdgeText, overflow: TextOverflow.ellipsis),
-              ),
-              size != null ? Text(size, style: minorCartItemText) : Container(),
-              getItemPrice(
-                  size,
-                  pizza,
-                  finalAllCartItemsMap[finalAllCartItemsMap.indexOf(ammount)]
-                      ["productAmount"]),
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              InkWell(
-                onTap: () async {
-                  int thisIndex = finalAllCartItemsMap.indexOf(ammount);
-                  dynamic value =
-                      finalAllCartItemsMap[thisIndex]["productAmount"];
-                  value = value - 1;
+    allPizzaEdgesProduct.forEach((pizzaEdge) {
+      if (pizzaEdge.id == cartItemMap["pizzaEdgeId"]) {
+        pizzaEdgeDescription = pizzaEdge.description;
+      }
+    });
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: <Widget>[
+        Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Container(
+              width: MediaQuery.of(context).size.width * 0.35,
+              child: Text(pizzaEdgeDescription,
+                  style: minorPizzaEdgeText, overflow: TextOverflow.ellipsis),
+            ),
+            size != null ? Text(size, style: minorCartItemText) : Container(),
+            getItemPrice(
+                size,
+                pizza,
+                finalAllCartItemsMap[finalAllCartItemsMap.indexOf(ammount)]
+                    ["productAmount"]),
+          ],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            InkWell(
+              onTap: () async {
+                int thisIndex = finalAllCartItemsMap.indexOf(ammount);
+                dynamic value =
+                    finalAllCartItemsMap[thisIndex]["productAmount"];
+                value = value - 1;
+
+                if (value == 0) {
+                  await widget.dbHelper.delete(
+                      finalAllCartItemsMap[index]['cartItemsId'],
+                      "cartItems",
+                      "cartItemsId");
+                } else {
                   Map<String, dynamic> newMap = new Map();
                   newMap.addAll(ammount);
                   newMap["productAmount"] = value;
                   await widget.dbHelper
                       .update(newMap, "cartItems", "cartItemsId");
+                }
 
-                  setState(() {
-                    retrieveAllCartItems();
-                  });
-                },
-                child: Container(
-                  width: 30,
-                  height: 30,
-                  margin: EdgeInsets.only(right: 5),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.all(Radius.circular(4.0)),
-                    border: Border.all(color: Colors.grey[500]),
-                  ),
-                  child: Icon(Icons.remove),
+                setState(() {
+                  retrieveAllCartItems();
+                });
+              },
+              child: Container(
+                width: 30,
+                height: 30,
+                margin: EdgeInsets.only(right: 5),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(4.0)),
+                  border: Border.all(color: Colors.grey[500]),
                 ),
+                child: Icon(Icons.remove),
               ),
-              Container(
-                margin: EdgeInsets.only(left: 5, right: 10),
-                child: Text(ammount['productAmount'].toString(), style: h3),
-              ),
-              InkWell(
-                onTap: () async {
-                  int thisIndex = finalAllCartItemsMap.indexOf(ammount);
-                  dynamic value =
-                      finalAllCartItemsMap[thisIndex]["productAmount"];
-                  value = value + 1;
-                  Map<String, dynamic> newMap = new Map();
-                  newMap.addAll(ammount);
-                  newMap["productAmount"] = value;
-                  await widget.dbHelper
-                      .update(newMap, "cartItems", "cartItemsId");
+            ),
+            Container(
+              margin: EdgeInsets.only(left: 5, right: 10),
+              child: Text(ammount['productAmount'].toString(), style: h3),
+            ),
+            InkWell(
+              onTap: () async {
+                int thisIndex = finalAllCartItemsMap.indexOf(ammount);
+                dynamic value =
+                    finalAllCartItemsMap[thisIndex]["productAmount"];
+                value = value + 1;
+                Map<String, dynamic> newMap = new Map();
+                newMap.addAll(ammount);
+                newMap["productAmount"] = value;
+                await widget.dbHelper
+                    .update(newMap, "cartItems", "cartItemsId");
 
-                  setState(() {
-                    retrieveAllCartItems();
-                  });
-                },
-                child: Container(
-                  width: 30,
-                  height: 30,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.all(Radius.circular(4.0)),
-                    border: Border.all(color: Colors.grey[500]),
-                  ),
-                  child: Icon(Icons.add),
+                setState(() {
+                  retrieveAllCartItems();
+                });
+              },
+              child: Container(
+                width: 30,
+                height: 30,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(4.0)),
+                  border: Border.all(color: Colors.grey[500]),
                 ),
-              )
-            ],
-          ),
-        ],
-      );
-    } else {
-      //não tem borda
-
-    }
+                child: Icon(Icons.add),
+              ),
+            )
+          ],
+        ),
+      ],
+    );
   }
-
-//  Widget checkPizzaEdgeOld(String size, Map<String, dynamic> ammount,
-//      Product pizza, Map<String, dynamic> cartItemMap, int index) {
-//    return StreamBuilder(
-//      stream: pizzaEdgePriceBlocs.elementAt(index).pizzaEdgePriceBlocStream,
-//      builder: (context, productSnap) {
-//        if (productSnap.connectionState == ConnectionState.none &&
-//            productSnap.hasData == null) {
-//          return Container();
-//        } else if (productSnap.hasData) {
-//          String tempPrice;
-//          if (cartItemMap['productSize'] == null) {
-//            tempPrice = (double.parse(pizza.price) +
-//                    double.parse(productSnap.data.price))
-//                .toStringAsFixed(2);
-////            pizza.price = tempPrice;
-//          } else {
-//            if (cartItemMap['productSize'] == "Broto") {
-//              tempPrice = (double.parse(pizza.price_broto) +
-//                      double.parse(productSnap.data.price_broto))
-//                  .toStringAsFixed(2);
-////              pizza.price_broto = tempPrice;
-//            } else if (cartItemMap['productSize'] == "Inteira") {
-//              tempPrice = (double.parse(pizza.price_inteira) +
-//                      double.parse(productSnap.data.price_inteira))
-//                  .toStringAsFixed(2);
-////              pizza.price_inteira = tempPrice;
-//            }
-//          }
-//
-////          String oldTotalPrice =
-////              (double.parse(totalPrice) + double.parse(tempPrice))
-////                  .toStringAsFixed(2);
-//
-////          totalPrice_bloc.totalPriceSink.add(oldTotalPrice.replaceAll(".", ","));
-//
-//          return Row(
-//            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//            children: <Widget>[
-//              Column(
-//                mainAxisAlignment: MainAxisAlignment.start,
-//                crossAxisAlignment: CrossAxisAlignment.start,
-//                children: <Widget>[
-//                  Container(
-//                    width: MediaQuery.of(context).size.width * 0.35,
-//                    child: Text(productSnap.data.description,
-//                        style: minorPizzaEdgeText,
-//                        overflow: TextOverflow.ellipsis),
-//                  ),
-//                  size != null
-//                      ? Text(size, style: minorCartItemText)
-//                      : Container(),
-//                  getItemPrice(
-//                      size,
-//                      pizza,
-//                      finalAllCartItemsMap[finalAllCartItemsMap
-//                          .indexOf(ammount)]["productAmount"]),
-//                ],
-//              ),
-//              Row(
-//                mainAxisAlignment: MainAxisAlignment.center,
-//                crossAxisAlignment: CrossAxisAlignment.center,
-//                children: <Widget>[
-//                  InkWell(
-//                    onTap: () async {
-//                      int thisIndex = finalAllCartItemsMap.indexOf(ammount);
-//                      dynamic value =
-//                          finalAllCartItemsMap[thisIndex]["productAmount"];
-//                      value = value - 1;
-//                      Map<String, dynamic> newMap = new Map();
-//                      newMap.addAll(ammount);
-//                      newMap["productAmount"] = value;
-//                      await widget.dbHelper
-//                          .update(newMap, "cartItems", "cartItemsId");
-//
-//
-//                      setState(() {
-//                        retrieveAllCartItems();
-//                      });
-//                    },
-//                    child: Container(
-//                      width: 30,
-//                      height: 30,
-//                      margin: EdgeInsets.only(right: 5),
-//                      alignment: Alignment.center,
-//                      decoration: BoxDecoration(
-//                        borderRadius: BorderRadius.all(Radius.circular(4.0)),
-//                        border: Border.all(color: Colors.grey[500]),
-//                      ),
-//                      child: Icon(Icons.remove),
-//                    ),
-//                  ),
-//                  Container(
-//                    margin: EdgeInsets.only(left: 5, right: 10),
-//                    child: Text(ammount['productAmount'].toString(), style: h3),
-//                  ),
-//                  InkWell(
-//                    onTap: () async {
-//                      int thisIndex = finalAllCartItemsMap.indexOf(ammount);
-//                      dynamic value =
-//                          finalAllCartItemsMap[thisIndex]["productAmount"];
-//                      value = value + 1;
-//                      Map<String, dynamic> newMap = new Map();
-//                      newMap.addAll(ammount);
-//                      newMap["productAmount"] = value;
-//                      await widget.dbHelper
-//                          .update(newMap, "cartItems", "cartItemsId");
-//
-//
-//                      setState(() {
-//                        retrieveAllCartItems();
-//                      });
-//                    },
-//                    child: Container(
-//                      width: 30,
-//                      height: 30,
-//                      alignment: Alignment.center,
-//                      decoration: BoxDecoration(
-//                        borderRadius: BorderRadius.all(Radius.circular(4.0)),
-//                        border: Border.all(color: Colors.grey[500]),
-//                      ),
-//                      child: Icon(Icons.add),
-//                    ),
-//                  )
-//                ],
-//              ),
-//            ],
-//          );
-//        }
-//        return Container();
-//      },
-//    );
-//  }
 }

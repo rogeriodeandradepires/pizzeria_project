@@ -147,8 +147,9 @@ class _ChoosePizzaDialogState extends State<ChoosePizzaDialog>  with TickerProvi
 
                         if (index < productSnap.data.length) {
                           product = productSnap.data[index];
-
                           return foodItem(context, product, onTapped: () {
+                            print(product.id);
+                            product.categoryName = selectedCategory;
                             productToReturn = product;
                             widget.onReturnedProductChanged(productToReturn);
                             Navigator.of(context, rootNavigator: true).pop();
