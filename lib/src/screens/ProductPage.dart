@@ -6,6 +6,7 @@ import 'package:dom_marino_app/src/shared/database_helper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:page_transition/page_transition.dart';
 import '../shared/styles.dart';
 import '../shared/colors.dart';
 import '../shared/partials.dart';
@@ -59,6 +60,8 @@ class _ProductPageState extends State<ProductPage> {
   bool hasObservations = false;
   String sizePriceSelected = "";
 
+  BuildContext globalContext;
+
   TextEditingController observationsController = new TextEditingController();
 
 
@@ -70,6 +73,7 @@ class _ProductPageState extends State<ProductPage> {
 
   @override
   Widget build(BuildContext context) {
+    globalContext = context;
     //página grande do produto
     return Scaffold(
         backgroundColor: primaryColor,
@@ -82,54 +86,57 @@ class _ProductPageState extends State<ProductPage> {
           ),
           title: Text(widget.productData.description, style: h2),
         ),
-        body: ListView(
-          children: <Widget>[
-            Container(
-              //container de fora
-              color: primaryColor,
-              margin: EdgeInsets.only(top: 20),
-              child: Stack(
-                children: <Widget>[
-                  Align(
-                    alignment: Alignment.center,
-                    child: Container(
-                      margin: EdgeInsets.only(top: 100, bottom: 100),
-                      padding: EdgeInsets.only(
-                          top: 60, bottom: 20, left: 10, right: 10),
-                      width: MediaQuery.of(context).size.width * 0.85,
-                      child: getPageColumn(),
-                      decoration: BoxDecoration(
-                          image: new DecorationImage(
-                            image: new AssetImage("images/main_bg.png"),
-                            fit: BoxFit.cover,
-                          ),
-                          borderRadius: BorderRadius.circular(10),
-                          boxShadow: [
-                            BoxShadow(
-                                blurRadius: 15,
-                                spreadRadius: 5,
-                                color: Color.fromRGBO(0, 0, 0, .05))
-                          ]),
+        body: new Builder(builder: (BuildContext context) {
+          globalContext = context;
+          return ListView(
+            children: <Widget>[
+              Container(
+                //container de fora
+                color: primaryColor,
+                margin: EdgeInsets.only(top: 20),
+                child: Stack(
+                  children: <Widget>[
+                    Align(
+                      alignment: Alignment.center,
+                      child: Container(
+                        margin: EdgeInsets.only(top: 100, bottom: 100),
+                        padding: EdgeInsets.only(
+                            top: 60, bottom: 20, left: 10, right: 10),
+                        width: MediaQuery.of(context).size.width * 0.85,
+                        child: getPageColumn(),
+                        decoration: BoxDecoration(
+                            image: new DecorationImage(
+                              image: new AssetImage("images/main_bg.png"),
+                              fit: BoxFit.cover,
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: [
+                              BoxShadow(
+                                  blurRadius: 15,
+                                  spreadRadius: 5,
+                                  color: Color.fromRGBO(0, 0, 0, .05))
+                            ]),
+                      ),
                     ),
-                  ),
-                  Align(
-                    alignment: Alignment.center,
-                    child: SizedBox(
-                      width: 200,
-                      height: 180,
-                      //box de todos os conteudos da imagem na pagina do produto
-                      child: foodItem(context, widget.productData,
-                          isProductPage: true,
-                          onTapped: () {},
-                          imgWidth: 200,
-                          onLike: () {}),
-                    ),
-                  )
-                ],
-              ),
-            )
-          ],
-        ));
+                    Align(
+                      alignment: Alignment.center,
+                      child: SizedBox(
+                        width: 200,
+                        height: 180,
+                        //box de todos os conteudos da imagem na pagina do produto
+                        child: foodItem(context, widget.productData,
+                            isProductPage: true,
+                            onTapped: () {},
+                            imgWidth: 200,
+                            onLike: () {}),
+                      ),
+                    )
+                  ],
+                ),
+              )
+            ],
+          );
+        }));
   }
 
   Widget checkSizes(BuildContext context, Product product) {
@@ -318,21 +325,11 @@ class _ProductPageState extends State<ProductPage> {
         onTap: () {
           if (product.description.contains("Escolha")) {
             if (product1ToReturn == null || product2ToReturn == null) {
-              showDialog(
-                  context: context,
-                  builder: (context) {
-                    return CupertinoAlertDialog(
-                      title: Text('Erro'),
-                      content: Text('Por favor, escolha os sabores da Pizza'),
-                      actions: <Widget>[
-                        FlatButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                            },
-                            child: Text('Ok')),
-                      ],
-                    );
-                  });
+              Scaffold.of(globalContext).showSnackBar(
+                  SnackBar(content: Text("Por favor, escolha os sabores da Pizza."),
+                    backgroundColor: Colors.redAccent,
+                    duration: Duration(seconds: 3),)
+              );
             } else {
               showPizzaEdgeDialog();
             }
@@ -789,30 +786,35 @@ class _ProductPageState extends State<ProductPage> {
                           if (widget.category.contains("Pizza")) {
                             //se é pizza
                             if (!widget.category.contains("Sabores")) {
-                              //se Não é two_flavored_pizza
-                              checkSizeAndRunDb(cartId, cart, cartRow);
+                              if (sizePriceSelected=="") {
+                                Scaffold.of(globalContext).showSnackBar(
+                                    SnackBar(content: Text("Por favor, escolha o tamanho da Pizza."),
+                                      backgroundColor: Colors.redAccent,
+                                      duration: Duration(seconds: 3),)
+                                );
+                              }else{
+                                //se Não é two_flavored_pizza
+                                checkSizeAndRunDb(cartId, cart, cartRow);
+                              }
                             } else {
                               //se é Pizza de 2 Sabores
                               if (product1ToReturn == null ||
                                   product2ToReturn == null) {
-                                showDialog(
-                                    context: context,
-                                    builder: (context) {
-                                      return CupertinoAlertDialog(
-                                        title: Text('Erro'),
-                                        content: Text(
-                                            'Por favor, escolha os sabores da Pizza'),
-                                        actions: <Widget>[
-                                          FlatButton(
-                                              onPressed: () {
-                                                Navigator.pop(context);
-                                              },
-                                              child: Text('Ok')),
-                                        ],
-                                      );
-                                    });
+                                Scaffold.of(globalContext).showSnackBar(
+                                    SnackBar(content: Text("Por favor, escolha os sabores da Pizza."),
+                                      backgroundColor: Colors.redAccent,
+                                      duration: Duration(seconds: 3),)
+                                );
                               } else {
-                                checkSizeAndRunDb(cartId, cart, cartRow, isTwoFlavoredPizza: true);
+                                if (sizePriceSelected=="") {
+                                  Scaffold.of(globalContext).showSnackBar(
+                                      SnackBar(content: Text("Por favor, escolha o tamanho da Pizza."),
+                                        backgroundColor: Colors.redAccent,
+                                        duration: Duration(seconds: 3),)
+                                  );
+                                }else{
+                                  checkSizeAndRunDb(cartId, cart, cartRow, isTwoFlavoredPizza: true);
+                                }
                               }
                             }
                           } else {
@@ -870,8 +872,8 @@ class _ProductPageState extends State<ProductPage> {
                               await widget.dbHelper
                                   .insert(productRow, "cartItems");
                             }
+                            Navigator.pop(context);
                           }
-                          Navigator.pop(context);
                         }
                       : () {
                           Navigator.pushNamed(context, '/signin');
@@ -885,21 +887,11 @@ class _ProductPageState extends State<ProductPage> {
       Map<String, dynamic> cartRow, {bool isTwoFlavoredPizza}) async {
     if (sizePriceSelected == "") {
       //se não escolheu o tamanho
-      showDialog(
-          context: context,
-          builder: (context) {
-            return CupertinoAlertDialog(
-              title: Text('Erro'),
-              content: Text('Por favor, escolha o tamanho da Pizza'),
-              actions: <Widget>[
-                FlatButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: Text('Ok')),
-              ],
-            );
-          });
+      Scaffold.of(globalContext).showSnackBar(
+          SnackBar(content: Text("Por favor, escolha o tamanho da Pizza."),
+            backgroundColor: Colors.redAccent,
+            duration: Duration(seconds: 3),)
+      );
     } else {
       //se tiver selecionado o tamanho
 
@@ -1019,5 +1011,6 @@ class _ProductPageState extends State<ProductPage> {
         }
       }
     }
+    Navigator.pop(globalContext);
   }
 }

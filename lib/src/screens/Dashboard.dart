@@ -10,12 +10,11 @@ import '../shared/styles.dart';
 import '../shared/colors.dart';
 import '../shared/fryo_icons.dart';
 import './ProductPage.dart';
-import '../shared/ProductOld.dart';
 import '../shared/partials.dart';
 import 'package:http/http.dart';
 import 'package:dom_marino_app/src/shared/database_helper.dart';
 
-import 'CartPage2.dart';
+import 'CartPage.dart';
 
 List<Category> all_categories_obj_list = new List();
 List<Product> all_products_obj_list = new List();

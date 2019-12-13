@@ -37,7 +37,7 @@ const h3 = TextStyle(
 const cart_title = TextStyle(
     color: Colors.white,
     fontSize: 34,
-    height: 0.95,
+    height: 0.98,
     fontWeight: FontWeight.w600,
     fontFamily: 'Poppins');
 
@@ -86,14 +86,14 @@ const minorFoodNameText = TextStyle(
 const minorCartItemObservationsText = TextStyle(
     color: Colors.black,
     fontSize: 14,
-    height: 0.95,
+    height: 0.98,
     fontWeight: FontWeight.w600,
     fontFamily: 'Poppins');
 
 const minorPizzaEdgeText = TextStyle(
     color: Colors.black,
     fontSize: 12,
-    height: 0.95,
+    height: 0.98,
     fontWeight: FontWeight.w800,
     fontFamily: 'Poppins');
 
@@ -101,7 +101,7 @@ const minorCartItemText = TextStyle(
     color: Color.fromRGBO(117, 117, 117, 1.0),
     fontSize: 14,
     fontWeight: FontWeight.w800,
-    height: 0.95,
+    height: 0.98,
     fontFamily: 'Poppins');
 
 const chooseFlavorFoodNameText = TextStyle(

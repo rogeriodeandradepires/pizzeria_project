@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:dom_marino_app/src/BLoC/allCartItems_bloc.dart';
+import 'package:dom_marino_app/src/BLoC/listenAllCartItemsRetrieved_bloc.dart';
 import 'package:dom_marino_app/src/BLoC/totalPrice_bloc.dart';
 import 'package:dom_marino_app/src/models/cart_item_result_model.dart';
 import 'package:dom_marino_app/src/models/product_result_model.dart';
@@ -47,14 +49,22 @@ class _CartPageState extends State<CartPage> {
 
   List<Map<String, dynamic>> allCartItemsMap = new List();
   List<Map<String, dynamic>> finalAllCartItemsMap = new List();
+  List<Product> allCartItemsProduct = new List();
+  List<Product> allPizzaEdgesProduct = new List();
 
   int cartId = 0;
-  TotalPriceBloc bloc;
+  TotalPriceBloc totalPrice_bloc;
+  AllCartItemsBloc allCartItemsBloc;
+
+//  List<PizzaEdgePriceBloc> pizzaEdgePriceBlocs = new List();
+  ListenAllCartItemsReceivedBloc listenAllCartItemsReceivedBloc;
   List<String> includedProducts = new List();
 
   @override
   Future<void> initState() {
-    bloc = new TotalPriceBloc();
+    totalPrice_bloc = new TotalPriceBloc();
+    allCartItemsBloc = new AllCartItemsBloc();
+    listenAllCartItemsReceivedBloc = new ListenAllCartItemsReceivedBloc();
     retrieveCartId();
   }
 
@@ -81,7 +91,7 @@ class _CartPageState extends State<CartPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
                   StreamBuilder(
-                    stream: bloc.totalPriceStream,
+                    stream: totalPrice_bloc.totalPriceStream,
                     builder: (context, snapshot) {
                       String total = snapshot.data;
 
@@ -109,34 +119,51 @@ class _CartPageState extends State<CartPage> {
                       padding: EdgeInsets.only(top: 10, left: 10),
                       width: MediaQuery.of(context).size.width * 0.85,
                       height: MediaQuery.of(context).size.height * 0.7,
-                      child: FutureBuilder(
+                      child: StreamBuilder(
                         builder: (context, itemsCount) {
-                          if (itemsCount == 0) {
+//                          print(itemsCount.data);
+
+                          if (itemsCount.data == null) {
+                            return Container(
+                              child: _showOverlay(context),
+                            );
+                          }
+
+                          if (itemsCount.data == 0) {
+                            totalPrice_bloc.totalPriceSink.add("0,00");
                             return Container(
                                 height: 500,
-                                width: MediaQuery.of(context).size.width,
+                                margin: EdgeInsets.only(right: 5),
                                 child: Center(
                                     child: Text(
-                                        'Nenhum item disponível neste momento.',
+                                        'Nenhum item no carrinho neste momento.',
                                         textAlign: TextAlign.center,
                                         style: noneItemText)));
                           } else {
                             return Stack(
                               children: <Widget>[
-                                FutureBuilder(
-                                  builder: (context, containerSnap) {
-                                    if (containerSnap.connectionState ==
-                                                ConnectionState.none &&
-                                            containerSnap.hasData == null ||
-                                        containerSnap.data == null) {
-                                      return Container();
-                                    } else {
-                                      return containerSnap.data;
+                                StreamBuilder(
+                                  stream: allCartItemsBloc.controller.stream,
+                                  builder: (context, snapshot) {
+                                    Widget retorno = Container();
+//                                  List<Widget> allCartItemsWidget = snapshot.data;
+
+                                    if (snapshot.data != null) {
+                                      ListView createdLists = new ListView(
+                                        controller: null,
+                                        shrinkWrap: true,
+                                        scrollDirection: Axis.vertical,
+                                        children: snapshot.data,
+                                      );
+
+                                      retorno = createdLists;
+//                                    print("not null");
+//                                    buildCartItemsList();
                                     }
+
+                                    return retorno;
                                   },
-                                  future: buildCartItemsList(),
                                 ),
-//                          Center(child: Text("Items",style: h4)),
                                 Positioned(
                                   bottom: -5,
                                   child: Container(
@@ -156,7 +183,8 @@ class _CartPageState extends State<CartPage> {
                             );
                           }
                         },
-                        future: retrieveAllCartItems(),
+                        stream: listenAllCartItemsReceivedBloc
+                            .listenAllCartItemsReceivedBlocStream,
                       ),
                       decoration: BoxDecoration(
                           image: new DecorationImage(
@@ -172,19 +200,6 @@ class _CartPageState extends State<CartPage> {
                           ]),
                     ),
                   ),
-//                  Align(
-//                    alignment: Alignment.center,
-//                    child: SizedBox(
-//                      width: 200,
-//                      height: 180,
-//                      //box de todos os conteudos da imagem na pagina do produto
-//                      child: foodItem(context, widget.productData,
-//                          isProductPage: true,
-//                          onTapped: () {},
-//                          imgWidth: 200,
-//                          onLike: () {}),
-//                    ),
-//                  )
                 ],
               ),
             )
@@ -193,33 +208,39 @@ class _CartPageState extends State<CartPage> {
   }
 
   Future<int> retrieveAllCartItems() async {
-////    print("cartId2="+cartId.toString());
-    List<Map<String, dynamic>> tempAllCartItems = new List();
-    tempAllCartItems.addAll(await widget.dbHelper.retrieveAllCartItems(cartId));
+    List<Map<String, dynamic>> tempAllCartItems =
+        await widget.dbHelper.retrieveAllCartItems(cartId);
     allCartItemsMap = new List();
     allCartItemsMap.addAll(tempAllCartItems);
 
-//    print(allCartItemsMap.length);
+    allCartItemsMap
+        .sort((a, b) => a['productCategory'].compareTo(b['productCategory']));
+    allCartItemsMap = allCartItemsMap.reversed.toList();
+
+//    allCartItemsBloc.controller.sink.add(allCartItemsMap);
+    listenAllCartItemsReceivedBloc.listenAllCartItemsReceivedBlocSink
+        .add(allCartItemsMap.length);
+    buildCartItemsList();
+
     return allCartItemsMap.length;
   }
 
   Future<int> retrieveCartId() async {
     Map<String, dynamic> cart =
         await widget.dbHelper.searchCart(widget.user.uid);
-    cartId = await cart['cartId'];
-//    print("retrieveCart="+cartId.toString());
+    cartId = cart != null ? await cart['cartId'] : null;
     retrieveAllCartItems();
-    return cart['cartId'];
+    return cartId;
   }
 
   Future<Widget> buildCartItemsList() async {
+    totalPrice = "0,00";
+//
+//    print("entrou");
+
     includedProducts = new List();
     List<Widget> columnChildren = new List();
     columnChildren.add(Text("Items", style: h4));
-
-    allCartItemsMap
-        .sort((a, b) => a['productCategory'].compareTo(b['productCategory']));
-    allCartItemsMap = allCartItemsMap.reversed.toList();
 
     finalAllCartItemsMap = new List();
     finalAllCartItemsMap.addAll(allCartItemsMap);
@@ -227,73 +248,193 @@ class _CartPageState extends State<CartPage> {
     for (int i = 0; i < finalAllCartItemsMap.length; i++) {
       CartItem tempProduct = CartItem.fromJson(finalAllCartItemsMap[i]);
       tempProduct.productCategory = finalAllCartItemsMap[i]['productCategory'];
-//      totalPrice = "0,00";
-//
-//      bloc.totalPriceSink.add("0,00");
+      Product thisProduct;
 
       if (finalAllCartItemsMap[i]['isTwoFlavoredPizza'] == 1) {
+        //se for pizza de 2 sabores
+        thisProduct = await getProduct(
+            category: finalAllCartItemsMap[i]['categoryName'],
+            id: finalAllCartItemsMap[i]['product1Id'],
+            productOrder: "product1");
+        Product product2 = await getProduct(
+            category: finalAllCartItemsMap[i]['product2CategoryName'],
+            id: finalAllCartItemsMap[i]['product2Id'],
+            productOrder: "product2");
+
+        Product retrievedPizzaEdge;
+
+        if (finalAllCartItemsMap[i]['pizzaEdgeId'] != null) {
+          retrievedPizzaEdge = await getProduct(
+              id: finalAllCartItemsMap[i]['pizzaEdgeId'],
+              category: 'pizza_edges');
+        }
+        double tempPizzaEdgePrice = 0.00;
+        double higherPrice;
+
+        if (finalAllCartItemsMap[i]['productSize'] == "Broto") {
+          higherPrice = max(double.parse(thisProduct.price_broto),
+              double.parse(product2.price_broto));
+          if (retrievedPizzaEdge != null) {
+            allPizzaEdgesProduct.add(retrievedPizzaEdge);
+            tempPizzaEdgePrice = double.parse(retrievedPizzaEdge.price_broto);
+          }
+        } else {
+          higherPrice = max(double.parse(thisProduct.price_inteira),
+              double.parse(product2.price_inteira));
+
+          thisProduct.description =
+              thisProduct.description + " + " + product2.description;
+
+          if (retrievedPizzaEdge != null) {
+            allPizzaEdgesProduct.add(retrievedPizzaEdge);
+            tempPizzaEdgePrice = double.parse(retrievedPizzaEdge.price_inteira);
+          }
+        }
+
+        double tempProductPrice =
+            higherPrice * finalAllCartItemsMap[i]['productAmount'];
+        String oldTotalPrice = totalPrice.replaceAll(",", ".");
+        totalPrice = (double.parse(oldTotalPrice) +
+                tempProductPrice +
+                tempPizzaEdgePrice)
+            .toStringAsFixed(2);
+
+        if (finalAllCartItemsMap[i]['productSize'] == "Broto") {
+          thisProduct.price_broto =
+              (tempProductPrice + tempPizzaEdgePrice).toStringAsFixed(2);
+        } else {
+          thisProduct.price_inteira =
+              (tempProductPrice + tempPizzaEdgePrice).toStringAsFixed(2);
+        }
+
+        totalPrice_bloc.totalPriceSink.add(totalPrice.replaceAll(".", ","));
       } else {
-        Widget thisFuture = FutureBuilder(
-          builder: (context, productSnap) {
-//                print("builder");
-//                print(productSnap);
-            if (productSnap.connectionState == ConnectionState.none &&
-                productSnap.hasData == null) {
-//                  print("null");
-              return Container();
-            } else if (productSnap.hasData) {
-//                  print("hasData");
-              return Container(
-                width: MediaQuery.of(context).size.width,
-                child: cartItem(context, productSnap.data,
-                    size: finalAllCartItemsMap[i]['productSize'],
-                    ammount: finalAllCartItemsMap[i],
-                    cartItemMap: allCartItemsMap[i]),
-              );
+        //se não for pizza de 2 sabores
+
+        thisProduct = await getProduct(map: finalAllCartItemsMap[i]);
+
+        if (finalAllCartItemsMap[i]['productSize'] == null ||
+            finalAllCartItemsMap[i]['productSize'] == "") {
+          //se não é pizza
+          double tempPrice = double.parse(thisProduct.price) *
+              finalAllCartItemsMap[i]['productAmount'];
+          String oldTotalPrice = totalPrice.replaceAll(",", ".");
+
+          thisProduct.price = tempPrice.toStringAsFixed(2);
+
+          totalPrice =
+              (double.parse(oldTotalPrice) + tempPrice).toStringAsFixed(2);
+
+          totalPrice_bloc.totalPriceSink.add(totalPrice.replaceAll(".", ","));
+        } else {
+          //se é pizza
+
+          Product retrievedPizzaEdge;
+
+          if (finalAllCartItemsMap[i]['pizzaEdgeId'] != null) {
+//            pizzaEdgePriceBlocs.insert(i, new PizzaEdgePriceBloc());
+            retrievedPizzaEdge = await getProduct(
+                id: finalAllCartItemsMap[i]['pizzaEdgeId'],
+                category: 'pizza_edges');
+          }
+          double tempPizzaEdgePrice = 0.00;
+          if (finalAllCartItemsMap[i]['productSize'] == "Broto") {
+            if (retrievedPizzaEdge != null) {
+              tempPizzaEdgePrice =
+                  double.parse(retrievedPizzaEdge.price_broto) *
+                      finalAllCartItemsMap[i]['productAmount'];
+              String oldTotalPrice = totalPrice.replaceAll(",", ".");
+              totalPrice = (double.parse(oldTotalPrice) + tempPizzaEdgePrice)
+                  .toStringAsFixed(2);
+
+              allPizzaEdgesProduct.add(retrievedPizzaEdge);
+
+              totalPrice_bloc.totalPriceSink
+                  .add(totalPrice.replaceAll(".", ","));
             }
 
-            return Container(
-              padding: EdgeInsets.only(top: 10, bottom: 10),
-              child: _showOverlay(context),
-            );
+            if (thisProduct.price_broto != null) {
+              double tempPrice = double.parse(thisProduct.price_broto) *
+                  finalAllCartItemsMap[i]['productAmount'];
+              String oldTotalPrice = totalPrice.replaceAll(",", ".");
+              totalPrice =
+                  (double.parse(oldTotalPrice) + tempPrice).toStringAsFixed(2);
 
-//            return Container(
-//              width: 100,
-//              height: 100,
-//              margin: EdgeInsets.only(bottom: 50),
-//              child: _showOverlay(context),
-//            );
-          },
-          future: getProduct(map: finalAllCartItemsMap[i]),
-        );
+              thisProduct.price_broto =
+                  (tempPrice + tempPizzaEdgePrice).toStringAsFixed(2);
 
-        columnChildren.add(thisFuture);
+              totalPrice_bloc.totalPriceSink
+                  .add(totalPrice.replaceAll(".", ","));
+            }
+          } else {
+            //se for inteira
+
+            if (retrievedPizzaEdge != null) {
+              tempPizzaEdgePrice =
+                  double.parse(retrievedPizzaEdge.price_inteira) *
+                      finalAllCartItemsMap[i]['productAmount'];
+              String oldTotalPrice = totalPrice.replaceAll(",", ".");
+              totalPrice = (double.parse(oldTotalPrice) + tempPizzaEdgePrice)
+                  .toStringAsFixed(2);
+
+              //retrievedPizzaEdge.price_inteira = tempPizzaEdgePrice.toStringAsFixed(2);
+              allPizzaEdgesProduct.add(retrievedPizzaEdge);
+
+              totalPrice_bloc.totalPriceSink
+                  .add(totalPrice.replaceAll(".", ","));
+            }
+
+            if (thisProduct.price_inteira != null) {
+              double tempPrice = double.parse(thisProduct.price_inteira) *
+                  finalAllCartItemsMap[i]['productAmount'];
+              String oldTotalPrice = totalPrice.replaceAll(",", ".");
+              totalPrice =
+                  (double.parse(oldTotalPrice) + tempPrice).toStringAsFixed(2);
+
+              thisProduct.price_inteira =
+                  (tempPrice + tempPizzaEdgePrice).toStringAsFixed(2);
+
+              totalPrice_bloc.totalPriceSink
+                  .add(totalPrice.replaceAll(".", ","));
+            }
+          }
+        }
       }
+      Widget thisFuture = Container(
+        width: MediaQuery.of(context).size.width,
+        child: cartItem(context, thisProduct,
+            index: i,
+            size: finalAllCartItemsMap[i]['productSize'],
+            ammount: finalAllCartItemsMap[i],
+            cartItemMap: allCartItemsMap[i]),
+      );
+
+      columnChildren.add(thisFuture);
     }
 
     columnChildren.add(generateDummyListItem(60));
 
-//    print("columnChildren=" + columnChildren.length.toString());
-
-    ListView createdLists = new ListView(
-      controller: null,
-      shrinkWrap: true,
-      scrollDirection: Axis.vertical,
-      children: columnChildren,
-    );
-
-    return Container(
-      height: 500,
-      width: MediaQuery.of(context).size.width,
-      child: createdLists,
-    );
+    allCartItemsBloc.allCartItemsSink.add(columnChildren);
   }
 
   Future<Product> getProduct(
-      {Map<String, dynamic> map, String id, String category}) async {
+      {Map<String, dynamic> map,
+      String id,
+      String category,
+      String productOrder}) async {
     if (map != null) {
-      category = map['categoryName'];
-      id = map['productId'];
+      if (map['isTwoFlavoredPizza'] == 1) {
+        if (productOrder == "product1") {
+          id = map['product1Id'];
+          category = map['categoryName'];
+        } else {
+          id = map['product2Id'];
+          category = map['product2CategoryName'];
+        }
+      } else {
+        id = map['productId'];
+        category = map['categoryName'];
+      }
     }
 
     var queryParameters = {
@@ -317,49 +458,7 @@ class _CartPageState extends State<CartPage> {
         retrievedProduct.description = "Borda: " + retrievedProduct.description;
       }
 
-      if (map['productSize'] == null) {
-        if (!includedProducts.contains(id)) {
-          double tempPrice =
-              double.parse(retrievedProduct.price) * map['productAmount'];
-          String oldTotalPrice = totalPrice.replaceAll(",", ".");
-
-          totalPrice =
-              (double.parse(oldTotalPrice) + tempPrice).toStringAsFixed(2);
-
-          bloc.totalPriceSink.add(totalPrice.replaceAll(".", ","));
-
-        }
-      } else {
-        if (!includedProducts.contains(id)) {
-          if (map['productSize'] == "Broto") {
-            if (retrievedProduct.price_broto != null) {
-              double tempPrice = double.parse(retrievedProduct.price_broto) *
-                  map['productAmount'];
-              String oldTotalPrice = totalPrice.replaceAll(",", ".");
-              totalPrice =
-                  (double.parse(oldTotalPrice) + tempPrice).toStringAsFixed(2);
-
-              retrievedProduct.price_broto = tempPrice.toStringAsFixed(2);
-
-              bloc.totalPriceSink.add(totalPrice.replaceAll(".", ","));
-            }
-          } else {
-            //se for inteira
-            if (retrievedProduct.price_inteira != null) {
-              double tempPrice = double.parse(retrievedProduct.price_inteira) *
-                  map['productAmount'];
-              String oldTotalPrice = totalPrice.replaceAll(",", ".");
-              totalPrice =
-                  (double.parse(oldTotalPrice) + tempPrice).toStringAsFixed(2);
-
-              retrievedProduct.price_inteira = tempPrice.toStringAsFixed(2);
-
-              bloc.totalPriceSink.add(totalPrice.replaceAll(".", ","));
-            }
-          }
-        }
-      }
-      includedProducts.add(id);
+//      includedProducts.add(id);
       return retrievedProduct;
     } else {
       // If that response was not OK, throw an error.
@@ -395,13 +494,13 @@ class _CartPageState extends State<CartPage> {
     onTapped,
     Map<String, dynamic> cartItemMap,
     bool isProductPage = false,
+    int index,
   }) {
     return Card(
       color: Color(0xfffff2ca).withOpacity(0.65),
       elevation: 5,
-      //Color.fromRGBO(255, 0, 0, 0.5),
       child: getCartItemContainer(context, onLike, imgWidth, product,
-          isProductPage, onTapped, size, ammount, cartItemMap),
+          isProductPage, onTapped, size, ammount, cartItemMap, index),
     );
   }
 
@@ -414,7 +513,118 @@ class _CartPageState extends State<CartPage> {
       onTapped,
       String size,
       Map<String, dynamic> ammount,
-      Map<String, dynamic> cartItemMap) {
+      Map<String, dynamic> cartItemMap,
+      int index) {
+    List<Widget> columnChildren = new List();
+    columnChildren.add(Text(product.description, style: minorFoodNameText));
+
+    if (cartItemMap['pizzaEdgeId'] == null) {
+      columnChildren.add(Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              (size != null && size != "") ? Text(size, style: minorCartItemText)
+                  : (product.size!=null?Text(product.size, style: minorCartItemText):Container()),
+              getItemPrice(
+                  size,
+                  product,
+                  finalAllCartItemsMap[finalAllCartItemsMap.indexOf(ammount)]
+                      ["productAmount"]),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              InkWell(
+                onTap: () async {
+                  int index = finalAllCartItemsMap.indexOf(ammount);
+                  dynamic value = finalAllCartItemsMap[index]["productAmount"];
+                  value = value - 1;
+
+                  if (value == 0) {
+                    await widget.dbHelper.delete(
+                        finalAllCartItemsMap[index]['cartItemsId'],
+                        "cartItems",
+                        "cartItemsId");
+                  } else {
+                    Map<String, dynamic> newMap = new Map();
+                    newMap.addAll(ammount);
+                    newMap["productAmount"] = value;
+                    await widget.dbHelper
+                        .update(newMap, "cartItems", "cartItemsId");
+                  }
+
+                  setState(() {
+                    retrieveAllCartItems();
+                  });
+                },
+                child: Container(
+                  width: 30,
+                  height: 30,
+                  margin: EdgeInsets.only(right: 5),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(4.0)),
+                    border: Border.all(color: Colors.grey[500]),
+                  ),
+                  child: Icon(Icons.remove),
+                ),
+              ),
+              Container(
+                margin: EdgeInsets.only(left: 5, right: 10),
+                child: Text(ammount['productAmount'].toString(), style: h3),
+              ),
+              InkWell(
+                onTap: () async {
+                  int index = finalAllCartItemsMap.indexOf(ammount);
+                  dynamic value = finalAllCartItemsMap[index]["productAmount"];
+                  value = value + 1;
+                  Map<String, dynamic> newMap = new Map();
+                  newMap.addAll(ammount);
+                  newMap["productAmount"] = value;
+                  await widget.dbHelper
+                      .update(newMap, "cartItems", "cartItemsId");
+
+                  setState(() {
+                    retrieveAllCartItems();
+                  });
+                },
+                child: Container(
+                  width: 30,
+                  height: 30,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(4.0)),
+                    border: Border.all(color: Colors.grey[500]),
+                  ),
+                  child: Icon(Icons.add),
+                ),
+              )
+            ],
+          ),
+        ],
+      ));
+    } else {
+      columnChildren
+          .add(checkPizzaEdge(size, ammount, product, cartItemMap, index));
+    }
+
+    if (cartItemMap['productObservations'] != null &&
+        cartItemMap['productObservations'] != "") {
+      columnChildren.add(Container(
+        margin: EdgeInsets.only(top: 5, right: 4, bottom: 2),
+        child: Text(
+          cartItemMap['productObservations'],
+          style: minorCartItemObservationsText,
+          textAlign: TextAlign.justify,
+        ),
+      ));
+    }
+
     return Wrap(
       direction: Axis.horizontal,
       spacing: 2.0,
@@ -445,7 +655,9 @@ class _CartPageState extends State<CartPage> {
                   child: ClipRRect(
                     borderRadius: new BorderRadius.circular(8.0),
                     child: Image.network(
-                      product.imageUrl,
+                      cartItemMap['isTwoFlavoredPizza'] == 1
+                          ? "https://storage.googleapis.com/dom-marino-ws.appspot.com/categories/custom/two_flavored_pizza_image.png"
+                          : product.imageUrl,
                       fit: BoxFit.contain,
                     ),
                   )),
@@ -457,97 +669,7 @@ class _CartPageState extends State<CartPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(product.description, style: minorFoodNameText),
-              checkPizzaEdge(cartItemMap),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      size != null
-                          ? Text(size, style: minorCartItemText)
-                          : Container(),
-                      getItemPrice(
-                          size,
-                          product,
-                          finalAllCartItemsMap[finalAllCartItemsMap
-                              .indexOf(ammount)]["productAmount"]),
-                    ],
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: <Widget>[
-                      InkWell(
-                        onTap: () async {
-                          int index = finalAllCartItemsMap.indexOf(ammount);
-                          dynamic value =
-                              finalAllCartItemsMap[index]["productAmount"];
-                          value = value - 1;
-                          Map<String, dynamic> newMap = new Map();
-                          newMap.addAll(ammount);
-                          newMap["productAmount"] = value;
-                          await widget.dbHelper
-                              .update(newMap, "cartItems", "cartItemsId");
-
-                          setState(() {
-                            retrieveAllCartItems();
-                          });
-                        },
-                        child: Container(
-                          width: 30,
-                          height: 30,
-                          margin: EdgeInsets.only(right: 5),
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(4.0)),
-                            border: Border.all(color: Colors.grey[500]),
-                          ),
-                          child: Icon(Icons.remove),
-                        ),
-                      ),
-                      Container(
-                        margin: EdgeInsets.only(left: 5, right: 10),
-                        child: Text(ammount['productAmount'].toString(),
-                            style: h3),
-                      ),
-                      InkWell(
-                        onTap: () async {
-                          int index = finalAllCartItemsMap.indexOf(ammount);
-                          dynamic value =
-                              finalAllCartItemsMap[index]["productAmount"];
-                          value = value + 1;
-                          Map<String, dynamic> newMap = new Map();
-                          newMap.addAll(ammount);
-                          newMap["productAmount"] = value;
-                          await widget.dbHelper
-                              .update(newMap, "cartItems", "cartItemsId");
-
-                          setState(() {
-                            retrieveAllCartItems();
-                          });
-                        },
-                        child: Container(
-                          width: 30,
-                          height: 30,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(4.0)),
-                            border: Border.all(color: Colors.grey[500]),
-                          ),
-                          child: Icon(Icons.add),
-                        ),
-                      )
-                    ],
-                  ),
-                ],
-              ),
-            ],
+            children: columnChildren,
           ),
         ),
       ],
@@ -559,21 +681,9 @@ class _CartPageState extends State<CartPage> {
 
     Widget retorno;
 
-    if (size == null) {
+    if (size == null || size == "") {
       if (product.price != null) {
         tempPrice = double.parse(product.price) * ammount;
-//        String oldTotalPrice = totalPrice.replaceAll(",", ".");
-//
-////        print("totalPrice ANTES:"+totalPrice.toString());
-//
-//        totalPrice =
-//            (double.parse(oldTotalPrice) + tempPrice).toStringAsFixed(2);
-
-//        print("totalPrice DEPOIS:"+totalPrice.toString());
-
-        product.price = tempPrice.toStringAsFixed(2);
-
-//        bloc.totalPriceSink.add(totalPrice.replaceAll(".", ","));
 
         retorno = Text(
           "R\$ " + product.price.replaceAll(".", ","),
@@ -589,13 +699,6 @@ class _CartPageState extends State<CartPage> {
       if (size == "Broto") {
         if (product.price_broto != null) {
           tempPrice = double.parse(product.price_broto) * ammount;
-//          String oldTotalPrice = totalPrice.replaceAll(",", ".");
-//          totalPrice =
-//              (double.parse(oldTotalPrice) + tempPrice).toStringAsFixed(2);
-
-          product.price_broto = tempPrice.toStringAsFixed(2);
-
-//          bloc.totalPriceSink.add(totalPrice.replaceAll(".", ","));
 
           return Text(
             "R\$ " + product.price_broto.replaceAll(".", ","),
@@ -610,13 +713,6 @@ class _CartPageState extends State<CartPage> {
       } else {
         if (product.price_inteira != null) {
           tempPrice = double.parse(product.price_inteira) * ammount;
-//          String oldTotalPrice = totalPrice.replaceAll(",", ".");
-//          totalPrice =
-//              (double.parse(oldTotalPrice) + tempPrice).toStringAsFixed(2);
-
-          product.price_inteira = tempPrice.toStringAsFixed(2);
-
-//          bloc.totalPriceSink.add(totalPrice.replaceAll(".", ","));
 
           return Text(
             "R\$ " + product.price_inteira.replaceAll(".", ","),
@@ -630,99 +726,113 @@ class _CartPageState extends State<CartPage> {
         }
       }
     }
-
     return retorno;
   }
 
-  Widget getProductPrice(Product product, String size) {
-    String retorno;
+  Widget checkPizzaEdge(String size, Map<String, dynamic> ammount,
+      Product pizza, Map<String, dynamic> cartItemMap, int index) {
+    String pizzaEdgeDescription;
 
-    print(size);
+    allPizzaEdgesProduct.forEach((pizzaEdge) {
+      if (pizzaEdge.id == cartItemMap["pizzaEdgeId"]) {
+        pizzaEdgeDescription = pizzaEdge.description;
+      }
+    });
 
-    if (size == "Broto") {
-      print("Entrou no Broto");
-      return Expanded(
-        child: new Column(
-          mainAxisSize: MainAxisSize.min,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: <Widget>[
+        Column(
+          mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            new Container(
-              child: new Text("Broto", style: foodNameText),
+            Container(
+              width: MediaQuery.of(context).size.width * 0.35,
+              child: Text(pizzaEdgeDescription,
+                  style: minorPizzaEdgeText, overflow: TextOverflow.ellipsis),
             ),
-            new Container(
-              child: new Text("R\$ " + product.price_broto.replaceAll(".", ","),
-                  style: foodNameText),
-            ),
+            size != null ? Text(size, style: minorCartItemText) : Container(),
+            getItemPrice(
+                size,
+                pizza,
+                finalAllCartItemsMap[finalAllCartItemsMap.indexOf(ammount)]
+                    ["productAmount"]),
           ],
         ),
-      );
-    } else {
-      if (size == "Inteira") {
-        print("Entrou na Inteira");
-        return Expanded(
-          child: new Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              new Container(
-                child: new Text("Inteira", style: foodNameText),
-              ),
-              new Container(
-                child: new Text(
-                    "R\$ " + product.price_inteira.replaceAll(".", ","),
-                    style: foodNameText),
-              ),
-            ],
-          ),
-        );
-      } else {
-        print("Entrou em Outro");
-        return new Container(
-          height: 100,
-          width: 100,
-          child:
-              new Text("R\$ 0,00", // + product.price,//.replaceAll(".", ","),
-                  style: foodNameText),
-        );
-      }
-    }
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            InkWell(
+              onTap: () async {
+                int thisIndex = finalAllCartItemsMap.indexOf(ammount);
+                dynamic value =
+                    finalAllCartItemsMap[thisIndex]["productAmount"];
+                value = value - 1;
 
-//  if (!product.description.contains("Escolha")) {
-//    if (product.price != null && product.price != "") {
-//      retorno = "R\$ " + product.price.replaceAll(".", ",");
-//      return Text(retorno, style: foodNameText);
-//    }
-//
-//    if (product.price_broto != null) {
-//      return generatePricesGrid(product.price_broto, product.price_inteira);
-//    }
-//  } else {
-//    return Text(product.price, style: foodNameText);
-//  }
-//    return retorno;
-  }
+                if (value == 0) {
+                  await widget.dbHelper.delete(
+                      finalAllCartItemsMap[index]['cartItemsId'],
+                      "cartItems",
+                      "cartItemsId");
+                } else {
+                  Map<String, dynamic> newMap = new Map();
+                  newMap.addAll(ammount);
+                  newMap["productAmount"] = value;
+                  await widget.dbHelper
+                      .update(newMap, "cartItems", "cartItemsId");
+                }
 
-  Widget checkPizzaEdge(Map<String, dynamic> cartItemMap) {
-    if (cartItemMap['pizzaEdgeId'] == null) {
-      return Container(); //Text("", style: minorFoodNameText);
-    } else {
-      return FutureBuilder(
-        builder: (context, productSnap) {
-          if (productSnap.connectionState == ConnectionState.none &&
-              productSnap.hasData == null) {
-            return Container();
-          } else if (productSnap.hasData) {
-            return Container(
-              width: MediaQuery.of(context).size.width,
-              child:
-                  Text(productSnap.data.description, style: minorPizzaEdgeText),
-            );
-          }
-          return Container();
-        },
-        future:
-            getProduct(id: cartItemMap['pizzaEdgeId'], category: 'pizza_edges'),
-      );
-    }
+                setState(() {
+                  retrieveAllCartItems();
+                });
+              },
+              child: Container(
+                width: 30,
+                height: 30,
+                margin: EdgeInsets.only(right: 5),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(4.0)),
+                  border: Border.all(color: Colors.grey[500]),
+                ),
+                child: Icon(Icons.remove),
+              ),
+            ),
+            Container(
+              margin: EdgeInsets.only(left: 5, right: 10),
+              child: Text(ammount['productAmount'].toString(), style: h3),
+            ),
+            InkWell(
+              onTap: () async {
+                int thisIndex = finalAllCartItemsMap.indexOf(ammount);
+                dynamic value =
+                    finalAllCartItemsMap[thisIndex]["productAmount"];
+                value = value + 1;
+                Map<String, dynamic> newMap = new Map();
+                newMap.addAll(ammount);
+                newMap["productAmount"] = value;
+                await widget.dbHelper
+                    .update(newMap, "cartItems", "cartItemsId");
+
+                setState(() {
+                  retrieveAllCartItems();
+                });
+              },
+              child: Container(
+                width: 30,
+                height: 30,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(4.0)),
+                  border: Border.all(color: Colors.grey[500]),
+                ),
+                child: Icon(Icons.add),
+              ),
+            )
+          ],
+        ),
+      ],
+    );
   }
 }
