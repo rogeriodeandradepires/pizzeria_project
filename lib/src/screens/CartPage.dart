@@ -6,6 +6,8 @@ import 'package:dom_marino_app/src/BLoC/listenAllCartItemsRetrieved_bloc.dart';
 import 'package:dom_marino_app/src/BLoC/totalPrice_bloc.dart';
 import 'package:dom_marino_app/src/models/cart_item_result_model.dart';
 import 'package:dom_marino_app/src/models/product_result_model.dart';
+import 'package:dom_marino_app/src/screens/Dashboard.dart';
+import 'package:dom_marino_app/src/shared/cart_partials.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -170,7 +172,103 @@ class _CartPageState extends State<CartPage> {
                                     width:
                                         MediaQuery.of(context).size.width * 0.8,
                                     margin: EdgeInsets.only(bottom: 10),
-                                    child: froyoFlatBtn('Pagar', () {}),
+                                    child: froyoFlatBtn('Realizar Pedido', () async {
+                                      Dialog thisDialog = showLoadingDialog();
+
+                                      String url = 'http://192.168.63.1:8080/makeorder';
+                                      String userId = widget.user.uid;
+                                      String coupon_id = null;
+                                      String dateTime = null;
+                                      String id = null;
+                                      String delivery = "withdraw";
+                                      String payment_method = "credit_card";
+                                      String total = null;
+
+                                      Map<String, dynamic> productsId = {};
+
+                                      finalAllCartItemsMap.forEach((item) {
+
+                                        Product retrievedPizzaEdge;
+
+                                        String pizza_edge_description = null;
+                                        String pizza_edge_paid_price = null;
+                                        String pizza_edge_id = item['pizzaEdgeId'];
+                                        String product1_category = item["categoryName"];
+                                        String product2_category = item["product2CategoryName"];
+                                        String product_id = "";
+
+                                        if (item["isTwoFlavoredPizza"]==1) {
+                                          product_id = item["product1Id"];
+                                        }else{
+                                          product_id = item["productId"];
+                                        }
+
+                                        Map<String, dynamic> tempMap = {
+                                          'category': item['productCategory'],
+                                          'notes': item['productObservations'],
+                                          'id': null,
+                                          'paid_price': total,
+                                          'pizza_edge_id': '$pizza_edge_id',
+                                          'pizza_edge_description': '$pizza_edge_description',
+                                          'pizza_edge_paid_price': '$pizza_edge_paid_price',
+                                          'product1_category': '$product1_category',
+                                          'product2_category': '$product2_category',
+                                          'product2_id': item['product2Id'],
+                                          'product_description': null,
+                                          'product_id': product_id,
+                                          'isTwoFlavoredPizza': item["isTwoFlavoredPizza"],
+                                          'quantity': item['productAmount'],
+                                          'size': item['productSize'],
+                                        };
+
+//                                        'product_image_url': item['isTwoFlavoredPizza']==0?product1.imageUrl:"https://storage.googleapis.com/dom-marino-ws.appspot.com/categories/custom/two_flavored_pizza_image.png",
+
+                                        String tempProductsId = new DateTime.now().toUtc().toString();
+
+                                        productsId[tempProductsId] = tempMap;
+
+//                                        print(tempMap);
+
+
+                                      });
+
+//                                      print("productsId: "+json.encode(productsId));
+
+
+                                      var queryParameters = {
+                                        'coupon_id': '$coupon_id',
+                                        'dateTime': '$dateTime',
+                                        'id': '$id',
+                                        'delivery': '$delivery',
+                                        'payment_method': '$payment_method',
+                                        'total': '$total',
+                                        'userId': '$userId',
+                                        'products_id': json.encode(productsId),
+                                      };
+
+                                      var uri = Uri.http('192.168.63.1:8080', 'makeorder', queryParameters);
+
+                                      Response response = await get(uri);
+                                      // sample info available in response
+                                      int statusCode = response.statusCode;
+                                      Map<String, String> headers = response.headers;
+                                      String contentType = headers['content-type'];
+//                                      dynamic all_products = json.decode(response.body);
+
+                                      if (response.statusCode == 200) {
+                                        print('Ok');
+                                      }
+
+                                      print("status: "+response.statusCode.toString()+", body: "+response.body.toString());
+                                      Navigator.of(context, rootNavigator: false).pop();
+
+                                      await widget.dbHelper.delete(cartId, "cart", "cartId");
+
+//                                      Navigator.pop(context, "Ok");
+                                      Navigator.of(context, rootNavigator: true).pop("Ok");
+
+
+                                    }),
                                   ),
                                 ),
                                 Column(
@@ -276,7 +374,7 @@ class _CartPageState extends State<CartPage> {
               double.parse(product2.price_broto));
           if (retrievedPizzaEdge != null) {
             allPizzaEdgesProduct.add(retrievedPizzaEdge);
-            tempPizzaEdgePrice = double.parse(retrievedPizzaEdge.price_broto);
+            tempPizzaEdgePrice = double.parse(retrievedPizzaEdge.price_broto) * finalAllCartItemsMap[i]['productAmount'];
           }
         } else {
           higherPrice = max(double.parse(thisProduct.price_inteira),
@@ -287,7 +385,7 @@ class _CartPageState extends State<CartPage> {
 
           if (retrievedPizzaEdge != null) {
             allPizzaEdgesProduct.add(retrievedPizzaEdge);
-            tempPizzaEdgePrice = double.parse(retrievedPizzaEdge.price_inteira);
+            tempPizzaEdgePrice = double.parse(retrievedPizzaEdge.price_inteira) * finalAllCartItemsMap[i]['productAmount'];
           }
         }
 
@@ -296,7 +394,7 @@ class _CartPageState extends State<CartPage> {
         String oldTotalPrice = totalPrice.replaceAll(",", ".");
         totalPrice = (double.parse(oldTotalPrice) +
                 tempProductPrice +
-                tempPizzaEdgePrice)
+            (tempPizzaEdgePrice))
             .toStringAsFixed(2);
 
         if (finalAllCartItemsMap[i]['productSize'] == "Broto") {
@@ -422,6 +520,9 @@ class _CartPageState extends State<CartPage> {
       String id,
       String category,
       String productOrder}) async {
+//    print("problema");
+//    print("category: $category, id: $id");
+//    print("map: $map");
     if (map != null) {
       if (map['isTwoFlavoredPizza'] == 1) {
         if (productOrder == "product1") {
@@ -835,4 +936,28 @@ class _CartPageState extends State<CartPage> {
       ],
     );
   }
+
+  Dialog showLoadingDialog(){
+    Dialog retorno;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        retorno = Dialog(
+          backgroundColor: Colors.black.withOpacity(0),
+          child: Container(
+            width: 100,
+            height: 100,
+            child: Image.asset(
+              'images/loading_pizza_faster.gif',
+              fit: BoxFit.scaleDown,
+            ),
+          ),
+        );
+        return retorno;
+      },
+    );
+    return retorno;
+  }
+
 }

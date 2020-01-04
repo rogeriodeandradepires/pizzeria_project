@@ -83,6 +83,12 @@ const minorFoodNameText = TextStyle(
     fontWeight: FontWeight.w800,
     fontFamily: 'Poppins');
 
+const majorFoodNameText = TextStyle(
+    color: Colors.black,
+    fontSize: 18,
+    fontWeight: FontWeight.w800,
+    fontFamily: 'Poppins');
+
 const minorCartItemObservationsText = TextStyle(
     color: Colors.black,
     fontSize: 14,

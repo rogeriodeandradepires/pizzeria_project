@@ -2,8 +2,10 @@ import 'dart:convert';
 
 import 'package:dom_marino_app/src/bottomNavigationView/bottomBarView.dart';
 import 'package:dom_marino_app/src/models/category_result_model.dart';
+import 'package:dom_marino_app/src/models/order_result_model.dart';
 import 'package:dom_marino_app/src/models/product_result_model.dart';
 import 'package:dom_marino_app/src/models/tabIconData.dart';
+import 'package:dom_marino_app/src/shared/buttons.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../shared/styles.dart';
@@ -18,6 +20,7 @@ import 'CartPage.dart';
 
 List<Category> all_categories_obj_list = new List();
 List<Product> all_products_obj_list = new List();
+List<Order> all_orders_obj_list = new List();
 
 class Dashboard extends StatefulWidget {
   final String pageTitle;
@@ -35,11 +38,16 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   AnimationController animationController;
   List<TabIconData> tabIconsList = TabIconData.tabIconsList;
   ListView globalProductsListView;
+  ListView globalStoreTabListView;
   ScrollController _controller;
   final dbHelper = DatabaseHelper.instance;
   List<Map<String, dynamic>> allFavorites;
+  List<Map<String, dynamic>> allOrders;
   FirebaseUser user;
   FirebaseAuth fbAuth = FirebaseAuth.instance;
+  BuildContext globalContext;
+  ListView ordersTab;
+  var _tabs;
 
   Widget tabBody = new Container(
     decoration: new BoxDecoration(
@@ -56,6 +64,10 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       setState(() {
         user = newUser;
       });
+
+      if (newUser != null) {
+        retrieveAllOrders(user.uid);
+      }
     });
 
     retrieveAllFavorites(null);
@@ -83,12 +95,12 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final _tabs = [
+    globalContext = context;
+    _tabs = [
       storeTab(context),
       favoritesTab(context),
-      Text('Tab3'),
+      buildOrdersTab(globalContext),
       Text('Tab4'),
-      Text('Tab5'),
     ];
 
     return Scaffold(
@@ -112,19 +124,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
               fit: BoxFit.cover,
               height: 40.0,
             ),
-//              Container(
-//                  padding: const EdgeInsets.all(8.0),
-//              )
           ],
         ),
-//              Text('Fryo', style: logoWhiteStyle, textAlign: TextAlign.center),
         actions: <Widget>[
-//          IconButton(
-//            padding: EdgeInsets.all(0),
-//            onPressed: () {},
-//            iconSize: 21,
-//            icon: Icon(Fryo.magnifier),
-//          ),
           IconButton(
             padding: EdgeInsets.all(0),
             onPressed: () {},
@@ -162,20 +164,21 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 //            print("clicou no carrinho");
             bool isLogged = await checkIfUserIsLoggedIn();
             if (isLogged) {
-              Navigator.push(
+              final result = await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) {
-                    return new CartPage(dbHelper: dbHelper, user: user);
-                  },
-                ),
+                    builder: (context) =>
+                        new CartPage(dbHelper: dbHelper, user: user)),
               );
-            }else{
+
+              retrieveAllOrders(user.uid, update: true);
+
+              print("Resultado: " + result.toString());
+            } else {
               Navigator.pushNamed(context, '/signin');
             }
           },
           changeIndex: (index) async {
-//
             if (index != 0) {
               bool isLogged = await checkIfUserIsLoggedIn();
               if (!isLogged) {
@@ -188,10 +191,12 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                 if (!mounted) return;
                 setState(() {
                   _selectedIndex = index;
-//                  tabBody =
-//                      MyDiaryScreen(animationController: animationController);
                 });
               });
+
+              if (index == 2) {
+                retrieveAllOrders(user.uid, update: true);
+              }
             } else if (index == 1 || index == 3) {
               animationController.reverse().then((data) {
                 if (index == 3) {
@@ -202,8 +207,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                 if (!mounted) return;
                 setState(() {
                   _selectedIndex = index;
-//                  tabBody =
-//                      MyDiaryScreen(animationController: animationController);
                 });
               });
             }
@@ -440,8 +443,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   }
 
   Widget storeTab(BuildContext context) {
-    return ListView(
+    globalStoreTabListView = ListView(
         physics: const NeverScrollableScrollPhysics(),
+        controller: _controller,
         children: <Widget>[
           headerTopCategories('Todas as Categorias'),
           deals(_selectedCategory, onViewMore: () {}, items: <Widget>[
@@ -551,7 +555,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                       DatabaseHelper.columnIsLiked: 0
                                     };
 
-                                    await dbHelper.update(row, "favorites", "_id");
+                                    await dbHelper.update(
+                                        row, "favorites", "_id");
 
                                     setState(() {
                                       product.userLiked = false;
@@ -575,7 +580,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                       DatabaseHelper.columnIsLiked: 1
                                     };
 
-                                    await dbHelper.update(row, "favorites", "_id");
+                                    await dbHelper.update(
+                                        row, "favorites", "_id");
 
                                     setState(() {
                                       product.userLiked = true;
@@ -610,6 +616,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             )
           ]),
         ]);
+
+    return globalStoreTabListView;
   }
 
   Widget favoritesTab(BuildContext context) {
@@ -794,9 +802,60 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   Future<bool> checkIfUserIsLoggedIn() async {
     user = await fbAuth.currentUser();
     bool isLogged = user != null;
-
-//    print(isLogged ? user.uid : null);
     return isLogged;
+  }
+
+  Future<void> retrieveAllOrders(String uid,{bool update}) async {
+    if (update) {
+      Dialog thisDialog = showLoadingDialog();
+    }
+    var queryParameters = {
+      'id': '$uid',
+    };
+
+    var uri = Uri.https('dom-marino-webservice.appspot.com', 'list_user_orders',
+        queryParameters);
+
+    Response response = await get(uri);
+    // sample info available in response
+    int statusCode = response.statusCode;
+    Map<String, String> headers = response.headers;
+    String contentType = headers['content-type'];
+    dynamic all_orders = json.decode(response.body);
+
+    if (response.statusCode == 200) {
+      all_orders_obj_list = new List();
+      all_orders.forEach((order) {
+        all_orders_obj_list.add(Order.fromJson(order));
+      });
+    } else {
+      // If that response was not OK, throw an error.
+      throw Exception('Failed to load products');
+    }
+
+    all_orders_obj_list.sort((a, b) {
+      var aDateTime = DateTime.parse(a.dateTime.substring(6, 10) +
+          "-" +
+          a.dateTime.substring(3, 5) +
+          "-" +
+          a.dateTime.substring(0, 2));
+      var bDateTime = DateTime.parse(b.dateTime.substring(6, 10) +
+          "-" +
+          b.dateTime.substring(3, 5) +
+          "-" +
+          b.dateTime.substring(0, 2));
+
+      return bDateTime.compareTo(aDateTime);
+    });
+
+    if (update) {
+      Navigator.pop(context);
+      setState(() {
+        _tabs[2] = buildOrdersTab(globalContext);
+      });
+    }
+
+    return all_orders_obj_list;
   }
 
   Future<void> retrieveAllFavorites(String uid) async {
@@ -835,11 +894,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       for (List<Map<String, dynamic>> favoriteList in finalFavorites) {
         Widget thisFuture = FutureBuilder(
           builder: (context, productSnap) {
-//                print("builder");
-//                print(productSnap);
             if (productSnap.connectionState == ConnectionState.none &&
                 productSnap.hasData == null) {
-//                  print("null");
               return Container();
             } else if (productSnap.hasData) {
 //                  print("hasData");
@@ -855,7 +911,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
               margin: EdgeInsets.only(bottom: 50),
               child: _showOverlay(context),
             );
-
           },
           future: getFavoritedProducts(favoriteList),
         );
@@ -863,17 +918,11 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       }
     }
 
-//    Column createdLists = new Column(
-//        mainAxisAlignment: MainAxisAlignment.center,
-//        crossAxisAlignment: CrossAxisAlignment.center,
-//        mainAxisSize: MainAxisSize.min,
-//        children: columnChildren);
-
     columnChildren.add(generateDummyListItem(60));
 
     bool isFavoritesEmpty = false;
 
-    if (columnChildren.length==1) {
+    if (columnChildren.length == 1) {
       columnChildren.removeAt(0);
       isFavoritesEmpty = true;
     }
@@ -889,70 +938,318 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     return Container(
       height: 500,
       width: MediaQuery.of(context).size.width,
-      child: isFavoritesEmpty ? Center(child: Text('Nenhum item disponível neste momento.', textAlign: TextAlign.center,style: noneItemText)) : createdLists,
+      child: isFavoritesEmpty
+          ? Center(
+              child: Text('Nenhum item disponível neste momento.',
+                  textAlign: TextAlign.center, style: noneItemText))
+          : createdLists,
     );
   }
 
-//  List<Widget> buildFavoritesLists() {
-//    List<FutureBuilder> thisList = new List();
-//
-//    List<Widget> favoritesWidgetLists = <Widget>[];
-//
-//    if (user != null && allFavorites != null) {
-//      retrieveAllFavorites(user.uid);
-//      List<Map<String, dynamic>> orderedFavorites = new List();
-//      orderedFavorites.addAll(allFavorites);
-//      List<List<Map<String, dynamic>>> finalFavorites = new List();
-//      orderedFavorites.sort((a, b) => a['category'].compareTo(b['category']));
-//      int start = 0, end = 0;
-//
-//      for (int i = 0; i < orderedFavorites.length; i++) {
-//        if (i != orderedFavorites.length - 1) {
-//          if (orderedFavorites[i]['category'] !=
-//              orderedFavorites[i + 1]['category']) {
-//            end = i + 1;
-//            finalFavorites.add(orderedFavorites.sublist(start, end));
-//            start = end;
-//          }
-//        } else {
-//          finalFavorites
-//              .add(orderedFavorites.sublist(end, orderedFavorites.length));
-//        }
-//      }
-//
-//      for (List<Map<String, dynamic>> favoriteList in finalFavorites) {
-////        Map<String, dynamic> section = favoriteList[0];
-////        sectionHeader(section['category']);
-//        FutureBuilder thisFuture = FutureBuilder(
-//          builder: (context, productSnap) {
-//            print("builder");
-//            print(productSnap);
-//            if (productSnap.connectionState == ConnectionState.none &&
-//                productSnap.hasData == null) {
-//              print("null");
-//              return Container();
-//            } else if (productSnap.hasData) {
-//              print("hasData");
-//              return ListView.builder(
-//                scrollDirection: Axis.horizontal,
-//                shrinkWrap: true,
-//                itemCount: favoriteList.length,
-//                itemBuilder: (context, index) {
-//                  Product product = productSnap.data[index];
-//                  return productSnap.data[index];//foodItem(context, product);
-//                },
-//              );
-//            } else {
-//              print("outro");
-//              return Container();
-//            }
-//          },
-//          future: getFavoritedProducts(favoriteList),
-//        );
-//        thisList.add(thisFuture);
-//      }
-//    }
-//
-//    return thisList;
-//  }
+  buildOrdersTab(BuildContext context) {
+    List<Widget> ordersWidgetLists = <Widget>[];
+    ordersWidgetLists.add(sectionHeader('Meus Pedidos', onViewMore: () {}));
+    ordersWidgetLists.add(buildOrdersLists());
+
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: ordersWidgetLists,
+    );
+  }
+
+  Widget buildOrdersLists() {
+    List<Widget> columnChildren = new List();
+
+    if (user != null && all_orders_obj_list != null) {
+      for (Order order in all_orders_obj_list) {
+        Widget thisOrder = Container(
+          margin: EdgeInsets.only(left: 5, bottom: 10, right: 5),
+          decoration: BoxDecoration(
+              shape: BoxShape.rectangle,
+              color: Color(0xfffff2ca).withOpacity(0.5),
+              border:
+                  Border.all(width: 1.0, color: Colors.black.withOpacity(0.4)),
+              borderRadius: BorderRadius.all(Radius.circular(8.0))),
+          child: getOrderItemContainer(context, order),
+        );
+        columnChildren.add(thisOrder);
+      }
+    }
+
+    columnChildren.add(generateDummyListItem(60));
+
+    bool isOrdersListEmpty = false;
+
+    if (columnChildren.length == 1) {
+      columnChildren.removeAt(0);
+      isOrdersListEmpty = true;
+    }
+
+    ListView createdLists = new ListView(
+      controller: null,
+      shrinkWrap: true,
+      physics: const ClampingScrollPhysics(),
+      scrollDirection: Axis.vertical,
+      children: columnChildren,
+    );
+
+    return all_orders_obj_list.length == 0
+        ? Center(
+            child: Text('Nenhum item disponível neste momento.',
+                textAlign: TextAlign.center, style: noneItemText))
+        : createdLists;
+  }
+
+  getOrderItemContainer(BuildContext context, Order order) {
+    List<Widget> columnChildren = new List();
+    List<Widget> listViewChildren = new List();
+    List<Widget> listViewChildrenColumn = new List();
+
+    listViewChildren.add(Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: <Widget>[
+        Padding(
+          padding: const EdgeInsets.only(left: 5.0),
+          child: Text(order.dateTime.replaceAll("-", "\/").substring(0, 10),
+              style: majorFoodNameText),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(right: 5.0),
+          child: Text("Total: R\$ " + order.total.replaceAll(".", ","),
+              style: majorFoodNameText, overflow: TextOverflow.ellipsis),
+        )
+      ],
+    ));
+
+    order.products_id.forEach((item) {
+      columnChildren = new List();
+      columnChildren.add(Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(item['product_description'],
+                  style: minorFoodNameText, overflow: TextOverflow.ellipsis),
+              (item['pizza_edge_id'] != null && item['pizza_edge_id'] != "null")
+                  ? Text("Borda: " + item['pizza_edge_description'],
+                      style: minorPizzaEdgeText,
+                      overflow: TextOverflow.ellipsis)
+                  : Container(),
+              (item["size"] != null && item["size"] != "")
+                  ? Text(item["quantity"] + "X " + item["size"],
+                      style: minorCartItemText)
+                  : Container(),
+              Text("R\$ " + item["paid_price"].replaceAll(".", ","),
+                  style: minorCartItemText),
+            ],
+          ),
+        ],
+      ));
+
+      if (item['notes'] != null &&
+          item['notes'] != "" &&
+          item['notes'] != "None") {
+        columnChildren.add(Container(
+          margin: EdgeInsets.only(top: 5, right: 4, bottom: 2),
+          child: Text(
+            item['notes'],
+            style: minorCartItemObservationsText,
+            textAlign: TextAlign.justify,
+          ),
+        ));
+      }
+
+      String paid_price = "0.00";
+
+      if (item["paid_price"] != null && item["paid_price"] != "None") {
+        paid_price = item["paid_price"];
+      }
+
+      columnChildren.add(Container(
+        child: Text(
+            "Subtotal: R\$ " +
+                (double.parse(paid_price) * int.parse(item["quantity"]))
+                    .toStringAsFixed(2)
+                    .replaceAll(".", ","),
+            style: minorCartItemText),
+      ));
+
+      listViewChildren.add(Container(
+        margin: EdgeInsets.only(left: 5),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Card(
+              color: Color(0xfffff2ca).withOpacity(0.65),
+              elevation: 5,
+              child: Row(
+                children: <Widget>[
+                  Container(
+                    //quadrado branco fictício do conjunto imagem
+                    width: 50,
+                    height: 50,
+                    margin: EdgeInsets.only(right: 2),
+                    child: Stack(
+                      // para fazer a sombra
+                      children: <Widget>[
+                        Container(
+                            //quadrado branco da imagem para fazer a sombra
+                            width: 150,
+                            height: 150,
+                            decoration: new BoxDecoration(
+                                boxShadow: <BoxShadow>[
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.6),
+                                    offset: Offset(1.0, 6.0),
+                                    blurRadius: 15.0,
+                                  ),
+                                ],
+                                color: Colors.white,
+                                borderRadius: new BorderRadius.all(
+                                    const Radius.circular(5.0))),
+                            child: ClipRRect(
+                              borderRadius: new BorderRadius.circular(8.0),
+                              child: Image.network(
+                                item['product_image_url'],
+                                fit: BoxFit.contain,
+                              ),
+                            )),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    margin: EdgeInsets.only(left: 10),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: columnChildren,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ));
+    });
+
+    listViewChildren.add(froyoFlatBtn('Adicionar tudo ao carrinho', () async {
+      Map<String, dynamic> cartRow = {
+        DatabaseHelper.columnUserId: user.uid,
+        DatabaseHelper.columnDateRegister: new DateTime.now().toUtc().toString()
+      };
+
+      int cartId;
+      Map<String, dynamic> cart = await dbHelper.searchCart(user.uid);
+      if (cart == null) {
+        //se não tem carrinho
+        cartId = await dbHelper.insert(cartRow, "cart");
+      } else {
+        //se já tem carrinho
+        cartId = cart['cartId'];
+      }
+
+      List<Map<String, dynamic>> allCartItems =
+          await dbHelper.retrieveAllCartItems(cartId);
+      int equalId = null;
+
+      order.products_id.forEach((orderItem) async {
+        allCartItems.forEach((cartItem) {
+          if (cartItem['productId'] == orderItem['productId'] &&
+              cartItem['pizzaEdgeId'] == orderItem['pizzaEdgeId'] &&
+              cartItem['productSize'] == orderItem['size']) {
+            if (cartItem['product1Id'] == orderItem['productId'] ||
+                cartItem['product1Id'] == orderItem['product2_id'] &&
+                    cartItem['product2Id'] == orderItem['productId'] ||
+                cartItem['product2Id'] == orderItem['product2_id']) {
+              //se já tem item igual
+              equalId = cartItem['cartItemsId'];
+            }
+          }
+        });
+
+        if (equalId != null) {
+          //se já tem item igual
+          Map<String, dynamic> productRow =
+              await dbHelper.searchCartItem(equalId);
+          Map<String, dynamic> tempProductRow = new Map();
+          tempProductRow.addAll(productRow);
+          tempProductRow["productAmount"] = tempProductRow["productAmount"] + 1;
+          await dbHelper.update(tempProductRow, "cartItems", "cartItemsId");
+        } else {
+          //se ainda não tem item igual
+          int isTwoFlavoredPizza = 0;
+
+          if (orderItem['product2_id'] != null) {
+            isTwoFlavoredPizza = 1;
+          }
+
+          Map<String, dynamic> productRow = {
+            DatabaseHelper.columnCartId: cartId,
+            DatabaseHelper.columnProductId: orderItem['product_id'],
+            DatabaseHelper.columnProduct1Id: orderItem['product_id'],
+            DatabaseHelper.columnProduct2Id: orderItem['product2_id'],
+            DatabaseHelper.columnProductCategory: orderItem['category'],
+            DatabaseHelper.columnCategoryName: orderItem['product1_category'],
+            DatabaseHelper.columnProduct2CategoryName:
+                orderItem['product2_category'],
+            DatabaseHelper.columnProductAmount: orderItem['quantity'],
+            DatabaseHelper.columnProductObservations: orderItem['notes'],
+            DatabaseHelper.columnPizzaEdgeId: orderItem['pizza_edge_id'],
+            DatabaseHelper.columnProductSize: orderItem['size'],
+            DatabaseHelper.columnIsTwoFlavoredPizza: isTwoFlavoredPizza
+          };
+
+          await dbHelper.insert(productRow, "cartItems");
+
+//        print(orderItem);
+
+//          Navigator.push(
+//            context,
+//            MaterialPageRoute(
+//              builder: (context) {
+//                return new CartPage(dbHelper: dbHelper, user: user);
+//              },
+//            ),
+//          );
+
+        }
+      });
+    }));
+
+    return Container(
+      child: ListView(
+        physics: const ClampingScrollPhysics(),
+        shrinkWrap: true,
+        children: listViewChildren,
+      ),
+    );
+  }
+
+  Dialog showLoadingDialog(){
+    Dialog retorno;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        retorno = Dialog(
+          backgroundColor: Colors.black.withOpacity(0),
+          child: Container(
+            width: 100,
+            height: 100,
+            child: Image.asset(
+              'images/loading_pizza_faster.gif',
+              fit: BoxFit.scaleDown,
+            ),
+          ),
+        );
+        return retorno;
+      },
+    );
+    return retorno;
+  }
+
 }
