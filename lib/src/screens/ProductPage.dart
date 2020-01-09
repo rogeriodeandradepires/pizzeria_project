@@ -370,20 +370,26 @@ class _ProductPageState extends State<ProductPage> {
                     });
                   }
                   if (brotoPrice_global != "--") {
-                    double maximum_broto = max(
-                        double.parse(product1ToReturn.price_broto),
-                        double.parse(product2ToReturn.price_broto));
-                    double maximum_inteira = max(
-                        double.parse(product1ToReturn.price_inteira),
-                        double.parse(product2ToReturn.price_inteira));
 
-                    setState(() {
-                      brotoPrice_global = maximum_broto.toStringAsFixed(2);
-                    });
+                    if (product2ToReturn!=null) {
+                      double maximum_broto = max(
+                          double.parse(product1ToReturn.price_broto),
+                          double.parse(product2ToReturn.price_broto));
+                      double maximum_inteira = max(
+                          double.parse(product1ToReturn.price_inteira),
+                          double.parse(product2ToReturn.price_inteira));
 
-                    setState(() {
-                      inteiraPrice_global = maximum_inteira.toStringAsFixed(2);
-                    });
+                      setState(() {
+                        brotoPrice_global = maximum_broto.toStringAsFixed(2);
+                        inteiraPrice_global = maximum_inteira.toStringAsFixed(2);
+                      });
+                    }else{
+                      setState(() {
+                        brotoPrice_global = productToReturn.price_broto;
+                        inteiraPrice_global = productToReturn.price_inteira;
+                      });
+                    }
+
                   } else {
                     setState(() {
                       brotoPrice_global = productToReturn.price_broto;
@@ -668,6 +674,7 @@ class _ProductPageState extends State<ProductPage> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         Center(child: Text(widget.productData.description, style: h4)),
+        widget.productData.size==null?Container():Center(child: Text(widget.productData.size, style: h6)),
         Align(
             alignment: Alignment.center,
             child: checkIngredients(widget.productData)),
@@ -853,6 +860,8 @@ class _ProductPageState extends State<ProductPage> {
                             } else {
                               //se ainda não tem item igual
 
+//                              print("Size: "+widget.productData.size);
+
                               Map<String, dynamic> productRow = {
                                 DatabaseHelper.columnCartId: cartId,
                                 DatabaseHelper.columnProductId:
@@ -866,7 +875,7 @@ class _ProductPageState extends State<ProductPage> {
                                     observations,
                                 DatabaseHelper.columnPizzaEdgeId: null,
                                 DatabaseHelper.columnProductSize:
-                                    sizePriceSelected
+                                    widget.productData.size
                               };
 
                               await widget.dbHelper

@@ -15,6 +15,8 @@ import 'package:http/http.dart';
 import '../shared/styles.dart';
 import '../shared/colors.dart';
 import '../shared/buttons.dart';
+import 'package:intl/intl.dart';
+import 'package:dio/dio.dart' as diolib;
 
 class CartPage extends StatefulWidget {
   final dbHelper;
@@ -27,6 +29,7 @@ class CartPage extends StatefulWidget {
 }
 
 class _CartPageState extends State<CartPage> {
+  bool isLoading = false;
   int _quantity = 1;
 
   Widget firstFlavorChosen;
@@ -62,8 +65,17 @@ class _CartPageState extends State<CartPage> {
   ListenAllCartItemsReceivedBloc listenAllCartItemsReceivedBloc;
   List<String> includedProducts = new List();
 
+  var globalContext;
+
   @override
   Future<void> initState() {
+//    Dialog thisDialog = showLoadingDialog();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      isLoading = true;
+      return showLoadingDialog();
+    });
+
     totalPrice_bloc = new TotalPriceBloc();
     allCartItemsBloc = new AllCartItemsBloc();
     listenAllCartItemsReceivedBloc = new ListenAllCartItemsReceivedBloc();
@@ -72,6 +84,7 @@ class _CartPageState extends State<CartPage> {
 
   @override
   Widget build(BuildContext context) {
+    globalContext = context;
     //página grande do produto
     return Scaffold(
         backgroundColor: primaryColor,
@@ -172,13 +185,23 @@ class _CartPageState extends State<CartPage> {
                                     width:
                                         MediaQuery.of(context).size.width * 0.8,
                                     margin: EdgeInsets.only(bottom: 10),
-                                    child: froyoFlatBtn('Realizar Pedido', () async {
+                                    child: froyoFlatBtn('Realizar Pedido',
+                                        () async {
                                       Dialog thisDialog = showLoadingDialog();
 
-                                      String url = 'http://192.168.63.1:8080/makeorder';
+//                                      String url =
+//                                          'http://192.168.63.1:8080/makeorder';
                                       String userId = widget.user.uid;
                                       String coupon_id = null;
-                                      String dateTime = null;
+
+                                      var now = new DateTime.now();
+
+                                      print("Aqui:" + now.toString());
+
+//                                      var formatter = new DateFormat('yyyy-MM-dd Hms');
+                                      String dateTime =
+                                          now.toString().substring(0, 19);
+
                                       String id = null;
                                       String delivery = "withdraw";
                                       String payment_method = "credit_card";
@@ -187,57 +210,53 @@ class _CartPageState extends State<CartPage> {
                                       Map<String, dynamic> productsId = {};
 
                                       finalAllCartItemsMap.forEach((item) {
+//                                        print("Item: "+item.toString());
 
-                                        Product retrievedPizzaEdge;
-
-                                        String pizza_edge_description = null;
-                                        String pizza_edge_paid_price = null;
-                                        String pizza_edge_id = item['pizzaEdgeId'];
-                                        String product1_category = item["categoryName"];
-                                        String product2_category = item["product2CategoryName"];
+                                        String pizza_edge_id =
+                                            item['pizzaEdgeId'];
+                                        String product1_category =
+                                            item["categoryName"];
+                                        String product2_category =
+                                            item["product2CategoryName"];
                                         String product_id = "";
 
-                                        if (item["isTwoFlavoredPizza"]==1) {
+                                        if (item["isTwoFlavoredPizza"] == 1) {
                                           product_id = item["product1Id"];
-                                        }else{
+                                        } else {
                                           product_id = item["productId"];
                                         }
 
                                         Map<String, dynamic> tempMap = {
                                           'category': item['productCategory'],
                                           'notes': item['productObservations'],
-                                          'id': null,
-                                          'paid_price': total,
                                           'pizza_edge_id': '$pizza_edge_id',
-                                          'pizza_edge_description': '$pizza_edge_description',
-                                          'pizza_edge_paid_price': '$pizza_edge_paid_price',
-                                          'product1_category': '$product1_category',
-                                          'product2_category': '$product2_category',
+                                          'product1_category':
+                                              '$product1_category',
+                                          'product2_category':
+                                              '$product2_category',
                                           'product2_id': item['product2Id'],
-                                          'product_description': null,
                                           'product_id': product_id,
-                                          'isTwoFlavoredPizza': item["isTwoFlavoredPizza"],
+                                          'isTwoFlavoredPizza':
+                                              item["isTwoFlavoredPizza"],
                                           'quantity': item['productAmount'],
                                           'size': item['productSize'],
                                         };
 
-//                                        'product_image_url': item['isTwoFlavoredPizza']==0?product1.imageUrl:"https://storage.googleapis.com/dom-marino-ws.appspot.com/categories/custom/two_flavored_pizza_image.png",
-
-                                        String tempProductsId = new DateTime.now().toUtc().toString();
+                                        String tempProductsId =
+                                            new DateTime.now()
+                                                .toUtc()
+                                                .toString();
 
                                         productsId[tempProductsId] = tempMap;
 
 //                                        print(tempMap);
-
-
                                       });
 
 //                                      print("productsId: "+json.encode(productsId));
 
-
                                       var queryParameters = {
+                                        'date_time': '$dateTime',
                                         'coupon_id': '$coupon_id',
-                                        'dateTime': '$dateTime',
                                         'id': '$id',
                                         'delivery': '$delivery',
                                         'payment_method': '$payment_method',
@@ -246,28 +265,31 @@ class _CartPageState extends State<CartPage> {
                                         'products_id': json.encode(productsId),
                                       };
 
-                                      var uri = Uri.http('192.168.63.1:8080', 'makeorder', queryParameters);
+//                                      var uri = Uri.http('192.168.63.1:8080', 'makeorder', queryParameters);
+                                      var uri = Uri.http(
+                                          'dom-marino-webservice.appspot.com',
+                                          'makeorder',
+                                          queryParameters);
 
-                                      Response response = await get(uri);
-                                      // sample info available in response
-                                      int statusCode = response.statusCode;
-                                      Map<String, String> headers = response.headers;
-                                      String contentType = headers['content-type'];
-//                                      dynamic all_products = json.decode(response.body);
+                                      var url = "https://dom-marino-webservice.appspot.com/makeorder";
+//                                      var url = "http://192.168.63.1:8080/makeorder";
 
-                                      if (response.statusCode == 200) {
-                                        print('Ok');
-                                      }
+                                      diolib.Dio dio = new diolib.Dio();
+                                      diolib.Response apiResponse = await dio.post(url, data: queryParameters);
+                                      print(apiResponse.data.toString());
 
-                                      print("status: "+response.statusCode.toString()+", body: "+response.body.toString());
-                                      Navigator.of(context, rootNavigator: false).pop();
+                                      Navigator.of(context,
+                                              rootNavigator: false)
+                                          .pop();
 
-                                      await widget.dbHelper.delete(cartId, "cart", "cartId");
+                                      await widget.dbHelper.delete(
+                                          cartId, "cartItems", "cartId");
+                                      await widget.dbHelper
+                                          .delete(cartId, "cart", "cartId");
 
 //                                      Navigator.pop(context, "Ok");
-                                      Navigator.of(context, rootNavigator: true).pop("Ok");
-
-
+                                      Navigator.of(context, rootNavigator: true)
+                                          .pop("Ok");
                                     }),
                                   ),
                                 ),
@@ -349,19 +371,26 @@ class _CartPageState extends State<CartPage> {
       Product thisProduct;
 
       if (finalAllCartItemsMap[i]['isTwoFlavoredPizza'] == 1) {
+//        print("É pizza de 2 sabores");
+//        print("Product: "+finalAllCartItemsMap[i].toString());
+
         //se for pizza de 2 sabores
         thisProduct = await getProduct(
             category: finalAllCartItemsMap[i]['categoryName'],
             id: finalAllCartItemsMap[i]['product1Id'],
             productOrder: "product1");
+
         Product product2 = await getProduct(
             category: finalAllCartItemsMap[i]['product2CategoryName'],
             id: finalAllCartItemsMap[i]['product2Id'],
             productOrder: "product2");
 
         Product retrievedPizzaEdge;
+//        print("Pizza Edge: "+finalAllCartItemsMap[i]['pizzaEdgeId'].toString());
 
-        if (finalAllCartItemsMap[i]['pizzaEdgeId'] != null) {
+        if (finalAllCartItemsMap[i]['pizzaEdgeId'] != null &&
+            finalAllCartItemsMap[i]['pizzaEdgeId'] != "null") {
+//          print("Entrou errado");
           retrievedPizzaEdge = await getProduct(
               id: finalAllCartItemsMap[i]['pizzaEdgeId'],
               category: 'pizza_edges');
@@ -374,9 +403,10 @@ class _CartPageState extends State<CartPage> {
               double.parse(product2.price_broto));
           if (retrievedPizzaEdge != null) {
             allPizzaEdgesProduct.add(retrievedPizzaEdge);
-            tempPizzaEdgePrice = double.parse(retrievedPizzaEdge.price_broto) * finalAllCartItemsMap[i]['productAmount'];
+            tempPizzaEdgePrice = double.parse(retrievedPizzaEdge.price_broto) *
+                finalAllCartItemsMap[i]['productAmount'];
           }
-        } else {
+        } else if (finalAllCartItemsMap[i]['productSize'] == "Inteira") {
           higherPrice = max(double.parse(thisProduct.price_inteira),
               double.parse(product2.price_inteira));
 
@@ -385,7 +415,9 @@ class _CartPageState extends State<CartPage> {
 
           if (retrievedPizzaEdge != null) {
             allPizzaEdgesProduct.add(retrievedPizzaEdge);
-            tempPizzaEdgePrice = double.parse(retrievedPizzaEdge.price_inteira) * finalAllCartItemsMap[i]['productAmount'];
+            tempPizzaEdgePrice =
+                double.parse(retrievedPizzaEdge.price_inteira) *
+                    finalAllCartItemsMap[i]['productAmount'];
           }
         }
 
@@ -394,13 +426,13 @@ class _CartPageState extends State<CartPage> {
         String oldTotalPrice = totalPrice.replaceAll(",", ".");
         totalPrice = (double.parse(oldTotalPrice) +
                 tempProductPrice +
-            (tempPizzaEdgePrice))
+                (tempPizzaEdgePrice))
             .toStringAsFixed(2);
 
         if (finalAllCartItemsMap[i]['productSize'] == "Broto") {
           thisProduct.price_broto =
               (tempProductPrice + tempPizzaEdgePrice).toStringAsFixed(2);
-        } else {
+        } else if (finalAllCartItemsMap[i]['productSize'] == "Inteira") {
           thisProduct.price_inteira =
               (tempProductPrice + tempPizzaEdgePrice).toStringAsFixed(2);
         }
@@ -408,11 +440,17 @@ class _CartPageState extends State<CartPage> {
         totalPrice_bloc.totalPriceSink.add(totalPrice.replaceAll(".", ","));
       } else {
         //se não for pizza de 2 sabores
+//        print("Não é pizza de 2 sabores");
+//        print("Product: "+finalAllCartItemsMap[i].toString());
 
         thisProduct = await getProduct(map: finalAllCartItemsMap[i]);
+        thisProduct.category =
+            finalAllCartItemsMap[i]['productCategory'].toString();
 
-        if (finalAllCartItemsMap[i]['productSize'] == null ||
-            finalAllCartItemsMap[i]['productSize'] == "") {
+        if (!finalAllCartItemsMap[i]['productCategory']
+                .toString()
+                .contains("Pizza") &&
+            finalAllCartItemsMap[i]['productCategory'].toString() != "null") {
           //se não é pizza
           double tempPrice = double.parse(thisProduct.price) *
               finalAllCartItemsMap[i]['productAmount'];
@@ -429,7 +467,8 @@ class _CartPageState extends State<CartPage> {
 
           Product retrievedPizzaEdge;
 
-          if (finalAllCartItemsMap[i]['pizzaEdgeId'] != null) {
+          if (finalAllCartItemsMap[i]['pizzaEdgeId'] != null &&
+              finalAllCartItemsMap[i]['pizzaEdgeId'] != "null") {
 //            pizzaEdgePriceBlocs.insert(i, new PizzaEdgePriceBloc());
             retrievedPizzaEdge = await getProduct(
                 id: finalAllCartItemsMap[i]['pizzaEdgeId'],
@@ -513,6 +552,11 @@ class _CartPageState extends State<CartPage> {
     columnChildren.add(generateDummyListItem(60));
 
     allCartItemsBloc.allCartItemsSink.add(columnChildren);
+
+    if (isLoading) {
+      isLoading = false;
+      Navigator.of(context, rootNavigator: true).pop();
+    }
   }
 
   Future<Product> getProduct(
@@ -523,6 +567,7 @@ class _CartPageState extends State<CartPage> {
 //    print("problema");
 //    print("category: $category, id: $id");
 //    print("map: $map");
+//    print("productOrder: $productOrder");
     if (map != null) {
       if (map['isTwoFlavoredPizza'] == 1) {
         if (productOrder == "product1") {
@@ -627,8 +672,11 @@ class _CartPageState extends State<CartPage> {
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              (size != null && size != "") ? Text(size, style: minorCartItemText)
-                  : (product.size!=null?Text(product.size, style: minorCartItemText):Container()),
+              (size != null && size != "" && size != "None")
+                  ? Text(size, style: minorCartItemText)
+                  : ((product.size != null && product.size != "None")
+                      ? Text(product.size, style: minorCartItemText)
+                      : Container()),
               getItemPrice(
                   size,
                   product,
@@ -641,27 +689,12 @@ class _CartPageState extends State<CartPage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
               InkWell(
-                onTap: () async {
-                  int index = finalAllCartItemsMap.indexOf(ammount);
-                  dynamic value = finalAllCartItemsMap[index]["productAmount"];
-                  value = value - 1;
+                onTap: () {
+                  isLoading = true;
+                  showLoadingDialog();
 
-                  if (value == 0) {
-                    await widget.dbHelper.delete(
-                        finalAllCartItemsMap[index]['cartItemsId'],
-                        "cartItems",
-                        "cartItemsId");
-                  } else {
-                    Map<String, dynamic> newMap = new Map();
-                    newMap.addAll(ammount);
-                    newMap["productAmount"] = value;
-                    await widget.dbHelper
-                        .update(newMap, "cartItems", "cartItemsId");
-                  }
+                  subtractAmmount(ammount);
 
-                  setState(() {
-                    retrieveAllCartItems();
-                  });
                 },
                 child: Container(
                   width: 30,
@@ -681,18 +714,11 @@ class _CartPageState extends State<CartPage> {
               ),
               InkWell(
                 onTap: () async {
-                  int index = finalAllCartItemsMap.indexOf(ammount);
-                  dynamic value = finalAllCartItemsMap[index]["productAmount"];
-                  value = value + 1;
-                  Map<String, dynamic> newMap = new Map();
-                  newMap.addAll(ammount);
-                  newMap["productAmount"] = value;
-                  await widget.dbHelper
-                      .update(newMap, "cartItems", "cartItemsId");
+                  isLoading = true;
+                  showLoadingDialog();
 
-                  setState(() {
-                    retrieveAllCartItems();
-                  });
+                  addAmmount(ammount);
+
                 },
                 child: Container(
                   width: 30,
@@ -715,7 +741,8 @@ class _CartPageState extends State<CartPage> {
     }
 
     if (cartItemMap['productObservations'] != null &&
-        cartItemMap['productObservations'] != "") {
+        cartItemMap['productObservations'] != "" &&
+        cartItemMap['productObservations'] != "None") {
       columnChildren.add(Container(
         margin: EdgeInsets.only(top: 5, right: 4, bottom: 2),
         child: Text(
@@ -782,7 +809,10 @@ class _CartPageState extends State<CartPage> {
 
     Widget retorno;
 
-    if (size == null || size == "") {
+    print("Aqui: " + product.category.toString());
+
+    if (!product.category.toString().toLowerCase().contains("pizza") &&
+        product.category.toString() != "null") {
       if (product.price != null) {
         tempPrice = double.parse(product.price) * ammount;
 
@@ -849,10 +879,16 @@ class _CartPageState extends State<CartPage> {
           children: <Widget>[
             Container(
               width: MediaQuery.of(context).size.width * 0.35,
-              child: Text(pizzaEdgeDescription,
-                  style: minorPizzaEdgeText, overflow: TextOverflow.ellipsis),
+              child: (pizzaEdgeDescription != null &&
+                      pizzaEdgeDescription != "null")
+                  ? Text(pizzaEdgeDescription,
+                      style: minorPizzaEdgeText,
+                      overflow: TextOverflow.ellipsis)
+                  : Container(),
             ),
-            size != null ? Text(size, style: minorCartItemText) : Container(),
+            (size != null && size != "None")
+                ? Text(size, style: minorCartItemText)
+                : Container(),
             getItemPrice(
                 size,
                 pizza,
@@ -866,6 +902,10 @@ class _CartPageState extends State<CartPage> {
           children: <Widget>[
             InkWell(
               onTap: () async {
+
+                isLoading = true;
+                showLoadingDialog();
+
                 int thisIndex = finalAllCartItemsMap.indexOf(ammount);
                 dynamic value =
                     finalAllCartItemsMap[thisIndex]["productAmount"];
@@ -906,6 +946,10 @@ class _CartPageState extends State<CartPage> {
             ),
             InkWell(
               onTap: () async {
+
+                isLoading = true;
+                showLoadingDialog();
+
                 int thisIndex = finalAllCartItemsMap.indexOf(ammount);
                 dynamic value =
                     finalAllCartItemsMap[thisIndex]["productAmount"];
@@ -937,27 +981,73 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  Dialog showLoadingDialog(){
+  Dialog showLoadingDialog() {
     Dialog retorno;
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        retorno = Dialog(
-          backgroundColor: Colors.black.withOpacity(0),
-          child: Container(
-            width: 100,
-            height: 100,
-            child: Image.asset(
-              'images/loading_pizza_faster.gif',
-              fit: BoxFit.scaleDown,
-            ),
-          ),
-        );
-        return retorno;
-      },
-    );
+    showGeneralDialog(
+        context: globalContext,
+        pageBuilder: (BuildContext buildContext, Animation<double> animation,
+            Animation<double> secondaryAnimation) {
+          return SafeArea(
+            child: Builder(builder: (context) {
+              return Material(
+                  color: Colors.transparent,
+                  child: Align(
+                      alignment: Alignment.center,
+                      child: Container(
+                          height: 100.0,
+                          width: 100.0,
+                          child: Image.asset(
+                            'images/loading_pizza_faster.gif',
+                            fit: BoxFit.scaleDown,
+                          ))));
+            }),
+          );
+        },
+        barrierDismissible: true,
+        barrierLabel:
+            MaterialLocalizations.of(context).modalBarrierDismissLabel,
+        barrierColor: Colors.black.withOpacity(0.4),
+        transitionDuration: const Duration(milliseconds: 150));
     return retorno;
   }
 
+  Future<void> subtractAmmount(Map<String, dynamic> ammount) async {
+
+    int index = finalAllCartItemsMap.indexOf(ammount);
+    dynamic value = finalAllCartItemsMap[index]["productAmount"];
+    value = value - 1;
+
+    if (value == 0) {
+      await widget.dbHelper.delete(
+          finalAllCartItemsMap[index]['cartItemsId'],
+          "cartItems",
+          "cartItemsId");
+    } else {
+      Map<String, dynamic> newMap = new Map();
+      newMap.addAll(ammount);
+      newMap["productAmount"] = value;
+      await widget.dbHelper
+          .update(newMap, "cartItems", "cartItemsId");
+    }
+
+    setState(() {
+      retrieveAllCartItems();
+    });
+  }
+
+  Future<void> addAmmount(Map<String, dynamic> ammount) async {
+
+    int index = finalAllCartItemsMap.indexOf(ammount);
+    dynamic value = finalAllCartItemsMap[index]["productAmount"];
+    value = value + 1;
+    Map<String, dynamic> newMap = new Map();
+    newMap.addAll(ammount);
+    newMap["productAmount"] = value;
+    await widget.dbHelper
+        .update(newMap, "cartItems", "cartItemsId");
+
+    setState(() {
+      retrieveAllCartItems();
+    });
+  }
 }

@@ -8,6 +8,7 @@ import 'package:dom_marino_app/src/models/tabIconData.dart';
 import 'package:dom_marino_app/src/shared/buttons.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../shared/styles.dart';
 import '../shared/colors.dart';
 import '../shared/fryo_icons.dart';
@@ -46,8 +47,10 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   FirebaseUser user;
   FirebaseAuth fbAuth = FirebaseAuth.instance;
   BuildContext globalContext;
+  BuildContext globalScaffoldContext;
   ListView ordersTab;
   var _tabs;
+  bool isSnackbarVisible = false;
 
   Widget tabBody = new Container(
     decoration: new BoxDecoration(
@@ -104,52 +107,56 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     ];
 
     return Scaffold(
-      backgroundColor: bgColor,
-      appBar: AppBar(
-        centerTitle: true,
-        elevation: 0,
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Image.asset(
-            'images/leading_logo_icon_wide.png',
-            fit: BoxFit.cover,
-          ),
-        ),
-        backgroundColor: primaryColor,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Image.asset(
-              'images/title_logo_icon_wide_minor.png',
+        backgroundColor: bgColor,
+        appBar: AppBar(
+          centerTitle: true,
+          elevation: 0,
+          leading: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Image.asset(
+              'images/leading_logo_icon_wide.png',
               fit: BoxFit.cover,
-              height: 40.0,
             ),
+          ),
+          backgroundColor: primaryColor,
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Image.asset(
+                'images/title_logo_icon_wide_minor.png',
+                fit: BoxFit.cover,
+                height: 40.0,
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            IconButton(
+              padding: EdgeInsets.all(0),
+              onPressed: () {
+                showSnackbarError();
+              },
+              iconSize: 21,
+              icon: Icon(Fryo.location),
+            )
           ],
         ),
-        actions: <Widget>[
-          IconButton(
-            padding: EdgeInsets.all(0),
-            onPressed: () {},
-            iconSize: 21,
-            icon: Icon(Fryo.location),
-          )
-        ],
-      ),
-      body: new Stack(
-        children: <Widget>[
-          new Container(
-            decoration: new BoxDecoration(
-              image: new DecorationImage(
-                image: new AssetImage("images/main_bg.png"),
-                fit: BoxFit.cover,
+        body: new Builder(builder: (BuildContext context) {
+          globalScaffoldContext = context;
+          return Stack(
+            children: <Widget>[
+              new Container(
+                decoration: new BoxDecoration(
+                  image: new DecorationImage(
+                    image: new AssetImage("images/main_bg.png"),
+                    fit: BoxFit.cover,
+                  ),
+                ),
               ),
-            ),
-          ),
-          _tabs[_selectedIndex],
-          bottomBar(),
-        ],
-      ),
-    );
+              _tabs[_selectedIndex],
+              bottomBar(),
+            ],
+          );
+        }));
   }
 
   Widget bottomBar() {
@@ -332,26 +339,30 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     String url = 'https://dom-marino-webservice.appspot.com/list_' + category;
     var uri = Uri.https(
         'dom-marino-webservice.appspot.com', 'list_$category', queryParameters);
-//    print(url);
 
-    Response response = await get(uri);
-    // sample info available in response
-    int statusCode = response.statusCode;
-    Map<String, String> headers = response.headers;
-    String contentType = headers['content-type'];
-    dynamic allProducts = json.decode(response.body);
+    try {
+      Response response = await get(uri);
+      // sample info available in response
+      int statusCode = response.statusCode;
+      Map<String, String> headers = response.headers;
+      String contentType = headers['content-type'];
+      dynamic allProducts = json.decode(response.body);
 
 //    print(all_products.toString());
 
-    if (response.statusCode == 200) {
-      all_products_obj_list = new List();
+      if (response.statusCode == 200) {
+        all_products_obj_list = new List();
 
-      all_products_obj_list.add(Product.fromJson(allProducts));
+        all_products_obj_list.add(Product.fromJson(allProducts));
 
-      return Product.fromJson(allProducts);
-    } else {
-      // If that response was not OK, throw an error.
-      throw Exception('Failed to load product');
+        return Product.fromJson(allProducts);
+      } else {
+        // If that response was not OK, throw an error.
+        throw Exception('Failed to load product');
+      }
+    } catch (e) {
+      showSnackbarError();
+      print("Aqui getProduct erro: " + e.toString());
     }
   }
 
@@ -360,89 +371,101 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     String url = 'https://dom-marino-webservice.appspot.com/list_' + category;
 //    print(url);
 
-    Response response = await get(url);
-    // sample info available in response
-    int statusCode = response.statusCode;
-    Map<String, String> headers = response.headers;
-    String contentType = headers['content-type'];
-    dynamic all_products = json.decode(response.body);
+    try {
+      Response response = await get(url);
+      // sample info available in response
+      int statusCode = response.statusCode;
+      Map<String, String> headers = response.headers;
+      String contentType = headers['content-type'];
+      dynamic all_products = json.decode(response.body);
 
-    if (response.statusCode == 200) {
-      all_products_obj_list = new List();
-      all_products.forEach((product) {
-        all_products_obj_list.add(Product.fromJson(product));
+      if (response.statusCode == 200) {
+        all_products_obj_list = new List();
+        all_products.forEach((product) {
+          all_products_obj_list.add(Product.fromJson(product));
 //        print(product);
-      });
-    } else {
-      // If that response was not OK, throw an error.
-      throw Exception('Failed to load products');
-    }
+        });
+      } else {
+        // If that response was not OK, throw an error.
+        throw Exception('Failed to load products');
+      }
 
-    all_products_obj_list.sort((a, b) {
-      return a.description.toLowerCase().compareTo(b.description.toLowerCase());
-    });
+      all_products_obj_list.sort((a, b) {
+        return a.description
+            .toLowerCase()
+            .compareTo(b.description.toLowerCase());
+      });
+    } catch (e) {
+      showSnackbarError();
+      print("Aqui getProducts erro: " + e.toString());
+    }
 
     return all_products_obj_list;
   }
 
   Future getCategories() async {
     String url = 'https://dom-marino-webservice.appspot.com/list_categories';
-    Response response = await get(url);
-    // sample info available in response
-    int statusCode = response.statusCode;
-    Map<String, String> headers = response.headers;
-    String contentType = headers['content-type'];
-    dynamic all_categories = json.decode(response.body);
 
-    if (response.statusCode == 200) {
-      all_categories_obj_list = new List();
-      all_categories.forEach((category) {
-        all_categories_obj_list.add(Category.fromJson(category));
+    try {
+      Response response = await get(url);
+      // sample info available in response
+      int statusCode = response.statusCode;
+      Map<String, String> headers = response.headers;
+      String contentType = headers['content-type'];
+      dynamic all_categories = json.decode(response.body);
+
+      if (response.statusCode == 200) {
+        all_categories_obj_list = new List();
+        all_categories.forEach((category) {
+          all_categories_obj_list.add(Category.fromJson(category));
 //        print(category);
-      });
-    } else {
-      // If that response was not OK, throw an error.
-      throw Exception('Failed to load category');
-    }
-
-    all_categories_obj_list.sort((a, b) {
-      return a.title.toLowerCase().compareTo(b.title.toLowerCase());
-    });
-
-    List<Category> temp_all_categories_obj_list = new List();
-    temp_all_categories_obj_list.addAll(all_categories_obj_list);
-    Category temp_last_category = temp_all_categories_obj_list
-        .elementAt(temp_all_categories_obj_list.length - 1);
-    temp_all_categories_obj_list
-        .removeAt(temp_all_categories_obj_list.length - 1);
-    Category temp_category;
-
-    for (Category category in all_categories_obj_list) {
-      if (category.name == "two_flavored_pizzas") {
-        Category other_category = category;
-        temp_category = category;
-        temp_all_categories_obj_list.remove(other_category);
+        });
+      } else {
+        // If that response was not OK, throw an error.
+        throw Exception('Failed to load category');
       }
-    }
 
-    temp_all_categories_obj_list.add(temp_category);
-    temp_all_categories_obj_list.add(temp_last_category);
-
-    all_categories_obj_list = temp_all_categories_obj_list.reversed.toList();
-
-    if (_selectedCategory == "") {
-      setState(() {
-        _selectedCategory = all_categories_obj_list.elementAt(0).description;
-        _selectedCategoryName = all_categories_obj_list.elementAt(0).name;
+      all_categories_obj_list.sort((a, b) {
+        return a.title.toLowerCase().compareTo(b.title.toLowerCase());
       });
-    }
 
-//    getProducts();
+      List<Category> temp_all_categories_obj_list = new List();
+      temp_all_categories_obj_list.addAll(all_categories_obj_list);
+      Category temp_last_category = temp_all_categories_obj_list
+          .elementAt(temp_all_categories_obj_list.length - 1);
+      temp_all_categories_obj_list
+          .removeAt(temp_all_categories_obj_list.length - 1);
+      Category temp_category;
+
+      for (Category category in all_categories_obj_list) {
+        if (category.name == "two_flavored_pizzas") {
+          Category other_category = category;
+          temp_category = category;
+          temp_all_categories_obj_list.remove(other_category);
+        }
+      }
+
+      temp_all_categories_obj_list.add(temp_category);
+      temp_all_categories_obj_list.add(temp_last_category);
+
+      all_categories_obj_list = temp_all_categories_obj_list.reversed.toList();
+
+      if (_selectedCategory == "") {
+        setState(() {
+          _selectedCategory = all_categories_obj_list.elementAt(0).description;
+          _selectedCategoryName = all_categories_obj_list.elementAt(0).name;
+        });
+      }
+    } catch (e) {
+      showSnackbarError();
+      print("Aqui getCategories erro: " + e.toString());
+    }
 
     return all_categories_obj_list;
   }
 
   Widget storeTab(BuildContext context) {
+
     globalStoreTabListView = ListView(
         physics: const NeverScrollableScrollPhysics(),
         controller: _controller,
@@ -805,9 +828,11 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     return isLogged;
   }
 
-  Future<void> retrieveAllOrders(String uid,{bool update}) async {
-    if (update) {
-      Dialog thisDialog = showLoadingDialog();
+  Future<void> retrieveAllOrders(String uid, {bool update}) async {
+    if (update != null) {
+      if (update) {
+        Dialog thisDialog = showLoadingDialog();
+      }
     }
     var queryParameters = {
       'id': '$uid',
@@ -816,43 +841,42 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     var uri = Uri.https('dom-marino-webservice.appspot.com', 'list_user_orders',
         queryParameters);
 
-    Response response = await get(uri);
-    // sample info available in response
-    int statusCode = response.statusCode;
-    Map<String, String> headers = response.headers;
-    String contentType = headers['content-type'];
-    dynamic all_orders = json.decode(response.body);
+    try {
+      Response response = await get(uri);
+      // sample info available in response
+      int statusCode = response.statusCode;
+      Map<String, String> headers = response.headers;
+      String contentType = headers['content-type'];
+      dynamic all_orders = json.decode(response.body);
 
-    if (response.statusCode == 200) {
-      all_orders_obj_list = new List();
-      all_orders.forEach((order) {
-        all_orders_obj_list.add(Order.fromJson(order));
+      if (response.statusCode == 200) {
+        all_orders_obj_list = new List();
+        all_orders.forEach((order) {
+          all_orders_obj_list.add(Order.fromJson(order));
+        });
+      } else {
+        // If that response was not OK, throw an error.
+        throw Exception('Failed to load products');
+      }
+
+      all_orders_obj_list.sort((a, b) {
+        var aDateTime = DateTime.parse(a.dateTime);
+        var bDateTime = DateTime.parse(b.dateTime);
+
+        return bDateTime.compareTo(aDateTime);
       });
-    } else {
-      // If that response was not OK, throw an error.
-      throw Exception('Failed to load products');
+    } catch (e) {
+      showSnackbarError();
+      print("Aqui retrieveAllOrders erro: " + e.toString());
     }
 
-    all_orders_obj_list.sort((a, b) {
-      var aDateTime = DateTime.parse(a.dateTime.substring(6, 10) +
-          "-" +
-          a.dateTime.substring(3, 5) +
-          "-" +
-          a.dateTime.substring(0, 2));
-      var bDateTime = DateTime.parse(b.dateTime.substring(6, 10) +
-          "-" +
-          b.dateTime.substring(3, 5) +
-          "-" +
-          b.dateTime.substring(0, 2));
-
-      return bDateTime.compareTo(aDateTime);
-    });
-
-    if (update) {
-      Navigator.pop(context);
-      setState(() {
-        _tabs[2] = buildOrdersTab(globalContext);
-      });
+    if (update != null) {
+      if (update) {
+        Navigator.pop(context);
+        setState(() {
+          _tabs[2] = buildOrdersTab(globalContext);
+        });
+      }
     }
 
     return all_orders_obj_list;
@@ -969,7 +993,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
               color: Color(0xfffff2ca).withOpacity(0.5),
               border:
                   Border.all(width: 1.0, color: Colors.black.withOpacity(0.4)),
-              borderRadius: BorderRadius.all(Radius.circular(8.0))),
+              borderRadius: BorderRadius.all(Radius.circular(4.0))),
           child: getOrderItemContainer(context, order),
         );
         columnChildren.add(thisOrder);
@@ -995,8 +1019,12 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
     return all_orders_obj_list.length == 0
         ? Center(
+            child: Container(
+            margin:
+                EdgeInsets.only(top: MediaQuery.of(context).size.height * 0.35),
             child: Text('Nenhum item disponível neste momento.',
-                textAlign: TextAlign.center, style: noneItemText))
+                textAlign: TextAlign.center, style: noneItemText),
+          ))
         : createdLists;
   }
 
@@ -1010,8 +1038,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       children: <Widget>[
         Padding(
           padding: const EdgeInsets.only(left: 5.0),
-          child: Text(order.dateTime.replaceAll("-", "\/").substring(0, 10),
-              style: majorFoodNameText),
+          child: Text(formatDateTime(order.dateTime), style: majorFoodNameText),
         ),
         Padding(
           padding: const EdgeInsets.only(right: 5.0),
@@ -1037,10 +1064,15 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                       style: minorPizzaEdgeText,
                       overflow: TextOverflow.ellipsis)
                   : Container(),
-              (item["size"] != null && item["size"] != "")
-                  ? Text(item["quantity"] + "X " + item["size"],
-                      style: minorCartItemText)
-                  : Container(),
+              Text(
+                  item["quantity"] +
+                      "X " +
+                      ((item["size"] != null &&
+                              item["size"] != "" &&
+                              item["size"] != "None")
+                          ? item["size"]
+                          : ""),
+                  style: minorCartItemText),
               Text("R\$ " + item["paid_price"].replaceAll(".", ","),
                   style: minorCartItemText),
             ],
@@ -1077,7 +1109,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       ));
 
       listViewChildren.add(Container(
-        margin: EdgeInsets.only(left: 5),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1147,27 +1178,38 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       if (cart == null) {
         //se não tem carrinho
         cartId = await dbHelper.insert(cartRow, "cart");
+//        print("Não tem carrinho");
       } else {
         //se já tem carrinho
         cartId = cart['cartId'];
+//        print("Já tem carrinho");
       }
 
       List<Map<String, dynamic>> allCartItems =
           await dbHelper.retrieveAllCartItems(cartId);
       int equalId = null;
-
+//      print("Entrou: ");
       order.products_id.forEach((orderItem) async {
+//        print("OrderItem: "+orderItem.toString());
         allCartItems.forEach((cartItem) {
-          if (cartItem['productId'] == orderItem['productId'] &&
-              cartItem['pizzaEdgeId'] == orderItem['pizzaEdgeId'] &&
+//          print("CartItem:"+cartItem.toString());
+//          print("OrderItem:"+orderItem.toString());
+          if (cartItem['productId'] == orderItem['product_id'] &&
+              cartItem['pizzaEdgeId'] == orderItem['pizza_edge_id'] &&
               cartItem['productSize'] == orderItem['size']) {
-            if (cartItem['product1Id'] == orderItem['productId'] ||
+            print("product 1 igual");
+            if (cartItem['product1Id'] == orderItem['product_id'] ||
                 cartItem['product1Id'] == orderItem['product2_id'] &&
-                    cartItem['product2Id'] == orderItem['productId'] ||
+                    cartItem['product2Id'] == orderItem['product_id'] ||
                 cartItem['product2Id'] == orderItem['product2_id']) {
+              print("product 2 igual");
               //se já tem item igual
               equalId = cartItem['cartItemsId'];
+            } else {
+              print("product 2 DIFERENTE");
             }
+          } else {
+            print("product 1 DIFERENTE");
           }
         });
 
@@ -1183,7 +1225,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           //se ainda não tem item igual
           int isTwoFlavoredPizza = 0;
 
-          if (orderItem['product2_id'] != null) {
+          if (orderItem['product2_id'] != null &&
+              orderItem['product2_id'] != "None") {
             isTwoFlavoredPizza = 1;
           }
 
@@ -1207,17 +1250,22 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
 //        print(orderItem);
 
-//          Navigator.push(
-//            context,
-//            MaterialPageRoute(
-//              builder: (context) {
-//                return new CartPage(dbHelper: dbHelper, user: user);
-//              },
-//            ),
-//          );
-
         }
       });
+      final result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) =>
+            new CartPage(dbHelper: dbHelper, user: user)),
+      );
+
+      if (result.toString()=="Ok") {
+        retrieveAllOrders(user.uid, update: true);
+      }
+
+//          retrieveAllOrders(user.uid, update: true);
+
+      print("Retorno do CartPage: " + result.toString());
     }));
 
     return Container(
@@ -1229,27 +1277,73 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     );
   }
 
-  Dialog showLoadingDialog(){
+  Dialog showLoadingDialog() {
     Dialog retorno;
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        retorno = Dialog(
-          backgroundColor: Colors.black.withOpacity(0),
-          child: Container(
-            width: 100,
-            height: 100,
-            child: Image.asset(
-              'images/loading_pizza_faster.gif',
-              fit: BoxFit.scaleDown,
-            ),
-          ),
-        );
-        return retorno;
-      },
-    );
+    showGeneralDialog(
+        context: context,
+        pageBuilder: (BuildContext buildContext, Animation<double> animation,
+            Animation<double> secondaryAnimation) {
+          return SafeArea(
+            child: Builder(builder: (context) {
+              return Material(
+                  color: Colors.transparent,
+                  child: Align(
+                      alignment: Alignment.center,
+                      child: Container(
+                          height: 100.0,
+                          width: 100.0,
+                          child: Image.asset(
+                            'images/loading_pizza_faster.gif',
+                            fit: BoxFit.scaleDown,
+                          ))));
+            }),
+          );
+        },
+        barrierDismissible: true,
+        barrierLabel:
+            MaterialLocalizations.of(context).modalBarrierDismissLabel,
+        barrierColor: Colors.black.withOpacity(0.4),
+        transitionDuration: const Duration(milliseconds: 150));
     return retorno;
   }
 
+  String formatDateTime(String dateTime) {
+    var newDateTime = DateTime.parse(dateTime);
+    var formatter = new DateFormat('dd\/MM\/yyyy');
+    String formatted = formatter.format(newDateTime);
+    return formatted;
+  }
+
+  void showSnackbarError() {
+
+    if (!isSnackbarVisible) {
+      isSnackbarVisible = true;
+      Scaffold.of(globalScaffoldContext)
+          .showSnackBar(SnackBar(
+            content: Container(
+              height: MediaQuery.of(context).size.height*0.06,
+              child: Column(
+                children: <Widget>[
+                  Text(
+                    "Erro de conexão.",
+                    textAlign: TextAlign.center,
+                    style: h6Snackbar,
+                  ),
+                  Text(
+                    "Por favor, tente novamente mais tarde.",
+                    textAlign: TextAlign.justify,
+                    style: h5Snackbar,
+                  ),
+                ],
+              ),
+            ),
+            backgroundColor: Colors.redAccent,
+            duration: Duration(seconds: 3),
+          ))
+          .closed
+          .then((reason) {
+        isSnackbarVisible = false;
+      });
+    }
+  }
 }

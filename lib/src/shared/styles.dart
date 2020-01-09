@@ -59,10 +59,24 @@ const h5 = TextStyle(
     fontWeight: FontWeight.w500,
     fontFamily: 'Poppins');
 
+const h5Snackbar = TextStyle(
+    color: Colors.black,
+    fontSize: 14,
+    height: 0.98,
+    fontWeight: FontWeight.w500,
+    fontFamily: 'Poppins');
+
 const h6 = TextStyle(
     color: Colors.black,
     fontSize: 16,
     fontWeight: FontWeight.w500,
+    fontFamily: 'Poppins');
+
+const h6Snackbar = TextStyle(
+    color: Colors.black,
+    fontSize: 16,
+    height: 0.98,
+    fontWeight: FontWeight.w700,
     fontFamily: 'Poppins');
 
 const priceText = TextStyle(
