@@ -42,8 +42,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   ListView globalStoreTabListView;
   ScrollController _controller;
   final dbHelper = DatabaseHelper.instance;
-  List<Map<String, dynamic>> allFavorites;
-  List<Map<String, dynamic>> allOrders;
+  List<Map<String, dynamic>> allFavorites = new List();
+  List<Map<String, dynamic>> allOrders = new List();
   FirebaseUser user;
   FirebaseAuth fbAuth = FirebaseAuth.instance;
   BuildContext globalContext;
@@ -175,7 +175,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                 context,
                 MaterialPageRoute(
                     builder: (context) =>
-                        new CartPage(dbHelper: dbHelper, user: user)),
+                    new CartPage(dbHelper: dbHelper, user: user)),
               );
 
               retrieveAllOrders(user.uid, update: true);
@@ -202,7 +202,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
               });
 
               if (index == 2) {
-                retrieveAllOrders(user.uid, update: true);
+                if (user!=null) {
+                  retrieveAllOrders(user.uid, update: true);
+                }
               }
             } else if (index == 1 || index == 3) {
               animationController.reverse().then((data) {
@@ -244,7 +246,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         thisList.add(sectionHeader(subListTitle, onViewMore: () {}));
       }
       Product retrievedProduct =
-          await getProduct(favorited['categoryName'], favorited['productId']);
+      await getProduct(favorited['categoryName'], favorited['productId']);
       retrievedProduct.userLiked = true;
       Widget thisItem;
       thisItem = foodItem(context, retrievedProduct, onTapped: () {
@@ -268,7 +270,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           Map<String, dynamic> favorite;
           try {
             favorite =
-                await dbHelper.searchFavorite(user.uid, retrievedProduct.id);
+            await dbHelper.searchFavorite(user.uid, retrievedProduct.id);
           } on Exception catch (e, s) {
             print(
                 "Exception: " + e.toString() + ", Stacktrace: " + s.toString());
@@ -542,11 +544,11 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                 if (user != null) {
                                   Map<String, dynamic> row = {
                                     DatabaseHelper.columnId:
-                                        user.uid + product.id,
+                                    user.uid + product.id,
                                     DatabaseHelper.columnCategory:
-                                        _selectedCategory,
+                                    _selectedCategory,
                                     DatabaseHelper.columnCategoryName:
-                                        _selectedCategoryName,
+                                    _selectedCategoryName,
                                     DatabaseHelper.columnUserId: user.uid,
                                     DatabaseHelper.columnProductId: product.id,
                                     DatabaseHelper.columnIsLiked: 1
@@ -567,14 +569,14 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                   if (user != null) {
                                     Map<String, dynamic> row = {
                                       DatabaseHelper.columnId:
-                                          user.uid + product.id,
+                                      user.uid + product.id,
                                       DatabaseHelper.columnCategory:
-                                          _selectedCategory,
+                                      _selectedCategory,
                                       DatabaseHelper.columnCategoryName:
-                                          _selectedCategoryName,
+                                      _selectedCategoryName,
                                       DatabaseHelper.columnUserId: user.uid,
                                       DatabaseHelper.columnProductId:
-                                          product.id,
+                                      product.id,
                                       DatabaseHelper.columnIsLiked: 0
                                     };
 
@@ -592,14 +594,14 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                   if (user != null) {
                                     Map<String, dynamic> row = {
                                       DatabaseHelper.columnId:
-                                          user.uid + product.id,
+                                      user.uid + product.id,
                                       DatabaseHelper.columnCategory:
-                                          _selectedCategory,
+                                      _selectedCategory,
                                       DatabaseHelper.columnCategoryName:
-                                          _selectedCategoryName,
+                                      _selectedCategoryName,
                                       DatabaseHelper.columnUserId: user.uid,
                                       DatabaseHelper.columnProductId:
-                                          product.id,
+                                      product.id,
                                       DatabaseHelper.columnIsLiked: 1
                                     };
 
@@ -792,12 +794,12 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             children: (items != null)
                 ? items
                 : <Widget>[
-                    Container(
-                      margin: EdgeInsets.only(left: 15),
-                      child: Text('Nenhum item disponível neste momento.',
-                          style: taglineText),
-                    )
-                  ],
+              Container(
+                margin: EdgeInsets.only(left: 15),
+                child: Text('Nenhum item disponível neste momento.',
+                    style: taglineText),
+              )
+            ],
           )
         ],
       ),
@@ -809,7 +811,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       height: height,
       child: Container(
 //        color: Colors.red,
-          ),
+      ),
     );
   }
 
@@ -884,7 +886,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
   Future<void> retrieveAllFavorites(String uid) async {
     List<Map<String, dynamic>> tempAllFavorites =
-        await dbHelper.retrieveAllFavorites(uid);
+    await dbHelper.retrieveAllFavorites(uid);
     allFavorites = new List();
     allFavorites.addAll(tempAllFavorites);
 
@@ -964,8 +966,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       width: MediaQuery.of(context).size.width,
       child: isFavoritesEmpty
           ? Center(
-              child: Text('Nenhum item disponível neste momento.',
-                  textAlign: TextAlign.center, style: noneItemText))
+          child: Text('Nenhum item disponível neste momento.',
+              textAlign: TextAlign.center, style: noneItemText))
           : createdLists,
     );
   }
@@ -992,7 +994,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
               shape: BoxShape.rectangle,
               color: Color(0xfffff2ca).withOpacity(0.5),
               border:
-                  Border.all(width: 1.0, color: Colors.black.withOpacity(0.4)),
+              Border.all(width: 1.0, color: Colors.black.withOpacity(0.4)),
               borderRadius: BorderRadius.all(Radius.circular(4.0))),
           child: getOrderItemContainer(context, order),
         );
@@ -1019,12 +1021,12 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
     return all_orders_obj_list.length == 0
         ? Center(
-            child: Container(
-            margin:
-                EdgeInsets.only(top: MediaQuery.of(context).size.height * 0.35),
-            child: Text('Nenhum item disponível neste momento.',
-                textAlign: TextAlign.center, style: noneItemText),
-          ))
+        child: Container(
+          margin:
+          EdgeInsets.only(top: MediaQuery.of(context).size.height * 0.35),
+          child: Text('Nenhum item disponível neste momento.',
+              textAlign: TextAlign.center, style: noneItemText),
+        ))
         : createdLists;
   }
 
@@ -1061,15 +1063,15 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                   style: minorFoodNameText, overflow: TextOverflow.ellipsis),
               (item['pizza_edge_id'] != null && item['pizza_edge_id'] != "null")
                   ? Text("Borda: " + item['pizza_edge_description'],
-                      style: minorPizzaEdgeText,
-                      overflow: TextOverflow.ellipsis)
+                  style: minorPizzaEdgeText,
+                  overflow: TextOverflow.ellipsis)
                   : Container(),
               Text(
                   item["quantity"] +
                       "X " +
                       ((item["size"] != null &&
-                              item["size"] != "" &&
-                              item["size"] != "None")
+                          item["size"] != "" &&
+                          item["size"] != "None")
                           ? item["size"]
                           : ""),
                   style: minorCartItemText),
@@ -1127,7 +1129,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                       // para fazer a sombra
                       children: <Widget>[
                         Container(
-                            //quadrado branco da imagem para fazer a sombra
+                          //quadrado branco da imagem para fazer a sombra
                             width: 150,
                             height: 150,
                             decoration: new BoxDecoration(
@@ -1186,7 +1188,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       }
 
       List<Map<String, dynamic>> allCartItems =
-          await dbHelper.retrieveAllCartItems(cartId);
+      await dbHelper.retrieveAllCartItems(cartId);
       int equalId = null;
 //      print("Entrou: ");
       order.products_id.forEach((orderItem) async {
@@ -1216,7 +1218,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         if (equalId != null) {
           //se já tem item igual
           Map<String, dynamic> productRow =
-              await dbHelper.searchCartItem(equalId);
+          await dbHelper.searchCartItem(equalId);
           Map<String, dynamic> tempProductRow = new Map();
           tempProductRow.addAll(productRow);
           tempProductRow["productAmount"] = tempProductRow["productAmount"] + 1;
@@ -1238,7 +1240,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             DatabaseHelper.columnProductCategory: orderItem['category'],
             DatabaseHelper.columnCategoryName: orderItem['product1_category'],
             DatabaseHelper.columnProduct2CategoryName:
-                orderItem['product2_category'],
+            orderItem['product2_category'],
             DatabaseHelper.columnProductAmount: orderItem['quantity'],
             DatabaseHelper.columnProductObservations: orderItem['notes'],
             DatabaseHelper.columnPizzaEdgeId: orderItem['pizza_edge_id'],
@@ -1301,7 +1303,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         },
         barrierDismissible: true,
         barrierLabel:
-            MaterialLocalizations.of(context).modalBarrierDismissLabel,
+        MaterialLocalizations.of(context).modalBarrierDismissLabel,
         barrierColor: Colors.black.withOpacity(0.4),
         transitionDuration: const Duration(milliseconds: 150));
     return retorno;
@@ -1320,26 +1322,26 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       isSnackbarVisible = true;
       Scaffold.of(globalScaffoldContext)
           .showSnackBar(SnackBar(
-            content: Container(
-              height: MediaQuery.of(context).size.height*0.06,
-              child: Column(
-                children: <Widget>[
-                  Text(
-                    "Erro de conexão.",
-                    textAlign: TextAlign.center,
-                    style: h6Snackbar,
-                  ),
-                  Text(
-                    "Por favor, tente novamente mais tarde.",
-                    textAlign: TextAlign.justify,
-                    style: h5Snackbar,
-                  ),
-                ],
+        content: Container(
+          height: MediaQuery.of(context).size.height*0.06,
+          child: Column(
+            children: <Widget>[
+              Text(
+                "Erro de conexão.",
+                textAlign: TextAlign.center,
+                style: h6Snackbar,
               ),
-            ),
-            backgroundColor: Colors.redAccent,
-            duration: Duration(seconds: 3),
-          ))
+              Text(
+                "Por favor, tente novamente mais tarde.",
+                textAlign: TextAlign.justify,
+                style: h5Snackbar,
+              ),
+            ],
+          ),
+        ),
+        backgroundColor: Colors.redAccent,
+        duration: Duration(seconds: 3),
+      ))
           .closed
           .then((reason) {
         isSnackbarVisible = false;

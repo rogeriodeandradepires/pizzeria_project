@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">dom_marino_flutter</string>
+    <string name="facebook_app_id">550601015792509</string>
+    <string name="fb_login_protocol_scheme">fb550601015792509</string>
+</resources>

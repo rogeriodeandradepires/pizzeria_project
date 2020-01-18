@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "643134120120-lcbva0qppujb0ep0ean669jbojboj20f.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "br.com.pandras.dom_marino_app",
+            "certificate_hash": "8401618a6871cb283463ebbdfa7973e4ad01bcb4"
+          }
+        },
+        {
           "client_id": "643134120120-odh9prhp3li3hfq5cmcjp0525rtg5pkm.apps.googleusercontent.com",
           "client_type": 3
         }

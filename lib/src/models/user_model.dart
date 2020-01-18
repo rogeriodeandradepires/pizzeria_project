@@ -32,17 +32,26 @@ class UserModel extends Model{
     });
   }
 
+  void signInFace(bool isLoggedIn, FirebaseUser user){
+    isLoading = true;
+    notifyListeners();
+
+    firebaseUser = user;
+    isLoading = false;
+    notifyListeners();
+  }
+
   void signIn({@required String email, @required String pass, @required VoidCallback onSucess, @required VoidCallback onFail}) async{
     isLoading = true;
     notifyListeners();
 
     _auth.signInWithEmailAndPassword(email: email, password: pass).then(
             (user){
-              firebaseUser = user;
-              onSucess();
-              isLoading = false;
-              notifyListeners();
-    }).catchError((e){
+          firebaseUser = user;
+          onSucess();
+          isLoading = false;
+          notifyListeners();
+        }).catchError((e){
       onFail();
       isLoading = false;
       notifyListeners();

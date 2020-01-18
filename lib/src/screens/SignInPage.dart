@@ -1,7 +1,9 @@
 import 'package:dom_marino_app/src/models/user_model.dart';
 import 'package:dom_marino_app/src/screens/SignUpPage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
+import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 
 class SignInPage extends StatefulWidget {
   @override
@@ -109,6 +111,10 @@ class _SignInPageState extends State<SignInPage> {
                         },
                       )
                   ),
+                  RaisedButton(
+                    child: Text("Login with Facebook"),
+                    onPressed: () => initiateFacebookLogin(model),
+                  ),
                 ],
               ),
             );
@@ -130,6 +136,34 @@ class _SignInPageState extends State<SignInPage> {
           duration: Duration(seconds: 2),)
     );
   }
+
+  void initiateFacebookLogin(UserModel model) async {
+    final facebookLogin = FacebookLogin();
+    final facebookLoginResult = await facebookLogin.logIn(['email', 'public_profile']);
+
+    //var facebookLogin = FacebookLogin();
+    //var facebookLoginResult =
+    //await facebookLogin.logInWithReadPermissions(['email']);
+
+    FacebookAccessToken myToken = facebookLoginResult.accessToken;
+    AuthCredential credential = FacebookAuthProvider.getCredential(accessToken: myToken.token);
+
+    FirebaseUser firebaseUser = await FirebaseAuth.instance.signInWithCredential(credential);
+
+    switch (facebookLoginResult.status) {
+      case FacebookLoginStatus.error:
+        print("Error");
+        //onLoginStatusChanged(false);
+        break;
+      case FacebookLoginStatus.cancelledByUser:
+        print("CancelledByUser");
+        //onLoginStatusChanged(false);
+        break;
+      case FacebookLoginStatus.loggedIn:
+        print("LoggedIn");
+        model.signInFace(true, firebaseUser);
+        //onLoginStatusChanged(true);
+        break;
+    }
+  }
 }
-
-

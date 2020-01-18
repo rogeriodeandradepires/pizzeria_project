@@ -53,6 +53,12 @@ const white_h4 = TextStyle(
     fontWeight: FontWeight.w500,
     fontFamily: 'Poppins');
 
+const white_h4_lesser = TextStyle(
+    color: Colors.white,
+    fontSize: 14,
+    fontWeight: FontWeight.w500,
+    fontFamily: 'Poppins');
+
 const h5 = TextStyle(
     color: Colors.black,
     fontSize: 12,
@@ -62,7 +68,6 @@ const h5 = TextStyle(
 const h5Snackbar = TextStyle(
     color: Colors.black,
     fontSize: 14,
-    height: 0.98,
     fontWeight: FontWeight.w500,
     fontFamily: 'Poppins');
 
