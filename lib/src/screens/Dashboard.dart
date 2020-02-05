@@ -1069,7 +1069,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
               Text(
                   item["quantity"] +
                       "X " +
-                      ((item["size"] != null &&
+                      ((item["size"] != "null" &&
+                          item["size"] != null &&
                           item["size"] != "" &&
                           item["size"] != "None")
                           ? item["size"]
@@ -1194,24 +1195,50 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       order.products_id.forEach((orderItem) async {
 //        print("OrderItem: "+orderItem.toString());
         allCartItems.forEach((cartItem) {
-//          print("CartItem:"+cartItem.toString());
+//          print("CartItem:"+cartItem['productId'].toString()+", "+cartItem['pizzaEdgeId'].toString()+", "+cartItem['productSize'].toString());
+//          print("OrderItem:"+orderItem['product_id'].toString()+", "+orderItem['pizza_edge_id'].toString()+", "+orderItem['size'].toString());
 //          print("OrderItem:"+orderItem.toString());
-          if (cartItem['productId'] == orderItem['product_id'] &&
-              cartItem['pizzaEdgeId'] == orderItem['pizza_edge_id'] &&
-              cartItem['productSize'] == orderItem['size']) {
+
+        if (orderItem['pizza_edge_id'].toString()=="None") {
+          orderItem['pizza_edge_id'] = "null";
+        }
+
+        if (orderItem['pizza_edge_id'].toString()=="None") {
+          orderItem['pizza_edge_id'] = "null";
+        }
+
+        if (orderItem['size'].toString()=="None") {
+          orderItem['size'] = "null";
+        }
+
+          if ((cartItem['productId'].toString() == orderItem['product_id'].toString() ||
+              cartItem['product1Id'].toString() == orderItem['product_id'].toString()) &&
+              cartItem['pizzaEdgeId'].toString() == orderItem['pizza_edge_id'].toString() &&
+              cartItem['productSize'].toString() == orderItem['size'].toString()) {
             print("product 1 igual");
-            if (cartItem['product1Id'] == orderItem['product_id'] ||
-                cartItem['product1Id'] == orderItem['product2_id'] &&
-                    cartItem['product2Id'] == orderItem['product_id'] ||
-                cartItem['product2Id'] == orderItem['product2_id']) {
+
+            if (orderItem['product2_id'].toString()=="None") {
+              orderItem['product2_id'] = "null";
+
+            }
+
+            if (cartItem['product1Id'].toString() == orderItem['product_id'].toString() ||
+                cartItem['product1Id'].toString() == orderItem['product2_id'].toString() ||
+                cartItem['productId'].toString() == orderItem['product2_id'].toString() &&
+                    cartItem['product2Id'].toString() == orderItem['product_id'].toString() ||
+                cartItem['product2Id'].toString() == orderItem['product2_id'].toString()) {
               print("product 2 igual");
               //se já tem item igual
               equalId = cartItem['cartItemsId'];
             } else {
               print("product 2 DIFERENTE");
+//              print("CartItem: "+cartItem['productId'].toString()+","+cartItem['product1Id'].toString()+", "+cartItem['product2Id'].toString());
+//              print("OrderItem: "+orderItem['product_id'].toString()+","+orderItem['product_id'].toString()+", "+orderItem['product2_id'].toString());
             }
           } else {
             print("product 1 DIFERENTE");
+            print("CartItem: "+cartItem['productId'].toString()+","+cartItem['product1Id'].toString()+", "+cartItem['product2Id'].toString());
+            print("OrderItem: "+orderItem['product_id'].toString()+","+orderItem['product_id'].toString()+", "+orderItem['product2_id'].toString());
           }
         });
 
@@ -1221,7 +1248,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           await dbHelper.searchCartItem(equalId);
           Map<String, dynamic> tempProductRow = new Map();
           tempProductRow.addAll(productRow);
-          tempProductRow["productAmount"] = tempProductRow["productAmount"] + 1;
+          tempProductRow["productAmount"] = tempProductRow["productAmount"] + int.parse(orderItem['quantity']);
           await dbHelper.update(tempProductRow, "cartItems", "cartItemsId");
         } else {
           //se ainda não tem item igual

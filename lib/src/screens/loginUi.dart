@@ -29,6 +29,7 @@ class _LoginState extends State<Login> {
   final inputPass = InputWidget(0.0, 30.0, "Senha", true);
 
   FocusNode sendResetPassFN;
+  FocusNode signInBtnFN;
 
   var _model;
   final GoogleSignIn googleSignIn = GoogleSignIn();
@@ -41,11 +42,13 @@ class _LoginState extends State<Login> {
   void initState() {
     super.initState();
     sendResetPassFN = FocusNode();
+    signInBtnFN = FocusNode();
   }
 
   @override
   void dispose() {
     sendResetPassFN.dispose();
+    signInBtnFN.dispose();
     super.dispose();
   }
 
@@ -275,6 +278,7 @@ class _LoginState extends State<Login> {
                               Material(
                                 color: Colors.transparent,
                                 child: InkWell(
+                                  focusNode: signInBtnFN,
                                   customBorder: new CircleBorder(),
                                   child: Container(
                                       width: 60,
@@ -283,6 +287,9 @@ class _LoginState extends State<Login> {
                                           shape: CircleBorder(),
                                           color: Colors.transparent)),
                                   onTap: () {
+                                    FocusScope.of(context)
+                                        .requestFocus(signInBtnFN);
+
                                     if (_formKey.currentState.validate()) {
                                       print("validou");
                                     }

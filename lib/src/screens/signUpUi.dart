@@ -1,12 +1,19 @@
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:dom_marino_app/src/models/user_model.dart';
 import 'package:dom_marino_app/src/screens/signupBg.dart';
+import 'package:dom_marino_app/src/shared/styles.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:dio/dio.dart' as diolib;
+import 'package:http/http.dart' as http;
+
+import 'image_picker_handler.dart';
+
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 class SignUp extends StatefulWidget {
   final UserModel model;
@@ -18,7 +25,8 @@ class SignUp extends StatefulWidget {
   _SignUpState createState() => _SignUpState(this.model, this.scaffoldKey);
 }
 
-class _SignUpState extends State<SignUp> {
+class _SignUpState extends State<SignUp>
+    with TickerProviderStateMixin, ImagePickerListener {
   BuildContext globalContext;
 
   final _formKey = GlobalKey<FormState>();
@@ -31,8 +39,15 @@ class _SignUpState extends State<SignUp> {
   var _pass2Controller;
 
   var thisSignUpBg;
+  FocusNode registerFN;
+
+  var maskFormatter = new MaskTextInputFormatter(mask: '+55 (##) #####-####', filter: { "#": RegExp(r'[0-9]') });
 
   File _image;
+
+  FirebaseAuth _auth = FirebaseAuth.instance;
+  FirebaseUser firebaseUser;
+  Map<String, dynamic> userData = Map();
 
   FocusNode sendResetPassFN;
 
@@ -43,6 +58,9 @@ class _SignUpState extends State<SignUp> {
 
   _SignUpState(this._model, this._scaffoldKey);
 
+  AnimationController _controller;
+  ImagePickerHandler imagePicker;
+
   @override
   void initState() {
     super.initState();
@@ -52,6 +70,16 @@ class _SignUpState extends State<SignUp> {
     _emailController = TextEditingController();
     _pass1Controller = TextEditingController();
     _pass2Controller = TextEditingController();
+
+    registerFN = FocusNode();
+
+    _controller = new AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+
+    imagePicker = new ImagePickerHandler(this, _controller);
+    imagePicker.init();
   }
 
   @override
@@ -62,42 +90,16 @@ class _SignUpState extends State<SignUp> {
     _emailController.dispose();
     _pass1Controller.dispose();
     _pass2Controller.dispose();
+
+    registerFN.dispose();
+
+    _controller.dispose();
+
     super.dispose();
   }
 
   Future<void> onTap() async {
-
-    showGeneralDialog(
-        context: context,
-        pageBuilder: (BuildContext buildContext, Animation<double> animation,
-            Animation<double> secondaryAnimation) {
-          return SafeArea(
-            child: Builder(builder: (context) {
-              return Align(
-                  alignment: Alignment.center,
-                  child: Container(
-                    color: Colors.white,
-                      height: MediaQuery.of(context).size.height/4,
-                      width: MediaQuery.of(context).size.width*0.8,
-                      child: Image.asset(
-                        'images/loading_pizza_faster.gif',
-                        fit: BoxFit.scaleDown,
-                      )));
-            }),
-          );
-        },
-        barrierDismissible: true,
-        barrierLabel:
-        MaterialLocalizations.of(context).modalBarrierDismissLabel,
-        barrierColor: Colors.black.withOpacity(0.4),
-        transitionDuration: const Duration(milliseconds: 150));
-
-//    var image = await ImagePicker.pickImage(source: ImageSource.camera);
-//    setState(() {
-////      thisSignUpBg = SignupBg(onTap, image);
-//    _image = image;
-//    });
-
+    imagePicker.showDialog(context);
   }
 
   @override
@@ -110,8 +112,8 @@ class _SignUpState extends State<SignUp> {
         Column(
           children: <Widget>[
             Padding(
-              padding:
-                  EdgeInsets.only(top: MediaQuery.of(context).size.height / 4.5),
+              padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).size.height / 4.5),
             ),
             Column(
               children: <Widget>[
@@ -137,25 +139,26 @@ class _SignUpState extends State<SignUp> {
                                         bottomRight: Radius.circular(0.0),
                                         topRight: Radius.circular(30.0))),
                                 child: Padding(
-                                  padding: EdgeInsets.only(left: 40, right: 20, top: 0, bottom: 0),
+                                  padding: EdgeInsets.only(
+                                      left: 40, right: 20, top: 0, bottom: 0),
                                   child: TextFormField(
                                     autofocus: false,
                                     controller: _nameController,
                                     keyboardType: TextInputType.text,
-                                    validator: (text){
-                                      if(text.isEmpty){
+                                    validator: (text) {
+                                      if (text.isEmpty) {
                                         return "Digite seu Nome Completo.";
-                                      }else{
-                                          if (text.length<3) {
-                                            return "Nome inválido";
-                                          }
-
+                                      } else {
+                                        if (text.length < 3) {
+                                          return "Nome inválido";
+                                        }
                                       }
                                     },
                                     decoration: InputDecoration(
                                         border: InputBorder.none,
                                         hintText: "Nome Completo",
-                                        hintStyle: TextStyle(color: Colors.grey, fontSize: 14)),
+                                        hintStyle: TextStyle(
+                                            color: Colors.grey, fontSize: 14)),
                                   ),
                                 ),
                               ),
@@ -174,62 +177,27 @@ class _SignUpState extends State<SignUp> {
                                         bottomRight: Radius.circular(0.0),
                                         topRight: Radius.circular(0.0))),
                                 child: Padding(
-                                  padding: EdgeInsets.only(left: 40, right: 20, top: 0, bottom: 0),
-                                  child: TextFormField(
-                                    autofocus: false,
-                                    controller: _phoneController,
-                                    keyboardType: TextInputType.text,
-                                    validator: (text){
-                                      if(text.isEmpty){
-                                        return "Digite o Nº de seu Telefone.";
-                                      }else{
-                                        if (text.length<10) {
-                                          return "Telefone inválido";
-                                        }
-
-                                      }
-                                    },
-                                    decoration: InputDecoration(
-                                        border: InputBorder.none,
-                                        hintText: "Telefone de Contato",
-                                        hintStyle: TextStyle(color: Colors.grey, fontSize: 14)),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.only(right: 40, bottom: 10),
-                            child: Container(
-                              width: MediaQuery.of(context).size.width - 40,
-                              height: 50,
-                              child: Material(
-                                elevation: 0,
-                                color: Colors.white.withOpacity(0.8),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.only(
-                                        bottomRight: Radius.circular(0.0),
-                                        topRight: Radius.circular(0.0))),
-                                child: Padding(
-                                  padding: EdgeInsets.only(left: 40, right: 20, top: 0, bottom: 0),
+                                  padding: EdgeInsets.only(
+                                      left: 40, right: 20, top: 0, bottom: 0),
                                   child: TextFormField(
                                     autofocus: false,
                                     controller: _emailController,
-                                    keyboardType: TextInputType.text,
-                                    validator: (text){
-                                      if(text.isEmpty){
+                                    keyboardType: TextInputType.emailAddress,
+                                    validator: (text) {
+                                      if (text.isEmpty) {
                                         return "Digite seu Email.";
-                                      }else{
-                                        if (!text.contains("@") || !text.contains(".") ) {
+                                      } else {
+                                        if (!text.contains("@") ||
+                                            !text.contains(".")) {
                                           return "Email inválido";
                                         }
-
                                       }
                                     },
                                     decoration: InputDecoration(
                                         border: InputBorder.none,
                                         hintText: "Email",
-                                        hintStyle: TextStyle(color: Colors.grey, fontSize: 14)),
+                                        hintStyle: TextStyle(
+                                            color: Colors.grey, fontSize: 14)),
                                   ),
                                 ),
                               ),
@@ -248,26 +216,66 @@ class _SignUpState extends State<SignUp> {
                                         bottomRight: Radius.circular(0.0),
                                         topRight: Radius.circular(0.0))),
                                 child: Padding(
-                                  padding: EdgeInsets.only(left: 40, right: 20, top: 0, bottom: 0),
+                                  padding: EdgeInsets.only(
+                                      left: 40, right: 20, top: 0, bottom: 0),
+                                  child: TextFormField(
+                                    inputFormatters: [maskFormatter],
+                                    autofocus: false,
+                                    controller: _phoneController,
+                                    keyboardType: TextInputType.phone,
+                                    validator: (text) {
+                                      if (text.isEmpty) {
+                                        return "Digite o Nº de seu Telefone.";
+                                      } else {
+                                        if (text.length < 10) {
+                                          return "Telefone inválido";
+                                        }
+                                      }
+                                    },
+                                    decoration: InputDecoration(
+                                        border: InputBorder.none,
+                                        hintText: "Telefone de Contato",
+                                        hintStyle: TextStyle(
+                                            color: Colors.grey, fontSize: 14)),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(right: 40, bottom: 10),
+                            child: Container(
+                              width: MediaQuery.of(context).size.width - 40,
+                              height: 50,
+                              child: Material(
+                                elevation: 0,
+                                color: Colors.white.withOpacity(0.8),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.only(
+                                        bottomRight: Radius.circular(0.0),
+                                        topRight: Radius.circular(0.0))),
+                                child: Padding(
+                                  padding: EdgeInsets.only(
+                                      left: 40, right: 20, top: 0, bottom: 0),
                                   child: TextFormField(
                                     autofocus: false,
                                     controller: _pass1Controller,
                                     obscureText: true,
-                                    keyboardType: TextInputType.text,
-                                    validator: (text){
-                                      if(text.isEmpty){
+                                    keyboardType: TextInputType.visiblePassword,
+                                    validator: (text) {
+                                      if (text.isEmpty) {
                                         return "Digite sua Senha.";
-                                      }else{
-                                        if (text.length<6) {
+                                      } else {
+                                        if (text.length < 6) {
                                           return "A Senha deve conter ao menos 6 dígitos.";
                                         }
-
                                       }
                                     },
                                     decoration: InputDecoration(
                                         border: InputBorder.none,
                                         hintText: "Senha",
-                                        hintStyle: TextStyle(color: Colors.grey, fontSize: 14)),
+                                        hintStyle: TextStyle(
+                                            color: Colors.grey, fontSize: 14)),
                                   ),
                                 ),
                               ),
@@ -286,25 +294,28 @@ class _SignUpState extends State<SignUp> {
                                         bottomRight: Radius.circular(30.0),
                                         topRight: Radius.circular(0.0))),
                                 child: Padding(
-                                  padding: EdgeInsets.only(left: 40, right: 20, top: 0, bottom: 0),
+                                  padding: EdgeInsets.only(
+                                      left: 40, right: 20, top: 0, bottom: 0),
                                   child: TextFormField(
                                     autofocus: false,
                                     controller: _pass2Controller,
                                     obscureText: true,
-                                    keyboardType: TextInputType.text,
-                                    validator: (text){
-                                      if(text.isEmpty){
+                                    keyboardType: TextInputType.visiblePassword,
+                                    validator: (text) {
+                                      if (text.isEmpty) {
                                         return "Repita sua Senha.";
-                                      }else{
-                                          if (_pass1Controller.text != _pass2Controller.text) {
-                                            return "As Senhas digitadas não coincidem.";
+                                      } else {
+                                        if (_pass1Controller.text !=
+                                            _pass2Controller.text) {
+                                          return "As Senhas digitadas não coincidem.";
                                         }
                                       }
                                     },
                                     decoration: InputDecoration(
                                         border: InputBorder.none,
                                         hintText: "Repetir a Senha",
-                                        hintStyle: TextStyle(color: Colors.grey, fontSize: 14)),
+                                        hintStyle: TextStyle(
+                                            color: Colors.grey, fontSize: 14)),
                                   ),
                                 ),
                               ),
@@ -320,11 +331,12 @@ class _SignUpState extends State<SignUp> {
                 ),
                 Stack(
                   children: <Widget>[
-                    roundedRectButton(
-                        "Registrar", goBtnGradients, false),
+                    roundedRectButton("Registrar", goBtnGradients, false),
                     Material(
                       color: Colors.transparent,
                       child: InkWell(
+                        focusNode: registerFN,
+                        autofocus: true,
                         customBorder: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30.0)),
                         child: Container(
@@ -337,11 +349,28 @@ class _SignUpState extends State<SignUp> {
                           ),
                           padding: EdgeInsets.only(top: 16, bottom: 16),
                         ),
-                        onTap: (() {
-                          if (_formKey.currentState.validate()) {
-                            print("validou");
-                          }
+                        onTap: (() async {
 
+                          FocusScope.of(context)
+                              .requestFocus(sendResetPassFN);
+
+                          if (_formKey.currentState.validate()) {
+                            userData ={
+                              "name": _nameController.text,
+                              "email": _emailController.text,
+                              "phone": _phoneController.text,
+//                              "picture": _image
+                            };
+
+                            signUp(userData: userData, pass: _pass1Controller.text, onSucess: _onSucess, onFail: _onFail);
+
+//                            model.signUp(
+//                              userData: userData,
+//                              pass: _passController.text,
+//                              onSucess: _onSucess,
+//                              onFail: _onFail,
+//                            );
+                          }
                         }),
                       ),
                     ),
@@ -475,6 +504,97 @@ class _SignUpState extends State<SignUp> {
     await googleSignIn.signOut();
 
     print("User Sign Out");
+  }
+
+  @override
+  userImage(File _image) {
+    setState(() {
+      this._image = _image;
+    });
+  }
+
+  Future<void> _onSucess() async {
+
+    userData["uid"] = this.firebaseUser.uid.toString();
+
+//    FormData formData = new FormData.from({
+//                              "name": "wendux",
+//                              "file1": new UploadFileInfo(new File("./upload.jpg"), "upload1.jpg")
+//                            });
+
+
+//                            var url = "http://192.168.63.1:8080/create_user";
+    var url = "https://dom-marino-webservice.appspot.com/create_user";
+    var uri = Uri.http(
+        'dom-marino-webservice.appspot.com',
+        'create_user');
+
+    final postUri = Uri.parse(url);
+    http.MultipartRequest request = http.MultipartRequest('POST', postUri);
+
+    http.MultipartFile multipartFile =
+    await http.MultipartFile.fromPath('image_file', _image.path); //returns a Future<MultipartFile>
+
+    request.files.add(multipartFile);
+    request.fields['uid'] = userData["uid"];
+    request.fields['name'] = userData["name"];
+    request.fields['email'] = userData["email"];
+    request.fields['phone'] = userData["phone"];
+
+    http.StreamedResponse response = await request.send();
+    Navigator.of(context, rootNavigator: false).pop();
+
+    _scaffoldKey.currentState.showSnackBar(
+        SnackBar(content: Text("Usuario Criado com sucesso!"),
+          backgroundColor: Colors.greenAccent,
+          duration: Duration(seconds: 2),)
+    );
+//
+    Future.delayed(Duration(seconds:2)).then((_){
+      Navigator.of(context).pop();
+    });
+
+  }
+
+  void _onFail(){
+    _scaffoldKey.currentState.showSnackBar(
+        SnackBar(content: Text("Falha ao criar usuario!"),
+          backgroundColor: Colors.redAccent,
+          duration: Duration(seconds: 2),)
+    );
+
+//    Future.delayed(Duration(seconds:2)).then((_){
+//      Navigator.of(context).pop();
+//    });
+
+  }
+
+  void signUp(
+      {@required Map<String, dynamic> userData,
+      @required String pass,
+      @required VoidCallback onSucess,
+      @required VoidCallback onFail}) {
+//    isLoading = true;
+//    notifyListeners();
+
+  showLoadingDialog();
+
+    _auth
+        .createUserWithEmailAndPassword(
+            email: userData["email"], password: pass)
+        .then((user) async {
+      firebaseUser = user;
+
+      //await _saveUserData(userData);
+
+      onSucess();
+//      isLoading = false;
+//      notifyListeners();
+    }).catchError((e) {
+      onFail();
+//      isLoading = false;
+//      notifyListeners();
+    });
   }
 }
 

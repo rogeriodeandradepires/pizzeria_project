@@ -17,6 +17,22 @@ class _SignInPageState extends State<SignInPage> {
 
   final _formKey = GlobalKey<FormState>();
 
+  FocusNode signInBtnFN;
+
+
+  @override
+  void initState() {
+    signInBtnFN = FocusNode();
+    super.initState();
+  }
+
+
+  @override
+  void dispose() {
+    super.dispose();
+    signInBtnFN.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -52,6 +68,7 @@ class _SignInPageState extends State<SignInPage> {
                 padding: EdgeInsets.all(16.0),
                 children: <Widget>[
                   TextFormField(
+                    autofocus: false,
                     controller: _emailController,
                     decoration: InputDecoration(
                         hintText: "E-mail"
@@ -63,6 +80,7 @@ class _SignInPageState extends State<SignInPage> {
                   ),
                   SizedBox(height: 16.0),
                   TextFormField(
+                    autofocus: false,
                     controller: _passController,
                     decoration: InputDecoration(
                         hintText: "Senha"

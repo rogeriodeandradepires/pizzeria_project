@@ -33,6 +33,8 @@ dependencies:
   keyboard_visibility: ^0.5.2
   google_sign_in: ^4.1.1
   image_picker: ^0.6.3+1
+  image_cropper: ^1.2.0
+  mask_text_input_formatter: ^1.0.5
 
 
 
