@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:dom_marino_app/src/bottomNavigationView/bottomBarView.dart';
 import 'package:dom_marino_app/src/models/category_result_model.dart';
 import 'package:dom_marino_app/src/models/order_result_model.dart';
@@ -41,7 +40,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   ListView globalProductsListView;
   ListView globalStoreTabListView;
   ScrollController _controller;
-  final dbHelper = DatabaseHelper.instance;
+  var dbHelper = DatabaseHelper.instance;
   List<Map<String, dynamic>> allFavorites = new List();
   List<Map<String, dynamic>> allOrders = new List();
   FirebaseUser user;
@@ -85,8 +84,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     animationController =
         AnimationController(duration: Duration(milliseconds: 600), vsync: this);
     super.initState();
-//    WidgetsBinding.instance
-//        .addPostFrameCallback((_) => getProducts());
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => checkRegisterComplete());
   }
 
   @override
@@ -133,7 +132,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             IconButton(
               padding: EdgeInsets.all(0),
               onPressed: () {
-                showSnackbarError();
+                showRegisterDialog(null);
               },
               iconSize: 21,
               icon: Icon(Fryo.location),
@@ -175,21 +174,36 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                 context,
                 MaterialPageRoute(
                     builder: (context) =>
-                    new CartPage(dbHelper: dbHelper, user: user)),
+                        new CartPage(dbHelper: dbHelper, user: user)),
               );
 
               retrieveAllOrders(user.uid, update: true);
 
-              print("Resultado: " + result.toString());
+//              print("Resultado: " + result.toString());
             } else {
-              Navigator.pushNamed(context, '/signin');
+              final result = await Navigator.pushNamed(context, '/signin');
+
+//              print("1 Result=" + result);
+
+              if (result == "Ok") {
+                checkRegisterComplete();
+              }
             }
           },
           changeIndex: (index) async {
             if (index != 0) {
               bool isLogged = await checkIfUserIsLoggedIn();
               if (!isLogged) {
-                Navigator.pushNamed(context, '/signin');
+                final result = await Navigator.pushNamed(context, '/signin');
+
+//                print(" 2 Result=" + result);
+
+                if (result == "Ok") {
+//                  print("result==Ok");
+                  checkRegisterComplete();
+                }else{
+//                  print("result!=Ok");
+                }
               }
             }
 
@@ -202,7 +216,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
               });
 
               if (index == 2) {
-                if (user!=null) {
+                if (user != null) {
                   retrieveAllOrders(user.uid, update: true);
                 }
               }
@@ -246,7 +260,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         thisList.add(sectionHeader(subListTitle, onViewMore: () {}));
       }
       Product retrievedProduct =
-      await getProduct(favorited['categoryName'], favorited['productId']);
+          await getProduct(favorited['categoryName'], favorited['productId']);
       retrievedProduct.userLiked = true;
       Widget thisItem;
       thisItem = foodItem(context, retrievedProduct, onTapped: () {
@@ -270,7 +284,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           Map<String, dynamic> favorite;
           try {
             favorite =
-            await dbHelper.searchFavorite(user.uid, retrievedProduct.id);
+                await dbHelper.searchFavorite(user.uid, retrievedProduct.id);
           } on Exception catch (e, s) {
             print(
                 "Exception: " + e.toString() + ", Stacktrace: " + s.toString());
@@ -299,7 +313,13 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         } else {
           //não está logado
-          Navigator.pushNamed(context, '/signin');
+          final result = await Navigator.pushNamed(context, '/signin');
+
+//          print(" 3 Result=" + result);
+
+          if (result == "Ok") {
+            checkRegisterComplete();
+          }
         }
       });
       thisList.add(thisItem);
@@ -467,7 +487,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   }
 
   Widget storeTab(BuildContext context) {
-
     globalStoreTabListView = ListView(
         physics: const NeverScrollableScrollPhysics(),
         controller: _controller,
@@ -544,11 +563,11 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                 if (user != null) {
                                   Map<String, dynamic> row = {
                                     DatabaseHelper.columnId:
-                                    user.uid + product.id,
+                                        user.uid + product.id,
                                     DatabaseHelper.columnCategory:
-                                    _selectedCategory,
+                                        _selectedCategory,
                                     DatabaseHelper.columnCategoryName:
-                                    _selectedCategoryName,
+                                        _selectedCategoryName,
                                     DatabaseHelper.columnUserId: user.uid,
                                     DatabaseHelper.columnProductId: product.id,
                                     DatabaseHelper.columnIsLiked: 1
@@ -569,14 +588,14 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                   if (user != null) {
                                     Map<String, dynamic> row = {
                                       DatabaseHelper.columnId:
-                                      user.uid + product.id,
+                                          user.uid + product.id,
                                       DatabaseHelper.columnCategory:
-                                      _selectedCategory,
+                                          _selectedCategory,
                                       DatabaseHelper.columnCategoryName:
-                                      _selectedCategoryName,
+                                          _selectedCategoryName,
                                       DatabaseHelper.columnUserId: user.uid,
                                       DatabaseHelper.columnProductId:
-                                      product.id,
+                                          product.id,
                                       DatabaseHelper.columnIsLiked: 0
                                     };
 
@@ -594,14 +613,14 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                   if (user != null) {
                                     Map<String, dynamic> row = {
                                       DatabaseHelper.columnId:
-                                      user.uid + product.id,
+                                          user.uid + product.id,
                                       DatabaseHelper.columnCategory:
-                                      _selectedCategory,
+                                          _selectedCategory,
                                       DatabaseHelper.columnCategoryName:
-                                      _selectedCategoryName,
+                                          _selectedCategoryName,
                                       DatabaseHelper.columnUserId: user.uid,
                                       DatabaseHelper.columnProductId:
-                                      product.id,
+                                          product.id,
                                       DatabaseHelper.columnIsLiked: 1
                                     };
 
@@ -618,7 +637,14 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                               retrieveAllFavorites(user.uid);
                             } else {
                               //não está logado
-                              Navigator.pushNamed(context, '/signin');
+                              final result =
+                                  await Navigator.pushNamed(context, '/signin');
+
+//                              print("4 Result=" + result);
+
+                              if (result == "Ok") {
+                                checkRegisterComplete();
+                              }
                             }
                           }); //onLike
                         } else {
@@ -794,12 +820,12 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             children: (items != null)
                 ? items
                 : <Widget>[
-              Container(
-                margin: EdgeInsets.only(left: 15),
-                child: Text('Nenhum item disponível neste momento.',
-                    style: taglineText),
-              )
-            ],
+                    Container(
+                      margin: EdgeInsets.only(left: 15),
+                      child: Text('Nenhum item disponível neste momento.',
+                          style: taglineText),
+                    )
+                  ],
           )
         ],
       ),
@@ -811,7 +837,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       height: height,
       child: Container(
 //        color: Colors.red,
-      ),
+          ),
     );
   }
 
@@ -886,7 +912,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
   Future<void> retrieveAllFavorites(String uid) async {
     List<Map<String, dynamic>> tempAllFavorites =
-    await dbHelper.retrieveAllFavorites(uid);
+        await dbHelper.retrieveAllFavorites(uid);
     allFavorites = new List();
     allFavorites.addAll(tempAllFavorites);
 
@@ -966,8 +992,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       width: MediaQuery.of(context).size.width,
       child: isFavoritesEmpty
           ? Center(
-          child: Text('Nenhum item disponível neste momento.',
-              textAlign: TextAlign.center, style: noneItemText))
+              child: Text('Nenhum item disponível neste momento.',
+                  textAlign: TextAlign.center, style: noneItemText))
           : createdLists,
     );
   }
@@ -994,7 +1020,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
               shape: BoxShape.rectangle,
               color: Color(0xfffff2ca).withOpacity(0.5),
               border:
-              Border.all(width: 1.0, color: Colors.black.withOpacity(0.4)),
+                  Border.all(width: 1.0, color: Colors.black.withOpacity(0.4)),
               borderRadius: BorderRadius.all(Radius.circular(4.0))),
           child: getOrderItemContainer(context, order),
         );
@@ -1021,12 +1047,12 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
     return all_orders_obj_list.length == 0
         ? Center(
-        child: Container(
-          margin:
-          EdgeInsets.only(top: MediaQuery.of(context).size.height * 0.35),
-          child: Text('Nenhum item disponível neste momento.',
-              textAlign: TextAlign.center, style: noneItemText),
-        ))
+            child: Container(
+            margin:
+                EdgeInsets.only(top: MediaQuery.of(context).size.height * 0.35),
+            child: Text('Nenhum item disponível neste momento.',
+                textAlign: TextAlign.center, style: noneItemText),
+          ))
         : createdLists;
   }
 
@@ -1063,16 +1089,16 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                   style: minorFoodNameText, overflow: TextOverflow.ellipsis),
               (item['pizza_edge_id'] != null && item['pizza_edge_id'] != "null")
                   ? Text("Borda: " + item['pizza_edge_description'],
-                  style: minorPizzaEdgeText,
-                  overflow: TextOverflow.ellipsis)
+                      style: minorPizzaEdgeText,
+                      overflow: TextOverflow.ellipsis)
                   : Container(),
               Text(
                   item["quantity"] +
                       "X " +
                       ((item["size"] != "null" &&
-                          item["size"] != null &&
-                          item["size"] != "" &&
-                          item["size"] != "None")
+                              item["size"] != null &&
+                              item["size"] != "" &&
+                              item["size"] != "None")
                           ? item["size"]
                           : ""),
                   style: minorCartItemText),
@@ -1130,7 +1156,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                       // para fazer a sombra
                       children: <Widget>[
                         Container(
-                          //quadrado branco da imagem para fazer a sombra
+                            //quadrado branco da imagem para fazer a sombra
                             width: 150,
                             height: 150,
                             decoration: new BoxDecoration(
@@ -1189,7 +1215,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       }
 
       List<Map<String, dynamic>> allCartItems =
-      await dbHelper.retrieveAllCartItems(cartId);
+          await dbHelper.retrieveAllCartItems(cartId);
       int equalId = null;
 //      print("Entrou: ");
       order.products_id.forEach((orderItem) async {
@@ -1199,34 +1225,42 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 //          print("OrderItem:"+orderItem['product_id'].toString()+", "+orderItem['pizza_edge_id'].toString()+", "+orderItem['size'].toString());
 //          print("OrderItem:"+orderItem.toString());
 
-        if (orderItem['pizza_edge_id'].toString()=="None") {
-          orderItem['pizza_edge_id'] = "null";
-        }
+          if (orderItem['pizza_edge_id'].toString() == "None") {
+            orderItem['pizza_edge_id'] = "null";
+          }
 
-        if (orderItem['pizza_edge_id'].toString()=="None") {
-          orderItem['pizza_edge_id'] = "null";
-        }
+          if (orderItem['pizza_edge_id'].toString() == "None") {
+            orderItem['pizza_edge_id'] = "null";
+          }
 
-        if (orderItem['size'].toString()=="None") {
-          orderItem['size'] = "null";
-        }
+          if (orderItem['size'].toString() == "None") {
+            orderItem['size'] = "null";
+          }
 
-          if ((cartItem['productId'].toString() == orderItem['product_id'].toString() ||
-              cartItem['product1Id'].toString() == orderItem['product_id'].toString()) &&
-              cartItem['pizzaEdgeId'].toString() == orderItem['pizza_edge_id'].toString() &&
-              cartItem['productSize'].toString() == orderItem['size'].toString()) {
+          if ((cartItem['productId'].toString() ==
+                      orderItem['product_id'].toString() ||
+                  cartItem['product1Id'].toString() ==
+                      orderItem['product_id'].toString()) &&
+              cartItem['pizzaEdgeId'].toString() ==
+                  orderItem['pizza_edge_id'].toString() &&
+              cartItem['productSize'].toString() ==
+                  orderItem['size'].toString()) {
             print("product 1 igual");
 
-            if (orderItem['product2_id'].toString()=="None") {
+            if (orderItem['product2_id'].toString() == "None") {
               orderItem['product2_id'] = "null";
-
             }
 
-            if (cartItem['product1Id'].toString() == orderItem['product_id'].toString() ||
-                cartItem['product1Id'].toString() == orderItem['product2_id'].toString() ||
-                cartItem['productId'].toString() == orderItem['product2_id'].toString() &&
-                    cartItem['product2Id'].toString() == orderItem['product_id'].toString() ||
-                cartItem['product2Id'].toString() == orderItem['product2_id'].toString()) {
+            if (cartItem['product1Id'].toString() ==
+                    orderItem['product_id'].toString() ||
+                cartItem['product1Id'].toString() ==
+                    orderItem['product2_id'].toString() ||
+                cartItem['productId'].toString() ==
+                        orderItem['product2_id'].toString() &&
+                    cartItem['product2Id'].toString() ==
+                        orderItem['product_id'].toString() ||
+                cartItem['product2Id'].toString() ==
+                    orderItem['product2_id'].toString()) {
               print("product 2 igual");
               //se já tem item igual
               equalId = cartItem['cartItemsId'];
@@ -1237,18 +1271,29 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             }
           } else {
             print("product 1 DIFERENTE");
-            print("CartItem: "+cartItem['productId'].toString()+","+cartItem['product1Id'].toString()+", "+cartItem['product2Id'].toString());
-            print("OrderItem: "+orderItem['product_id'].toString()+","+orderItem['product_id'].toString()+", "+orderItem['product2_id'].toString());
+            print("CartItem: " +
+                cartItem['productId'].toString() +
+                "," +
+                cartItem['product1Id'].toString() +
+                ", " +
+                cartItem['product2Id'].toString());
+            print("OrderItem: " +
+                orderItem['product_id'].toString() +
+                "," +
+                orderItem['product_id'].toString() +
+                ", " +
+                orderItem['product2_id'].toString());
           }
         });
 
         if (equalId != null) {
           //se já tem item igual
           Map<String, dynamic> productRow =
-          await dbHelper.searchCartItem(equalId);
+              await dbHelper.searchCartItem(equalId);
           Map<String, dynamic> tempProductRow = new Map();
           tempProductRow.addAll(productRow);
-          tempProductRow["productAmount"] = tempProductRow["productAmount"] + int.parse(orderItem['quantity']);
+          tempProductRow["productAmount"] = tempProductRow["productAmount"] +
+              int.parse(orderItem['quantity']);
           await dbHelper.update(tempProductRow, "cartItems", "cartItemsId");
         } else {
           //se ainda não tem item igual
@@ -1267,7 +1312,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             DatabaseHelper.columnProductCategory: orderItem['category'],
             DatabaseHelper.columnCategoryName: orderItem['product1_category'],
             DatabaseHelper.columnProduct2CategoryName:
-            orderItem['product2_category'],
+                orderItem['product2_category'],
             DatabaseHelper.columnProductAmount: orderItem['quantity'],
             DatabaseHelper.columnProductObservations: orderItem['notes'],
             DatabaseHelper.columnPizzaEdgeId: orderItem['pizza_edge_id'],
@@ -1284,11 +1329,10 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       final result = await Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) =>
-            new CartPage(dbHelper: dbHelper, user: user)),
+            builder: (context) => new CartPage(dbHelper: dbHelper, user: user)),
       );
 
-      if (result.toString()=="Ok") {
+      if (result.toString() == "Ok") {
         retrieveAllOrders(user.uid, update: true);
       }
 
@@ -1330,7 +1374,89 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         },
         barrierDismissible: true,
         barrierLabel:
-        MaterialLocalizations.of(context).modalBarrierDismissLabel,
+            MaterialLocalizations.of(context).modalBarrierDismissLabel,
+        barrierColor: Colors.black.withOpacity(0.4),
+        transitionDuration: const Duration(milliseconds: 150));
+    return retorno;
+  }
+
+  Dialog showRegisterDialog(Map<String, dynamic> thisUser) {
+    Dialog retorno;
+    showGeneralDialog(
+        context: context,
+        pageBuilder: (BuildContext buildContext, Animation<double> animation,
+            Animation<double> secondaryAnimation) {
+          return SafeArea(
+            child: Builder(builder: (context) {
+              return WillPopScope(
+                onWillPop: () {},
+                child: Material(
+                    color: Colors.transparent,
+                    child: Align(
+                        alignment: Alignment.center,
+                        child: Container(
+                          width: MediaQuery.of(context).size.width * 0.8,
+                          height: MediaQuery.of(context).size.width * 0.5,
+                          decoration: new BoxDecoration(
+                            shape: BoxShape.rectangle,
+                            color: Colors.white,
+                            borderRadius:
+                                new BorderRadius.all(new Radius.circular(10.0)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: <Widget>[
+                              ClipRRect(
+                                borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(10),
+                                    topRight: Radius.circular(10)),
+                                child: Container(
+                                  height: 50,
+                                  child: Center(
+                                    child: Text(
+                                      "Cadastro Incompleto",
+                                      style: h2,
+                                    ),
+                                  ),
+                                  color: Colors.amber,
+                                ),
+                              ),
+                              Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(15.0),
+                                  child: Text(
+                                    "Por favor, complete seu cadastro.",
+                                    style: h6,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                    left: 15.0, right: 15.0),
+                                child: froyoFlatBtn("Ok", () async {
+                                  final result = await Navigator.pushReplacementNamed(
+                                      context, '/signup',
+                                      arguments: thisUser);
+
+//                                  print("dialog result ="+result.toString());
+
+                                  if (result!="Ok") {
+                                    checkRegisterComplete();
+                                  }
+
+                                }),
+                              ),
+                            ],
+                          ),
+                        ))),
+              );
+            }),
+          );
+        },
+        barrierDismissible: false,
+        barrierLabel:
+            MaterialLocalizations.of(context).modalBarrierDismissLabel,
         barrierColor: Colors.black.withOpacity(0.4),
         transitionDuration: const Duration(milliseconds: 150));
     return retorno;
@@ -1344,35 +1470,55 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   }
 
   void showSnackbarError() {
-
     if (!isSnackbarVisible) {
       isSnackbarVisible = true;
       Scaffold.of(globalScaffoldContext)
           .showSnackBar(SnackBar(
-        content: Container(
-          height: MediaQuery.of(context).size.height*0.06,
-          child: Column(
-            children: <Widget>[
-              Text(
-                "Erro de conexão.",
-                textAlign: TextAlign.center,
-                style: h6Snackbar,
+            content: Container(
+              height: MediaQuery.of(context).size.height * 0.06,
+              child: Column(
+                children: <Widget>[
+                  Text(
+                    "Erro de conexão.",
+                    textAlign: TextAlign.center,
+                    style: h6Snackbar,
+                  ),
+                  Text(
+                    "Por favor, tente novamente mais tarde.",
+                    textAlign: TextAlign.justify,
+                    style: h5Snackbar,
+                  ),
+                ],
               ),
-              Text(
-                "Por favor, tente novamente mais tarde.",
-                textAlign: TextAlign.justify,
-                style: h5Snackbar,
-              ),
-            ],
-          ),
-        ),
-        backgroundColor: Colors.redAccent,
-        duration: Duration(seconds: 3),
-      ))
+            ),
+            backgroundColor: Colors.redAccent,
+            duration: Duration(seconds: 3),
+          ))
           .closed
           .then((reason) {
         isSnackbarVisible = false;
       });
+    }
+  }
+
+  Future<void> checkRegisterComplete() async {
+    dbHelper = DatabaseHelper.instance;
+    user = await fbAuth.currentUser();
+
+    if (user != null) {
+//      print("user!=null: "+user.uid);
+      //isRegisterComplete
+      Map<String, dynamic> thisUser = await dbHelper.searchUser(user.uid);
+//      print("thisuser="+thisUser.toString());
+
+      if (thisUser != null) {
+//        print("isRegComplete="+thisUser['isRegComplete'].toString());
+        if (thisUser['isRegComplete'] == 0) {
+          showRegisterDialog(thisUser);
+        }
+      }
+    }else{
+//      print("user==null");
     }
   }
 }

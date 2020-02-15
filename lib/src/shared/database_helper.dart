@@ -9,9 +9,17 @@ class DatabaseHelper {
   static final _databaseName = "local.db";
   static final _databaseVersion = 1;
 
+  static final usersTable = 'users';
   static final favoritesTable = 'favorites';
   static final cartTable = 'cart';
   static final cartItemsTable = 'cartItems';
+
+  static final columnUID = 'uid';
+  static final columnUserName = 'name';
+  static final columnUserEmail = 'email';
+  static final columnUserImgUrl = 'imgUrl';
+  static final columnUserPhone = 'phone';
+  static final columnIsRegComplete = 'isRegComplete';
 
   static final columnId = '_id';
   static final columncartItemsId = 'cartItemsId';
@@ -56,6 +64,7 @@ class DatabaseHelper {
 
   // SQL code to create the database table
   Future _onCreate(Database db, int version) async {
+
     await db.execute('''
           CREATE TABLE $favoritesTable (
             $columnId TEXT PRIMARY KEY,
@@ -93,6 +102,18 @@ class DatabaseHelper {
             
           )
           ''');
+
+    await db.execute('''
+          CREATE TABLE $usersTable (
+            $columnUID TEXT PRIMARY KEY,
+            $columnUserName TEXT NOT NULL,
+            $columnUserEmail TEXT NOT NULL,
+            $columnUserImgUrl TEXT,
+            $columnUserPhone TEXT,
+            $columnIsRegComplete INTEGER NOT NULL DEFAULT 0
+          )
+          ''');
+
   }
 
   // Helper methods
@@ -137,6 +158,19 @@ class DatabaseHelper {
     }
 
     return records;
+  }
+
+  Future<Map<String, dynamic>> searchUser(String uid) async {
+    Database db = await instance.database;
+    List<Map<String, dynamic>> records = await db.rawQuery("SELECT * FROM $usersTable WHERE $columnUID=\"$uid\"");
+
+    var retorno = null;
+
+    if (records.length!=0) {
+      retorno = records.first;
+    }
+
+    return retorno;
   }
 
   Future<Map<String, dynamic>> searchFavorite(String uid, String productId) async {

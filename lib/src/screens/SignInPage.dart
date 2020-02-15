@@ -1,5 +1,4 @@
 import 'package:dom_marino_app/src/models/user_model.dart';
-import 'package:dom_marino_app/src/screens/SignUpPage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
@@ -50,9 +49,9 @@ class _SignInPageState extends State<SignInPage> {
               ),
               textColor: Colors.white,
               onPressed: (){
-                Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (context)=>SignUpPage())
-                );
+//                Navigator.of(context).pushReplacement(
+//                    MaterialPageRoute(builder: (context)=>SignUpPage())
+//                );
               },
             )
           ],

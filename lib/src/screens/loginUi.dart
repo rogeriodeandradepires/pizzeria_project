@@ -1,10 +1,14 @@
+import 'dart:convert';
+
 import 'package:dom_marino_app/src/models/user_model.dart';
 import 'package:dom_marino_app/src/screens/signUpUi.dart';
+import 'package:dom_marino_app/src/shared/database_helper.dart';
 import 'package:dom_marino_app/src/shared/styles.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:http/http.dart' as http;
 
 import 'signinBg.dart';
 import 'inputWidget.dart';
@@ -12,8 +16,11 @@ import 'inputWidget.dart';
 class Login extends StatefulWidget {
   final UserModel model;
   final scaffoldKey;
+  final dbHelper = DatabaseHelper.instance;
 
   Login(this.model, this.scaffoldKey);
+
+
 
   @override
   _LoginState createState() => _LoginState(this.model, this.scaffoldKey);
@@ -443,18 +450,31 @@ class _LoginState extends State<Login> {
         //onLoginStatusChanged(false);
         break;
       case FacebookLoginStatus.loggedIn:
-        print("LoggedIn");
+//        print("LoggedIn");
+
+        var graphResponse = await http.get(
+            'https://graph.facebook.com/v2.12/me?fields=name,first_name,last_name,email,picture.height(200)&access_token=${facebookLoginResult.accessToken.token}');
+
+        var profile = json.decode(graphResponse.body);
+//        print(profile['first_name']+" "+profile['last_name']);
+//        print(profile['picture']['data']['url']);
+//        print(profile['email']);
+
         AuthCredential credential =
             FacebookAuthProvider.getCredential(accessToken: myToken.token);
 
+//        print("Aqui: "+credential.toString());
+
         FirebaseUser firebaseUser =
             await FirebaseAuth.instance.signInWithCredential(credential);
+        
+        await sendUserToFirestore(firebaseUser, profile, true);
 
-        Navigator.of(context, rootNavigator: false).pop();
+        Navigator.of(context, rootNavigator: false).pop('Ok');
 
         model.signInFace(true, firebaseUser);
 
-        Navigator.of(context, rootNavigator: true).pop();
+        Navigator.of(context, rootNavigator: true).pop('Ok');
         //onLoginStatusChanged(true);
         break;
     }
@@ -468,17 +488,20 @@ class _LoginState extends State<Login> {
             Animation<double> secondaryAnimation) {
           return SafeArea(
             child: Builder(builder: (context) {
-              return Material(
-                  color: Colors.transparent,
-                  child: Align(
-                      alignment: Alignment.center,
-                      child: Container(
-                          height: 100.0,
-                          width: 100.0,
-                          child: Image.asset(
-                            'images/loading_pizza_faster.gif',
-                            fit: BoxFit.scaleDown,
-                          ))));
+              return WillPopScope(
+                onWillPop: (){},
+                child: Material(
+                    color: Colors.transparent,
+                    child: Align(
+                        alignment: Alignment.center,
+                        child: Container(
+                            height: 100.0,
+                            width: 100.0,
+                            child: Image.asset(
+                              'images/loading_pizza_faster.gif',
+                              fit: BoxFit.scaleDown,
+                            )))),
+              );
             }),
           );
         },
@@ -506,20 +529,23 @@ class _LoginState extends State<Login> {
 
       final FirebaseUser user = await FirebaseAuth.instance
           .signInWithCredential(credential)
-          .then((thisUser) {
+          .then((thisUser) async {
         _model.signInFace(true, thisUser);
-        Navigator.of(context, rootNavigator: false).pop();
+        Navigator.of(context, rootNavigator: false).pop('Ok');
 
 //      assert(!thisUser.isAnonymous);
 //      assert(thisUser.getIdToken() != null);
 
+//        print("terminou: " + thisUser.toString());
+
+        await sendUserToFirestore(thisUser, thisUser, false);
+
         if (!thisUser.isAnonymous && thisUser.getIdToken() != null) {
-          Navigator.of(context, rootNavigator: true).pop();
+          Navigator.of(context, rootNavigator: true).pop('Ok');
         } else {
           print("User é nulo");
         }
 
-        print("terminou: " + thisUser.toString());
         return thisUser;
       });
 
@@ -541,6 +567,117 @@ class _LoginState extends State<Login> {
     await googleSignIn.signOut();
 
     print("User Sign Out");
+  }
+
+  Future<void> sendUserToFirestore(FirebaseUser firebaseUser, profile, bool isFacebook) async {
+
+//    print("Entrou senduser");
+
+    String uid = firebaseUser.uid.toString();
+    String name = isFacebook ? profile["first_name"]+" "+profile['last_name']: profile.displayName;
+    String email = isFacebook ? profile["email"]: profile.email;
+    String img_url = isFacebook ? profile['picture']['data']['url']: profile.photoUrl;
+
+//    var url = "http://192.168.63.1:8080/create_user";
+    var queryParameters = {
+      'uid': '$uid',
+    };
+
+    var uri = Uri.https(
+        'dom-marino-webservice.appspot.com', 'list_users', queryParameters);
+
+    try {
+      http.Response response = await http.get(uri);
+      // sample info available in response
+      int statusCode = response.statusCode;
+      Map<String, String> headers = response.headers;
+      String contentType = headers['content-type'];
+
+//      print(response.body);
+
+      if (response.statusCode == 200) {
+        dynamic existentUser = json.decode(response.body);
+
+        if (existentUser!=null) {
+//          print("já existe");
+
+          Map<String, dynamic> thisUser = {
+            DatabaseHelper.columnUID: uid,
+            DatabaseHelper.columnUserName: name,
+            DatabaseHelper.columnUserEmail: email,
+            DatabaseHelper.columnUserImgUrl: img_url,
+            DatabaseHelper.columnUserPhone: existentUser['phone'],
+            DatabaseHelper.columnIsRegComplete: existentUser['isRegisterComplete']
+          };
+
+          dynamic retorno = await this.widget.dbHelper.searchUser(uid);
+
+          if (retorno!=null) {
+//            print("já existe, tem retorno");
+            await this.widget.dbHelper.update(thisUser, "users", "uid");
+          }else{
+//            print("já existe, NÃO tem retorno");
+            await this.widget.dbHelper.insert(thisUser, "users");
+          }
+
+        }else{
+//          print("não existe");
+          var url = "https://dom-marino-webservice.appspot.com/create_user";
+
+          final postUri = Uri.parse(url);
+          http.MultipartRequest request = http.MultipartRequest('POST', postUri);
+
+          request.fields['hasImageFile'] = "False";
+
+          request.fields['uid'] = uid;
+          request.fields['name'] = name;
+          request.fields['phone'] = "";
+          request.fields['email'] = email;
+          request.fields['isRegisterComplete'] = "0";
+          request.fields['img_url'] = img_url;
+
+          http.StreamedResponse response = await request.send();
+
+          Map<String, dynamic> thisUser = {
+            DatabaseHelper.columnUID: uid,
+            DatabaseHelper.columnUserName: name,
+            DatabaseHelper.columnUserEmail: email,
+            DatabaseHelper.columnUserImgUrl: img_url,
+            DatabaseHelper.columnUserPhone: "",
+            DatabaseHelper.columnIsRegComplete: 0
+          };
+
+          dynamic retorno = await this.widget.dbHelper.searchUser(uid);
+
+//          print("retorno="+retorno.toString());
+
+          if (retorno!=null) {
+//            print("Não existe, tem retorno");
+            await this.widget.dbHelper.update(thisUser, "users", "uid");
+          }else{
+//            print("Não existe, Não tem retorno");
+            await this.widget.dbHelper.insert(thisUser, "users");
+          }
+        }
+//        all_products_obj_list = new List();
+//
+//        all_products_obj_list.add(Product.fromJson(allProducts));
+//
+//        return Product.fromJson(allProducts);
+      } else {
+        // If that response was not OK, throw an error.
+        throw Exception('Failed to load product');
+      }
+    } catch (e) {
+      print("Aqui listUsers erro: " + e.toString());
+    }
+
+//    print("Saiu senduser: "+response.statusCode.toString());
+
+
+//    Future.delayed(Duration(seconds:2)).then((_){
+//      Navigator.of(context).pop();
+//    });
   }
 }
 

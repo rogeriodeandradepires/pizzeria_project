@@ -2,14 +2,10 @@ import 'package:dom_marino_app/src/models/user_model.dart';
 import 'package:dom_marino_app/src/screens/CartPage.dart';
 import 'package:dom_marino_app/src/screens/LoginMainPage.dart';
 import 'package:dom_marino_app/src/screens/SignUpMainPage.dart';
-import 'package:dom_marino_app/src/shared/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
 import './src/screens/SignInPage.dart';
-import './src/screens/SignUpPage.dart';
-import './src/screens/HomePage.dart';
 import './src/screens/Dashboard.dart';
-import './src/screens/ProductPage.dart';
 
 void main() => runApp(MyApp());
 

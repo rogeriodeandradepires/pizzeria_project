@@ -6,8 +6,9 @@ import 'package:flutter/material.dart';
 class SignupBg extends StatefulWidget {
   Function() thisOnTap;
   File image;
+  String imgUrl;
 
-  SignupBg(this.thisOnTap, this.image);
+  SignupBg(this.imgUrl, this.thisOnTap, this.image);
 
   @override
   _SignupBgState createState() => _SignupBgState();
@@ -43,7 +44,7 @@ class _SignupBgState extends State<SignupBg> {
                       CircleAvatar(
                         radius: 60.0,
                         backgroundColor: Colors.transparent,
-                        backgroundImage: this.widget.image != null ? FileImage(this.widget.image):AssetImage('images/avatar.png'),
+                        backgroundImage: this.widget.image != null ? FileImage(this.widget.image):this.widget.imgUrl!=null?NetworkImage(this.widget.imgUrl):AssetImage('images/avatar.png'),
                       ),
                       Material(
                           color: Colors.transparent,

@@ -20,6 +20,8 @@ class _SignUpMainPageState extends State<SignUpMainPage> {
 
   @override
   Widget build(BuildContext context) {
+    final Map<String, dynamic> args = ModalRoute.of(context).settings.arguments;
+
     return Scaffold(
       resizeToAvoidBottomInset: true,
       key: scaffoldKey,
@@ -41,7 +43,7 @@ class _SignUpMainPageState extends State<SignUpMainPage> {
           controller: scrollController,
           children: <Widget>[
             Container(
-                height: MediaQuery.of(context).size.height, child: SignUp(model, scaffoldKey)),
+                height: MediaQuery.of(context).size.height, child: SignUp(args, model, scaffoldKey)),
           ],
         );
       }),
@@ -66,5 +68,7 @@ class _SignUpMainPageState extends State<SignUpMainPage> {
         }
       },
     );
+
   }
+
 }
