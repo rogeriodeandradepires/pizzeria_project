@@ -203,6 +203,7 @@ class _SignUpState extends State<SignUp>
                                   padding: EdgeInsets.only(
                                       left: 40, right: 20, top: 0, bottom: 0),
                                   child: TextFormField(
+                                    enabled: thisUser!=null?false:true,
                                     autofocus: false,
                                     controller: _emailController,
                                     keyboardType: TextInputType.emailAddress,
@@ -373,7 +374,7 @@ class _SignUpState extends State<SignUp>
                 ),
                 Stack(
                   children: <Widget>[
-                    roundedRectButton("Registrar", goBtnGradients, false),
+                    roundedRectButton(thisUser!=null?"Salvar":"Registrar", goBtnGradients, false),
                     Material(
                       color: Colors.transparent,
                       child: InkWell(

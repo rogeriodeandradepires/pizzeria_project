@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:dom_marino_app/src/bottomNavigationView/bottomBarView.dart';
 import 'package:dom_marino_app/src/models/category_result_model.dart';
 import 'package:dom_marino_app/src/models/order_result_model.dart';
@@ -16,6 +17,7 @@ import '../shared/partials.dart';
 import 'package:http/http.dart';
 import 'package:dom_marino_app/src/shared/database_helper.dart';
 
+import 'AboutPage.dart';
 import 'CartPage.dart';
 
 List<Category> all_categories_obj_list = new List();
@@ -60,6 +62,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     ),
   );
 
+  Map<String, dynamic> thisUser = new Map();
+
   @override
   void initState() {
     fbAuth.onAuthStateChanged.listen((newUser) {
@@ -102,7 +106,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       storeTab(context),
       favoritesTab(context),
       buildOrdersTab(globalContext),
-      Text('Tab4'),
+      profileTab(context),
     ];
 
     return Scaffold(
@@ -132,7 +136,12 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             IconButton(
               padding: EdgeInsets.all(0),
               onPressed: () {
-                showRegisterDialog(null);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                      new AboutPage()),
+                );
               },
               iconSize: 21,
               icon: Icon(Fryo.location),
@@ -201,7 +210,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                 if (result == "Ok") {
 //                  print("result==Ok");
                   checkRegisterComplete();
-                }else{
+                } else {
 //                  print("result!=Ok");
                 }
               }
@@ -223,8 +232,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             } else if (index == 1 || index == 3) {
               animationController.reverse().then((data) {
                 if (index == 3) {
-                  FirebaseAuth.instance.signOut();
-                  user = null;
+//                  FirebaseAuth.instance.signOut();
+//                  user = null;
                 }
 
                 if (!mounted) return;
@@ -673,7 +682,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
   Widget favoritesTab(BuildContext context) {
     List<Widget> favoritesWidgetLists = <Widget>[];
-    favoritesWidgetLists.add(sectionHeader('Favoritos', onViewMore: () {}));
+    favoritesWidgetLists
+        .add(sectionHeader('Meus Favoritos', onViewMore: () {}));
 //    List<Widget> thisList = buildFavoritesLists();
 //    favoritesWidgetLists.addAll(thisList);
     favoritesWidgetLists.add(buildFavoritesLists());
@@ -995,6 +1005,203 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
               child: Text('Nenhum item disponível neste momento.',
                   textAlign: TextAlign.center, style: noneItemText))
           : createdLists,
+    );
+  }
+
+  profileTab(BuildContext context) {
+    List<Widget> profileWidgetLists = <Widget>[];
+
+    profileWidgetLists.add(Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: <Widget>[
+        sectionHeader('Meu Perfil', onViewMore: () {}),
+        Padding(
+          padding: const EdgeInsets.only(right: 10.0),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: (() {
+                      FirebaseAuth.instance.signOut();
+                      user = null;
+                      thisUser = new Map();
+              }),
+              child: Text(
+                'Sair >>',
+                textAlign: TextAlign.center,
+                style: h6,
+              ),
+            ),
+          ),
+        ),
+      ],
+    ));
+
+    if (user != null && thisUser != null) {
+      retrieveUser();
+
+      profileWidgetLists.add(Padding(
+        padding: const EdgeInsets.only(top: 10.0, bottom: 10.0),
+        child: Align(
+          alignment: Alignment.center,
+          child: Container(
+            width: 140.0,
+            height: 140.0,
+            padding: const EdgeInsets.all(8.0),
+            // borde width
+            decoration: new BoxDecoration(
+              color: Colors.white, // border color
+              shape: BoxShape.circle,
+            ),
+            child: CircleAvatar(
+              backgroundColor: Colors.transparent,
+              backgroundImage: thisUser['imgUrl'] != null
+                  ? NetworkImage(thisUser['imgUrl'])
+                  : AssetImage('images/avatar.png'),
+            ),
+          ),
+        ),
+      ));
+
+      profileWidgetLists.add(Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Padding(
+            padding: EdgeInsets.only(right: 40, bottom: 10),
+            child: Container(
+              width: MediaQuery.of(context).size.width - 40,
+              height: 50,
+              child: Material(
+                elevation: 0,
+                color: Colors.white.withOpacity(0.8),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.only(
+                        bottomRight: Radius.circular(0.0),
+                        topRight: Radius.circular(30.0))),
+                child: Padding(
+                  padding:
+                      EdgeInsets.only(left: 40, right: 20, top: 0, bottom: 0),
+                  child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: thisUser['name'] != null
+                          ? Text(
+                              thisUser['name'],
+                              style: h8,
+                            )
+                          : Container()),
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.only(right: 40, bottom: 10),
+            child: Container(
+              width: MediaQuery.of(context).size.width - 40,
+              height: 50,
+              child: Material(
+                elevation: 0,
+                color: Colors.white.withOpacity(0.8),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.only(
+                        bottomRight: Radius.circular(0.0),
+                        topRight: Radius.circular(0.0))),
+                child: Padding(
+                  padding:
+                      EdgeInsets.only(left: 40, right: 20, top: 0, bottom: 0),
+                  child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: thisUser['email'] != null
+                          ? AutoSizeText(
+                              thisUser['email'],
+                              style: h8,
+                              maxLines: 1,
+                            )
+                          : Container()),
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.only(right: 40, bottom: 10),
+            child: Container(
+              width: MediaQuery.of(context).size.width - 40,
+              height: 50,
+              child: Material(
+                elevation: 0,
+                color: Colors.white.withOpacity(0.8),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.only(
+                        bottomRight: Radius.circular(30.0),
+                        topRight: Radius.circular(0.0))),
+                child: Padding(
+                  padding:
+                      EdgeInsets.only(left: 40, right: 20, top: 0, bottom: 0),
+                  child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: thisUser['phone'] != null
+                          ? Text(
+                              thisUser['phone'],
+                              style: h8,
+                            )
+                          : Container()),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ));
+
+      profileWidgetLists.add(
+        Padding(
+          padding: const EdgeInsets.only(top:10.0),
+          child: Stack(
+            children: <Widget>[
+              Center(child: roundedRectButton("Editar", goBtnGradients, false)),
+              Center(
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    autofocus: true,
+                    customBorder: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30.0)),
+                    child: Container(
+                      alignment: Alignment.center,
+                      width: MediaQuery.of(globalContext).size.width / 1.2,
+                      height: 55.0,
+                      decoration: ShapeDecoration(
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30.0)),
+                      ),
+                      padding: EdgeInsets.only(top: 16, bottom: 16),
+                    ),
+                    onTap: (() async {
+                      final result = await Navigator.pushReplacementNamed(
+                          context, '/signup',
+                          arguments: thisUser);
+
+                      if (result != "Ok") {
+                        checkRegisterComplete();
+                      }
+                    }),
+                  ),
+                ),
+              )
+            ],
+          ),
+        ),
+      );
+    } else {
+      profileWidgetLists.add(Container(
+        height: 500,
+        width: MediaQuery.of(context).size.width,
+        child: Center(
+            child: Text('Por favor, faça login para continuar.',
+                textAlign: TextAlign.center, style: noneItemText)),
+      ));
+    }
+
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: profileWidgetLists,
     );
   }
 
@@ -1435,16 +1642,16 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                 padding: const EdgeInsets.only(
                                     left: 15.0, right: 15.0),
                                 child: froyoFlatBtn("Ok", () async {
-                                  final result = await Navigator.pushReplacementNamed(
-                                      context, '/signup',
-                                      arguments: thisUser);
+                                  final result =
+                                      await Navigator.pushReplacementNamed(
+                                          context, '/signup',
+                                          arguments: thisUser);
 
 //                                  print("dialog result ="+result.toString());
 
-                                  if (result!="Ok") {
+                                  if (result != "Ok") {
                                     checkRegisterComplete();
                                   }
-
                                 }),
                               ),
                             ],
@@ -1517,8 +1724,94 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           showRegisterDialog(thisUser);
         }
       }
-    }else{
+    } else {
 //      print("user==null");
     }
   }
+
+  Future<void> retrieveUser() async {
+    var queryParameters = {
+      'uid': user.uid,
+    };
+
+    var uri = Uri.https(
+        'dom-marino-webservice.appspot.com', 'list_users', queryParameters);
+
+    try {
+      Response response = await get(uri);
+      // sample info available in response
+      int statusCode = response.statusCode;
+      Map<String, String> headers = response.headers;
+      String contentType = headers['content-type'];
+
+//      print(response.body);
+
+      if (response.statusCode == 200) {
+        dynamic existentUser = json.decode(response.body);
+
+        if (existentUser != null) {
+//          print("já existe");
+
+          thisUser = {
+            DatabaseHelper.columnUID: user.uid,
+            DatabaseHelper.columnUserName: existentUser['name'],
+            DatabaseHelper.columnUserEmail: existentUser['email'],
+            DatabaseHelper.columnUserImgUrl: existentUser['image_url'],
+            DatabaseHelper.columnUserPhone: existentUser['phone'],
+            DatabaseHelper.columnIsRegComplete:
+                existentUser['isRegisterComplete']
+          };
+        } else {
+          thisUser = new Map();
+        }
+//        all_products_obj_list = new List();
+//
+//        all_products_obj_list.add(Product.fromJson(allProducts));
+//
+//        return Product.fromJson(allProducts);
+      } else {
+        // If that response was not OK, throw an error.
+        throw Exception('Failed to load product');
+      }
+    } catch (e) {
+      print("Aqui listUsers erro: " + e.toString());
+    }
+  }
 }
+
+Widget roundedRectButton(
+    String title, List<Color> gradient, bool isEndIconVisible) {
+  return Builder(builder: (BuildContext mContext) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 10),
+      child: Stack(
+        alignment: Alignment(1.0, 0.0),
+        children: <Widget>[
+          Container(
+            alignment: Alignment.center,
+            width: MediaQuery.of(mContext).size.width / 1.2,
+            decoration: ShapeDecoration(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30.0)),
+              gradient: LinearGradient(
+                  colors: gradient,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight),
+            ),
+            child: Text(title,
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500)),
+            padding: EdgeInsets.only(top: 16, bottom: 16),
+          ),
+        ],
+      ),
+    );
+  });
+}
+
+const List<Color> goBtnGradients = [
+  Color(0xFF643621),
+  Color(0xFF391d11),
+];
