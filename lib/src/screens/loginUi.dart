@@ -246,7 +246,7 @@ class _LoginState extends State<Login> {
                                       color: Colors.transparent,
                                       child: InkWell(
                                         onTap: (() {
-                                          Navigator.pushReplacementNamed(context, '/signup');
+                                          Navigator.pushNamed(context, '/signup');
                                         }),
                                         child: Text(
                                           'Criar Conta',

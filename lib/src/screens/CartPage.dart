@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:dom_marino_app/src/BLoC/allCartItems_bloc.dart';
 import 'package:dom_marino_app/src/BLoC/listenAllCartItemsRetrieved_bloc.dart';
 import 'package:dom_marino_app/src/BLoC/totalPrice_bloc.dart';
@@ -187,109 +188,8 @@ class _CartPageState extends State<CartPage> {
                                     margin: EdgeInsets.only(bottom: 10),
                                     child: froyoFlatBtn('Realizar Pedido',
                                         () async {
-                                      Dialog thisDialog = showLoadingDialog();
-
-//                                      String url =
-//                                          'http://192.168.63.1:8080/makeorder';
-                                      String userId = widget.user.uid;
-                                      String coupon_id = null;
-
-                                      var now = new DateTime.now();
-
-                                      print("Aqui:" + now.toString());
-
-//                                      var formatter = new DateFormat('yyyy-MM-dd Hms');
-                                      String dateTime =
-                                          now.toString().substring(0, 19);
-
-                                      String id = null;
-                                      String delivery = "withdraw";
-                                      String payment_method = "credit_card";
-                                      String total = null;
-
-                                      Map<String, dynamic> productsId = {};
-
-                                      finalAllCartItemsMap.forEach((item) {
-//                                        print("Item: "+item.toString());
-
-                                        String pizza_edge_id =
-                                            item['pizzaEdgeId'];
-                                        String product1_category =
-                                            item["categoryName"];
-                                        String product2_category =
-                                            item["product2CategoryName"];
-                                        String product_id = "";
-
-                                        if (item["isTwoFlavoredPizza"] == 1) {
-                                          product_id = item["product1Id"];
-                                        } else {
-                                          product_id = item["productId"];
-                                        }
-
-                                        Map<String, dynamic> tempMap = {
-                                          'category': item['productCategory'],
-                                          'notes': item['productObservations'],
-                                          'pizza_edge_id': '$pizza_edge_id',
-                                          'product1_category':
-                                              '$product1_category',
-                                          'product2_category':
-                                              '$product2_category',
-                                          'product2_id': item['product2Id'],
-                                          'product_id': product_id,
-                                          'isTwoFlavoredPizza':
-                                              item["isTwoFlavoredPizza"],
-                                          'quantity': item['productAmount'],
-                                          'size': item['productSize'],
-                                        };
-
-                                        String tempProductsId =
-                                            new DateTime.now()
-                                                .toUtc()
-                                                .toString();
-
-                                        productsId[tempProductsId] = tempMap;
-
-//                                        print(tempMap);
-                                      });
-
-//                                      print("productsId: "+json.encode(productsId));
-
-                                      var queryParameters = {
-                                        'date_time': '$dateTime',
-                                        'coupon_id': '$coupon_id',
-                                        'id': '$id',
-                                        'delivery': '$delivery',
-                                        'payment_method': '$payment_method',
-                                        'total': '$total',
-                                        'userId': '$userId',
-                                        'products_id': json.encode(productsId),
-                                      };
-
-//                                      var uri = Uri.http('192.168.63.1:8080', 'makeorder', queryParameters);
-                                      var uri = Uri.http(
-                                          'dom-marino-webservice.appspot.com',
-                                          'makeorder',
-                                          queryParameters);
-
-                                      var url = "https://dom-marino-webservice.appspot.com/makeorder";
-//                                      var url = "http://192.168.63.1:8080/makeorder";
-
-                                      diolib.Dio dio = new diolib.Dio();
-                                      diolib.Response apiResponse = await dio.post(url, data: queryParameters);
-                                      print(apiResponse.data.toString());
-
-                                      Navigator.of(context,
-                                              rootNavigator: false)
-                                          .pop();
-
-                                      await widget.dbHelper.delete(
-                                          cartId, "cartItems", "cartId");
-                                      await widget.dbHelper
-                                          .delete(cartId, "cart", "cartId");
-
-//                                      Navigator.pop(context, "Ok");
-                                      Navigator.of(context, rootNavigator: true)
-                                          .pop("Ok");
+                                    Dialog thisDialog = showLoadingDialog();
+                                    checkWorkingHoursAndPlaceOrder();
                                     }),
                                   ),
                                 ),
@@ -694,7 +594,6 @@ class _CartPageState extends State<CartPage> {
                   showLoadingDialog();
 
                   subtractAmmount(ammount);
-
                 },
                 child: Container(
                   width: 30,
@@ -718,7 +617,6 @@ class _CartPageState extends State<CartPage> {
                   showLoadingDialog();
 
                   addAmmount(ammount);
-
                 },
                 child: Container(
                   width: 30,
@@ -902,7 +800,6 @@ class _CartPageState extends State<CartPage> {
           children: <Widget>[
             InkWell(
               onTap: () async {
-
                 isLoading = true;
                 showLoadingDialog();
 
@@ -946,7 +843,6 @@ class _CartPageState extends State<CartPage> {
             ),
             InkWell(
               onTap: () async {
-
                 isLoading = true;
                 showLoadingDialog();
 
@@ -1012,22 +908,18 @@ class _CartPageState extends State<CartPage> {
   }
 
   Future<void> subtractAmmount(Map<String, dynamic> ammount) async {
-
     int index = finalAllCartItemsMap.indexOf(ammount);
     dynamic value = finalAllCartItemsMap[index]["productAmount"];
     value = value - 1;
 
     if (value == 0) {
-      await widget.dbHelper.delete(
-          finalAllCartItemsMap[index]['cartItemsId'],
-          "cartItems",
-          "cartItemsId");
+      await widget.dbHelper.delete(finalAllCartItemsMap[index]['cartItemsId'],
+          "cartItems", "cartItemsId");
     } else {
       Map<String, dynamic> newMap = new Map();
       newMap.addAll(ammount);
       newMap["productAmount"] = value;
-      await widget.dbHelper
-          .update(newMap, "cartItems", "cartItemsId");
+      await widget.dbHelper.update(newMap, "cartItems", "cartItemsId");
     }
 
     setState(() {
@@ -1036,18 +928,387 @@ class _CartPageState extends State<CartPage> {
   }
 
   Future<void> addAmmount(Map<String, dynamic> ammount) async {
-
     int index = finalAllCartItemsMap.indexOf(ammount);
     dynamic value = finalAllCartItemsMap[index]["productAmount"];
     value = value + 1;
     Map<String, dynamic> newMap = new Map();
     newMap.addAll(ammount);
     newMap["productAmount"] = value;
-    await widget.dbHelper
-        .update(newMap, "cartItems", "cartItemsId");
+    await widget.dbHelper.update(newMap, "cartItems", "cartItemsId");
 
     setState(() {
       retrieveAllCartItems();
     });
   }
+
+  Future<void> checkWorkingHoursAndPlaceOrder() async {
+    String url = 'http://api.timezonedb.com/v2.1/get-time-zone?key=PJ3V1SZ4GHNA&format=json&by=zone&zone=America/Sao_Paulo';
+  //formatted
+//    String url = 'http://worldtimeapi.org/api/timezone/America/Sao_Paulo';
+
+    Response response = await get(url);
+    // sample info available in response
+    int statusCode = response.statusCode;
+    Map<String, String> headers = response.headers;
+    String contentType = headers['content-type'];
+    dynamic realDateTime = json.decode(response.body);
+
+    var date = DateTime.parse(realDateTime['formatted'].toString());
+    String dayOfTheWeek = DateFormat('EEE').format(date).toLowerCase();
+
+//    print(dayOfTheWeek);
+
+    String currentHoursString = realDateTime["formatted"]
+        .toString()
+        .substring(11, 13);
+
+    if (currentHoursString=="00") {
+      currentHoursString = "24";
+    }
+
+    int currentHours = int.parse(currentHoursString);
+
+    int currentMinutes =
+        int.parse(realDateTime["formatted"].toString().substring(14, 16));
+    int currentTimeSum = currentHours * 60 + currentMinutes;
+
+    String formattedActualDateTime = realDateTime['formatted'].toString().substring(0, 10) +
+            " " +
+            currentHours.toString() +
+            ":" +
+            realDateTime["formatted"].toString().substring(14, 16) +
+            ":00";
+    print(formattedActualDateTime);
+//  var now = new DateTime.now();
+//
+//  print(now.toString().substring(0, 19));
+
+    int serverHoursFrom;
+    int serverMinutesFrom;
+    int serverTimeSumFrom;
+
+    int serverHoursTo;
+    int serverMinutesTo;
+    int serverTimeSumTo;
+
+    var queryParameters = {
+      'weekDay': '$dayOfTheWeek',
+    };
+
+    var uri = Uri.https('dom-marino-webservice.appspot.com',
+        'get_working_hours', queryParameters);
+
+    Response wh_response = await get(uri);
+    // sample info available in response
+    int wh_statusCode = wh_response.statusCode;
+    Map<String, String> wh_headers = wh_response.headers;
+    String wh_contentType = headers['content-type'];
+    dynamic workingHours = json.decode(wh_response.body);
+
+    if (response.statusCode == 200) {
+
+      serverHoursFrom =
+          int.parse(workingHours["from"].toString().substring(0, 2));
+      serverMinutesFrom =
+          int.parse(workingHours["from"].toString().substring(3, 5));
+      serverTimeSumFrom = serverHoursFrom * 60 + serverMinutesFrom;
+
+      serverHoursTo = int.parse(workingHours["to"].toString().substring(0, 2));
+      serverMinutesTo =
+          int.parse(workingHours["to"].toString().substring(3, 5));
+      serverTimeSumTo = serverHoursTo * 60 + serverMinutesTo;
+    } else {
+      // If that response was not OK, throw an error.
+      throw Exception('Failed to load product');
+    }
+
+    print(currentTimeSum);
+    print(serverTimeSumFrom);
+    print(serverTimeSumTo);
+
+    if (serverHoursFrom != null) {
+      if (currentTimeSum >= serverTimeSumFrom &&
+          currentTimeSum <= serverTimeSumTo) {
+//      String url = 'http://192.168.63.1:8080/makeorder';
+        String userId = widget.user.uid;
+        String coupon_id = null;
+
+//      var now = new DateTime.now();
+
+//      print("Aqui:" + now.toString());
+
+//      var formatter = new DateFormat('yyyy-MM-dd Hms');
+//      String dateTime = now.toString().substring(0, 19);
+//      print(dateTime);
+
+        String id = null;
+        String delivery = "withdraw";
+        String payment_method = "credit_card";
+        String total = null;
+
+        Map<String, dynamic> productsId = {};
+
+        finalAllCartItemsMap.forEach((item) {
+//      print("Item: "+item.toString());
+
+          String pizza_edge_id = item['pizzaEdgeId'];
+          String product1_category = item["categoryName"];
+          String product2_category = item["product2CategoryName"];
+          String product_id = "";
+
+          if (item["isTwoFlavoredPizza"] == 1) {
+            product_id = item["product1Id"];
+          } else {
+            product_id = item["productId"];
+          }
+
+          Map<String, dynamic> tempMap = {
+            'category': item['productCategory'],
+            'notes': item['productObservations'],
+            'pizza_edge_id': '$pizza_edge_id',
+            'product1_category': '$product1_category',
+            'product2_category': '$product2_category',
+            'product2_id': item['product2Id'],
+            'product_id': product_id,
+            'isTwoFlavoredPizza': item["isTwoFlavoredPizza"],
+            'quantity': item['productAmount'],
+            'size': item['productSize'],
+          };
+
+          String tempProductsId = new DateTime.now().toUtc().toString();
+
+          productsId[tempProductsId] = tempMap;
+
+//      print(tempMap);
+        });
+
+//      print("productsId: "+json.encode(productsId));
+
+        var queryParameters = {
+          'date_time': '$formattedActualDateTime',
+          'coupon_id': '$coupon_id',
+          'id': '$id',
+          'delivery': '$delivery',
+          'payment_method': '$payment_method',
+          'total': '$total',
+          'userId': '$userId',
+          'products_id': json.encode(productsId),
+        };
+
+        var url = "https://dom-marino-webservice.appspot.com/makeorder";
+//      var url = "http://192.168.63.1:8080/makeorder";
+
+        diolib.Dio dio = new diolib.Dio();
+        diolib.Response apiResponse =
+            await dio.post(url, data: queryParameters);
+        print(apiResponse.data.toString());
+
+
+        Navigator.of(context, rootNavigator: false).pop();
+
+        await widget.dbHelper.delete(cartId, "cartItems", "cartId");
+        await widget.dbHelper.delete(cartId, "cart", "cartId");
+
+        showSuccessDialog();
+
+      }else{
+        Navigator.of(context, rootNavigator: false).pop();
+        showTimeErrorDialog();
+      }
+    }
+  }
+
+  Dialog showSuccessDialog() {
+    Dialog retorno;
+    showGeneralDialog(
+        context: context,
+        pageBuilder: (BuildContext buildContext, Animation<double> animation,
+            Animation<double> secondaryAnimation) {
+          return SafeArea(
+            child: Builder(builder: (context) {
+              return WillPopScope(
+                onWillPop: () {},
+                child: Material(
+                    color: Colors.transparent,
+                    child: Align(
+                        alignment: Alignment.center,
+                        child: Container(
+                          width: MediaQuery.of(context).size.width * 0.8,
+                          height: MediaQuery.of(context).size.width * 0.5,
+                          decoration: new BoxDecoration(
+                            shape: BoxShape.rectangle,
+                            color: Colors.white,
+                            borderRadius:
+                            new BorderRadius.all(new Radius.circular(10.0)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: <Widget>[
+                              ClipRRect(
+                                borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(10),
+                                    topRight: Radius.circular(10)),
+                                child: Container(
+                                  height: 50,
+                                  child: Center(
+                                    child: Text(
+                                      "Pedido Recebido",
+                                      style: h2,
+                                    ),
+                                  ),
+                                  color: Colors.lightGreen,
+                                ),
+                              ),
+                              Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(15.0),
+                                  child: Text(
+                                    "Seu pedido foi recebido com sucesso.",
+                                    style: h6,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                    left: 15.0, right: 15.0),
+                                child: froyoFlatBtn("Ok", () async {
+                                  Navigator.of(context, rootNavigator: false).pop("Ok");
+                                  Navigator.of(context, rootNavigator: true).pop("Ok");
+                                }),
+                              ),
+                            ],
+                          ),
+                        ))),
+              );
+            }),
+          );
+        },
+        barrierDismissible: false,
+        barrierLabel:
+        MaterialLocalizations.of(context).modalBarrierDismissLabel,
+        barrierColor: Colors.black.withOpacity(0.4),
+        transitionDuration: const Duration(milliseconds: 150));
+    return retorno;
+  }
+
+  Dialog showTimeErrorDialog() {
+    Dialog retorno;
+    showGeneralDialog(
+        context: context,
+        pageBuilder: (BuildContext buildContext, Animation<double> animation,
+            Animation<double> secondaryAnimation) {
+          return SafeArea(
+            child: Builder(builder: (context) {
+              return WillPopScope(
+                onWillPop: () {},
+                child: Material(
+                    color: Colors.transparent,
+                    child: Align(
+                        alignment: Alignment.center,
+                        child: Container(
+                          width: MediaQuery.of(context).size.width * 0.8,
+                          height: MediaQuery.of(context).size.height * 0.4,
+                          decoration: new BoxDecoration(
+                            shape: BoxShape.rectangle,
+                            color: Colors.white,
+                            borderRadius:
+                            new BorderRadius.all(new Radius.circular(10.0)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: <Widget>[
+                              ClipRRect(
+                                borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(10),
+                                    topRight: Radius.circular(10)),
+                                child: Container(
+                                  height: 50,
+                                  child: Center(
+                                    child: Text(
+                                      "Horário de Atendimento",
+                                      style: h2,
+                                    ),
+                                  ),
+                                  color: Colors.redAccent,
+                                ),
+                              ),
+                              Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(10.0),
+                                  child: Column(
+                                    children: <Widget>[
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.start,
+                                        children: <Widget>[
+                                          Container(
+                                            width: MediaQuery.of(context).size.width * 0.7,
+                                            padding: const EdgeInsets.only(left: 8.0),
+                                            child: Text(
+                                              "Pedido fora do horário de atendimento. Por favor, tente novamente de:",
+                                              style: h6,
+                                              textAlign: TextAlign.justify,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.only(right: 8.0, left: 8.0, top: 8.0),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.start,
+                                          children: <Widget>[
+                                            Container(
+                                              width: MediaQuery.of(context).size.width * 0.7,
+                                              padding: const EdgeInsets.only(left: 8.0),
+                                              child: AutoSizeText(
+                                                "Dom à Sex das 19:00 às 23:00",
+                                                style: h6,
+                                                maxLines: 1,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.only(right: 8.0, left: 8.0),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.start,
+                                          children: <Widget>[
+                                            Container(
+                                              width: MediaQuery.of(context).size.width * 0.7,
+                                              padding: const EdgeInsets.only(left: 8.0),
+                                              child: Text(
+                                                "Sáb das 19:00 às 23:30",
+                                                style: h6,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                    left: 15.0, right: 15.0),
+                                child: froyoFlatBtn("Ok", () async {
+                                  Navigator.of(context, rootNavigator: true).pop();
+                                }),
+                              ),
+                            ],
+                          ),
+                        ))),
+              );
+            }),
+          );
+        },
+        barrierDismissible: false,
+        barrierLabel:
+        MaterialLocalizations.of(context).modalBarrierDismissLabel,
+        barrierColor: Colors.black.withOpacity(0.4),
+        transitionDuration: const Duration(milliseconds: 150));
+    return retorno;
+  }
+
 }

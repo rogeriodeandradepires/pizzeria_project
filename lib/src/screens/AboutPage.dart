@@ -126,7 +126,8 @@ class _AboutPageState extends State<AboutPage> {
                           }
                         },
                         child: Padding(
-                          padding: const EdgeInsets.all(8.0),
+                          padding: const EdgeInsets.only(
+                              right: 8.0, left: 8.0, bottom: 8.0, top: 10.0),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: <Widget>[
@@ -205,10 +206,8 @@ class _AboutPageState extends State<AboutPage> {
                           Container(
                             width: MediaQuery.of(context).size.width * 0.75,
                             padding: const EdgeInsets.only(left: 8.0),
-                            child: AutoSizeText(
-                              "Horário de funcionamento:",
-                              style: h6,
-                              maxLines: 1,
+                            child: AutoSizeText("Horário de funcionamento:",
+                              style: h6, maxLines: 1, textAlign: TextAlign.justify,
                             ),
                           ),
                         ],
@@ -226,7 +225,7 @@ class _AboutPageState extends State<AboutPage> {
                             child: AutoSizeText(
                               "Dom à Sex das 19:00 às 23:30",
                               style: h6,
-                              maxLines: 1,
+                              maxLines: 1, textAlign: TextAlign.justify,
                             ),
                           ),
                         ],

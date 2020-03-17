@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:dom_marino_app/src/bottomNavigationView/bottomBarView.dart';
 import 'package:dom_marino_app/src/models/category_result_model.dart';
@@ -7,6 +9,7 @@ import 'package:dom_marino_app/src/models/product_result_model.dart';
 import 'package:dom_marino_app/src/models/tabIconData.dart';
 import 'package:dom_marino_app/src/shared/buttons.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../shared/styles.dart';
@@ -19,6 +22,8 @@ import 'package:dom_marino_app/src/shared/database_helper.dart';
 
 import 'AboutPage.dart';
 import 'CartPage.dart';
+
+import 'package:dio/dio.dart' as diolib;
 
 List<Category> all_categories_obj_list = new List();
 List<Product> all_products_obj_list = new List();
@@ -53,6 +58,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   var _tabs;
   bool isSnackbarVisible = false;
 
+  int storeTabsErrorCount = 1;
+  bool isErrorShown = false;
+
   Widget tabBody = new Container(
     decoration: new BoxDecoration(
       image: new DecorationImage(
@@ -63,6 +71,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   );
 
   Map<String, dynamic> thisUser = new Map();
+
+  int dioErrorCount = 0;
 
   @override
   void initState() {
@@ -138,9 +148,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                      new AboutPage()),
+                  MaterialPageRoute(builder: (context) => new AboutPage()),
                 );
               },
               iconSize: 21,
@@ -186,7 +194,14 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                         new CartPage(dbHelper: dbHelper, user: user)),
               );
 
-              retrieveAllOrders(user.uid, update: true);
+              if (result.toString() == "Ok") {
+                setState(() {
+                  _selectedIndex = 2;
+                });
+                retrieveAllOrders(user.uid, update: true);
+              }
+
+//              retrieveAllOrders(user.uid, update: true);
 
 //              print("Resultado: " + result.toString());
             } else {
@@ -427,34 +442,49 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             .compareTo(b.description.toLowerCase());
       });
     } catch (e) {
-      showSnackbarError();
-      print("Aqui getProducts erro: " + e.toString());
+//      print("Aqui getProducts erro: " + e.toString());
     }
 
     return all_products_obj_list;
   }
 
   Future getCategories() async {
-    String url = 'https://dom-marino-webservice.appspot.com/list_categories';
+//    String url = 'https://dom-marino-webservice.appspot.com/list_categories';
+//    Response response;
+//    final client = Client();
+
+    var url = "https://dom-marino-webservice.appspot.com/list_categories";
+//      var url = "http://192.168.63.1:8080/makeorder";
+
+    diolib.Dio dio = new diolib.Dio();
+    final cancelToken = diolib.CancelToken();
 
     try {
-      Response response = await get(url);
+//      response = await client.get(url);
+//      client.close();
+      diolib.Response apiResponse =
+          await dio.get(url, cancelToken: cancelToken);
+//      print(apiResponse.data.toString());
       // sample info available in response
-      int statusCode = response.statusCode;
-      Map<String, String> headers = response.headers;
-      String contentType = headers['content-type'];
-      dynamic all_categories = json.decode(response.body);
+//      int statusCode = response.statusCode;
+//      Map<String, String> headers = response.headers;
+//      String contentType = headers['content-type'];
+      var response = apiResponse.data;
+      dynamic all_categories = response; //json.decode(response);
 
-      if (response.statusCode == 200) {
-        all_categories_obj_list = new List();
-        all_categories.forEach((category) {
-          all_categories_obj_list.add(Category.fromJson(category));
+//      dynamic all_categories = json.decode(response.body);
+
+//      if (response.statusCode == 200) {
+      all_categories_obj_list = new List();
+      all_categories.forEach((category) {
+        all_categories_obj_list.add(Category.fromJson(category));
 //        print(category);
-        });
-      } else {
-        // If that response was not OK, throw an error.
-        throw Exception('Failed to load category');
-      }
+      });
+//      } else {
+//        print("Erro "+response.toString());
+//        // If that response was not OK, throw an error.
+//        throw Exception('Failed to load category');
+//      }
 
       all_categories_obj_list.sort((a, b) {
         return a.title.toLowerCase().compareTo(b.title.toLowerCase());
@@ -487,9 +517,63 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           _selectedCategoryName = all_categories_obj_list.elementAt(0).name;
         });
       }
+
+//      setState(() {
+//        isErrorShown = false;
+//      });
+
+    } on TimeoutException catch (_) {
+      print("timeoutException: " + _.toString());
+//      dio.close();
+//      setState(() {
+//        isErrorShown = true;
+//      });
+    } on SocketException catch (_) {
+//      client.close();
+
+//    dio.close();
+
+//      getCategories();
+
+//      if (storeTabsErrorCount < 3) {
+//        setState(() {
+//          storeTabsErrorCount++;
+//          getCategories();
+////          _tabs[0] = storeTab(context);
+//        });
+//      } else {
+//        storeTabsErrorCount = 1;
+////          showSnackbarError();
+//        print("Mostrou o erro getCategories");
+//
+//        setState(() {
+//          isErrorShown = true;
+//        });
+//      }
+
+      print("Aqui socket erro:" + _.toString());
     } catch (e) {
-      showSnackbarError();
-      print("Aqui getCategories erro: " + e.toString());
+//    dio.close(force: true);
+
+      if (e is diolib.DioError) {
+//        if(!cancelToken.isCancelled){
+//          cancelToken.cancel();
+
+        print("is dioerror:$e");
+
+        dioErrorCount++;
+
+        if (dioErrorCount >= 2) {
+          if (!cancelToken.isCancelled) {
+            cancelToken.cancel("cancelled");
+            setState(() {
+              isErrorShown = true;
+            });
+          }
+        }
+      } else {}
+
+      print("Aqui getCategories erro:" + e.toString());
     }
 
     return all_categories_obj_list;
@@ -506,10 +590,19 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
               height: MediaQuery.of(context).size.height,
               child: FutureBuilder(
                 builder: (context, productSnap) {
+                  if (productSnap.connectionState == ConnectionState.done) {
+                    if (productSnap.data != null) {
+                      if (productSnap.data.length == 0) {
+                        print("deu erro nos produtos 1");
+                        return showUpdateWindow(finished: true);
+                      }
+                    }
+                  }
+
                   if (productSnap.connectionState == ConnectionState.none &&
                       productSnap.hasData == null) {
                     //print('product snapshot data is: ${productSnap.data}');
-                    return Container();
+                    return showUpdateWindow(finished: true);
                   } else if (productSnap.hasData) {
                     globalProductsListView = ListView.builder(
                       controller: _controller,
@@ -663,7 +756,12 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                       },
                     );
 
-                    return globalProductsListView;
+                    if (productSnap.data.length == 0) {
+                      print("deu erro nos produtos 2");
+                      return showUpdateWindow(finished:true);
+                    }else{
+                      return globalProductsListView;
+                    }
                   }
 
                   return Container(
@@ -677,7 +775,11 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           ]),
         ]);
 
-    return globalStoreTabListView;
+    if (isErrorShown) {
+      return showUpdateWindow();
+    } else {
+      return globalStoreTabListView;
+    }
   }
 
   Widget favoritesTab(BuildContext context) {
@@ -728,6 +830,18 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                 if (categorySnap.connectionState == ConnectionState.none &&
                     categorySnap.hasData == null) {
                   //print('category snapshot data is: ${categorySnap.data}');
+
+//                  if(categorySnap.connectionState==ConnectionState.done){
+//                  if(categorySnap.data!=null){
+//                    if(categorySnap.data.length==0){
+//                      print("deu erro na categoria");
+//                      setState(() {
+//                        isErrorShown = true;
+//                      });
+//                    }
+//                  }
+//                }
+
                   return Container();
                 } else if (categorySnap.hasData) {
                   return ListView.builder(
@@ -1021,9 +1135,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             color: Colors.transparent,
             child: InkWell(
               onTap: (() {
-                      FirebaseAuth.instance.signOut();
-                      user = null;
-                      thisUser = new Map();
+                FirebaseAuth.instance.signOut();
+                user = null;
+                thisUser = new Map();
               }),
               child: Text(
                 'Sair >>',
@@ -1152,7 +1266,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
       profileWidgetLists.add(
         Padding(
-          padding: const EdgeInsets.only(top:10.0),
+          padding: const EdgeInsets.only(top: 10.0),
           child: Stack(
             children: <Widget>[
               Center(child: roundedRectButton("Editar", goBtnGradients, false)),
@@ -1174,7 +1288,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                       padding: EdgeInsets.only(top: 16, bottom: 16),
                     ),
                     onTap: (() async {
-                      final result = await Navigator.pushReplacementNamed(
+                      final result = await Navigator.pushNamed(
                           context, '/signup',
                           arguments: thisUser);
 
@@ -1193,9 +1307,52 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       profileWidgetLists.add(Container(
         height: 500,
         width: MediaQuery.of(context).size.width,
-        child: Center(
-            child: Text('Por favor, faça login para continuar.',
-                textAlign: TextAlign.center, style: noneItemText)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Center(
+                child: Text('Por favor, faça login para continuar.',
+                    textAlign: TextAlign.center, style: noneItemText)),
+            Padding(
+              padding: const EdgeInsets.only(top: 10.0),
+              child: Stack(
+                children: <Widget>[
+                  Center(
+                      child: roundedRectButton("Login", goBtnGradients, false)),
+                  Center(
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        autofocus: true,
+                        customBorder: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30.0)),
+                        child: Container(
+                          alignment: Alignment.center,
+                          width: MediaQuery.of(globalContext).size.width / 1.2,
+                          height: 55.0,
+                          decoration: ShapeDecoration(
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30.0)),
+                          ),
+                          padding: EdgeInsets.only(top: 16, bottom: 16),
+                        ),
+                        onTap: (() async {
+                          final result =
+                              await Navigator.pushNamed(context, '/signin');
+
+                          if (result != "Ok") {
+                            checkRegisterComplete();
+                          }
+                        }),
+                      ),
+                    ),
+                  )
+                ],
+              ),
+            )
+          ],
+        ),
       ));
     }
 
@@ -1541,6 +1698,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
       if (result.toString() == "Ok") {
         retrieveAllOrders(user.uid, update: true);
+
       }
 
 //          retrieveAllOrders(user.uid, update: true);
@@ -1713,15 +1871,22 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     user = await fbAuth.currentUser();
 
     if (user != null) {
-//      print("user!=null: "+user.uid);
+      print("user!=null: " + user.uid);
       //isRegisterComplete
-      Map<String, dynamic> thisUser = await dbHelper.searchUser(user.uid);
-//      print("thisuser="+thisUser.toString());
+      Map<String, dynamic> localThisUser = await dbHelper.searchUser(user.uid);
+//      print("thisuser="+thisUser['isRegComplete'].toString());
 
-      if (thisUser != null) {
+      if (localThisUser != null) {
 //        print("isRegComplete="+thisUser['isRegComplete'].toString());
-        if (thisUser['isRegComplete'] == 0) {
-          showRegisterDialog(thisUser);
+        if (localThisUser['isRegComplete'] == 0) {
+//          print("isRegComplete="+thisUser['isRegComplete'].toString());
+          showRegisterDialog(localThisUser);
+        } else {
+//          print(localThisUser.toString());
+          setState(() {
+            thisUser = localThisUser;
+          });
+//          print("isRegComplete="+thisUser['isRegComplete'].toString());
         }
       }
     } else {
@@ -1776,6 +1941,73 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     } catch (e) {
       print("Aqui listUsers erro: " + e.toString());
     }
+  }
+
+  Widget showUpdateWindow({bool finished}) {
+    return Align(
+        alignment: finished!=null ? (finished?Alignment.topCenter:Alignment.center):Alignment.center,
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.8,
+          height: MediaQuery.of(context).size.height * 0.32,
+          decoration: new BoxDecoration(
+            shape: BoxShape.rectangle,
+            color: Colors.white,
+            borderRadius: new BorderRadius.all(new Radius.circular(10.0)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              ClipRRect(
+                borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(10),
+                    topRight: Radius.circular(10)),
+                child: Container(
+                  height: 50,
+                  child: Center(
+                    child: Text(
+                      "Erro de conexão",
+                      style: h2,
+                    ),
+                  ),
+                  color: Colors.redAccent,
+                ),
+              ),
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Column(
+                    children: <Widget>[
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: <Widget>[
+                          Container(
+                            width: MediaQuery.of(context).size.width * 0.7,
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Text(
+                              "Por favor, clique para atualizar ou tente novamente mais tarde.",
+                              style: h6,
+                              textAlign: TextAlign.justify,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 15.0, right: 15.0),
+                child: froyoFlatBtn("Atualizar", () async {
+                  dioErrorCount = 0;
+                  setState(() {
+                    isErrorShown = false;
+                    _tabs[0] = storeTab(context);
+                  });
+                }),
+              ),
+            ],
+          ),
+        ));
   }
 }
 

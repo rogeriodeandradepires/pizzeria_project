@@ -611,6 +611,7 @@ class _SignUpState extends State<SignUp>
 
   Future<void> sendUserToFirestore() async {
     userData["uid"] = widget.thisUser!=null?widget.thisUser['uid']:this.firebaseUser.uid.toString();
+    String img_url = "";
 
     var url = "https://dom-marino-webservice.appspot.com/create_user";
 
@@ -636,11 +637,12 @@ class _SignUpState extends State<SignUp>
     if (this.widget.thisUser != null) {
       if (this.thisUser['imgUrl'] != null) {
         request.fields['img_url'] = this.thisUser['imgUrl'].toString();
+        img_url = this.thisUser['imgUrl'];
       }
     }
 
     http.StreamedResponse response = await request.send();
-    String img_url = "";
+
 
     Map<String, dynamic> thisUser = {
       DatabaseHelper.columnUID: userData["uid"],
@@ -656,10 +658,10 @@ class _SignUpState extends State<SignUp>
 //          print("retorno="+retorno.toString());
 
     if (retorno!=null) {
-//            print("Não existe, tem retorno");
+            print("Não existe, tem retorno");
       await this.widget.dbHelper.update(thisUser, "users", "uid");
     }else{
-//            print("Não existe, Não tem retorno");
+            print("Não existe, Não tem retorno");
       await this.widget.dbHelper.insert(thisUser, "users");
     }
 
