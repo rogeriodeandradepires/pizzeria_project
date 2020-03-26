@@ -234,7 +234,7 @@ class _LoginState extends State<Login> {
                                           }
                                         }),
                                         child: Text(
-                                          'Esqueci minha senha',
+                                          'Redefinir senha',
                                           textAlign: TextAlign.end,
                                           style: TextStyle(
                                               color: Color(0xFF000000),

@@ -77,181 +77,181 @@ class _AboutPageState extends State<AboutPage> {
                           spreadRadius: 5,
                           color: Color.fromRGBO(0, 0, 0, .05))
                     ]),
-                child: Column(
-                  children: <Widget>[
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () async {
-                          if (await MapLauncher.isMapAvailable(
-                              MapType.google)) {
-                            await MapLauncher.launchMap(
-                              mapType: MapType.google,
-                              coords: Coords(-21.208633, -50.437031),
-                              title: "Dom Marino Pizzaria Gourmet",
-                              description: "A melhor pizzaria da região.",
-                            );
-                          }
-                        },
-                        child: ClipRRect(
-                          borderRadius: new BorderRadius.only(
-                              topLeft: Radius.circular(10),
-                              topRight: Radius.circular(10)),
-                          child: Container(
-                            padding: const EdgeInsets.all(8.0),
-                            decoration: new BoxDecoration(
-                              color: Colors.white, // border color
-                              shape: BoxShape.rectangle,
-                            ),
-                            child: Image.asset(
-                              'images/map.png',
-                              fit: BoxFit.scaleDown,
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: <Widget>[
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () async {
+                            if (await MapLauncher.isMapAvailable(
+                                MapType.google)) {
+                              await MapLauncher.launchMap(
+                                mapType: MapType.google,
+                                coords: Coords(-21.208633, -50.437031),
+                                title: "Dom Marino Pizzaria Gourmet",
+                                description: "A melhor pizzaria da região.",
+                              );
+                            }
+                          },
+                          child: ClipRRect(
+                            borderRadius: new BorderRadius.only(
+                                topLeft: Radius.circular(10),
+                                topRight: Radius.circular(10)),
+                            child: Container(
+                              padding: const EdgeInsets.all(8.0),
+                              decoration: new BoxDecoration(
+                                color: Colors.white, // border color
+                                shape: BoxShape.rectangle,
+                              ),
+                              child: Image.asset(
+                                'images/map.png',
+                                fit: BoxFit.scaleDown,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () async {
-                          if (await MapLauncher.isMapAvailable(
-                              MapType.google)) {
-                            await MapLauncher.launchMap(
-                              mapType: MapType.google,
-                              coords: Coords(-21.208633, -50.437031),
-                              title: "Dom Marino Pizzaria Gourmet",
-                              description: "A melhor pizzaria da região.",
-                            );
-                          }
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.only(
-                              right: 8.0, left: 8.0, bottom: 8.0, top: 10.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: <Widget>[
-                              Container(
-                                width: 20,
-                                child: Image.asset(
-                                  'images/place.png',
-                                  fit: BoxFit.scaleDown,
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () async {
+                            if (await MapLauncher.isMapAvailable(
+                                MapType.google)) {
+                              await MapLauncher.launchMap(
+                                mapType: MapType.google,
+                                coords: Coords(-21.208633, -50.437031),
+                                title: "Dom Marino Pizzaria Gourmet",
+                                description: "A melhor pizzaria da região.",
+                              );
+                            }
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 8.0, bottom: 8.0, top: 8.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: <Widget>[
+                                Container(
+                                  width: 20,
+                                  child: Image.asset(
+                                    'images/place.png',
+                                    fit: BoxFit.scaleDown,
+                                  ),
                                 ),
-                              ),
-                              Container(
-                                width: MediaQuery.of(context).size.width * 0.75,
-                                padding: const EdgeInsets.only(left: 8.0),
-                                child: AutoSizeText(
-                                  "Rua Silva Jardim, 106 - Araçatuba",
-                                  style: h6,
-                                  maxLines: 1,
+                                Container(
+                                  width: MediaQuery.of(context).size.width * 0.6,
+                                  padding: const EdgeInsets.only(left: 8.0),
+                                  child: AutoSizeText(
+                                    "Rua Silva Jardim, 106 - Araçatuba",
+                                    style: h5Snackbar,
+                                    maxLines: 2,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () async {
-                          const url = "tel:+55 18 3304 2044";
-                          if (await canLaunch(url)) {
-                            await launch(url);
-                          } else {
-                            throw 'Could not launch $url';
-                          }
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.only(
-                              right: 8.0, left: 8.0, bottom: 8.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: <Widget>[
-                              Container(
-                                width: 20,
-                                child: Image.asset(
-                                  'images/phone.png',
-                                  fit: BoxFit.scaleDown,
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () async {
+                            const url = "tel:+55 18 3304 2044";
+                            if (await canLaunch(url)) {
+                              await launch(url);
+                            } else {
+                              throw 'Could not launch $url';
+                            }
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.only(
+                                right: 8.0, left: 8.0, bottom: 8.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: <Widget>[
+                                Container(
+                                  width: 20,
+                                  child: Image.asset(
+                                    'images/phone.png',
+                                    fit: BoxFit.scaleDown,
+                                  ),
                                 ),
-                              ),
-                              Container(
-                                width: MediaQuery.of(context).size.width * 0.75,
-                                padding: const EdgeInsets.only(left: 8.0),
-                                child: AutoSizeText(
-                                  "Ligar (18) 3304-2044",
-                                  style: h6,
-                                  maxLines: 1,
+                                Container(
+                                  width: MediaQuery.of(context).size.width * 0.6,
+                                  padding: const EdgeInsets.only(left: 8.0),
+                                  child: AutoSizeText(
+                                    "Ligar (18) 3304-2044",
+                                    style: h5Snackbar,
+                                    maxLines: 1,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(
-                          left: 8.0, right: 8.0, top: 8.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: <Widget>[
-                          Container(
-                            width: 20,
-                            child: Image.asset(
-                              'images/clock.png',
-                              fit: BoxFit.scaleDown,
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: <Widget>[
+                            Container(
+                              width: 20,
+                              child: Image.asset(
+                                'images/clock.png',
+                                fit: BoxFit.scaleDown,
+                              ),
                             ),
-                          ),
-                          Container(
-                            width: MediaQuery.of(context).size.width * 0.75,
-                            padding: const EdgeInsets.only(left: 8.0),
-                            child: AutoSizeText("Horário de funcionamento:",
-                              style: h6, maxLines: 1, textAlign: TextAlign.justify,
+                            Container(
+                              width: MediaQuery.of(context).size.width * 0.65,
+                              padding: const EdgeInsets.only(left: 8.0),
+                              child: AutoSizeText("Horário de funcionamento:",
+                                style: h6, maxLines: 1, textAlign: TextAlign.justify,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8.0, left: 8.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: <Widget>[
-                          Container(width: 20),
-                          Container(
-                            width: MediaQuery.of(context).size.width * 0.75,
-                            padding: const EdgeInsets.only(left: 8.0),
-                            child: AutoSizeText(
-                              "Dom à Sex das 19:00 às 23:30",
-                              style: h6,
-                              maxLines: 1, textAlign: TextAlign.justify,
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: <Widget>[
+                            Container(width: 20),
+                            Container(
+                              width: MediaQuery.of(context).size.width * 0.65,
+                              padding: const EdgeInsets.only(left: 8.0),
+                              child: AutoSizeText(
+                                "Dom à Sex - 19:00 às 23:30",
+                                style: h5Snackbar,
+                                maxLines: 1, textAlign: TextAlign.justify,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8.0, left: 8.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: <Widget>[
-                          Container(
-                            width: 20,
-                          ),
-                          Container(
-                            width: MediaQuery.of(context).size.width * 0.75,
-                            padding: const EdgeInsets.only(left: 8.0),
-                            child: AutoSizeText(
-                              "Sáb das 19:00 às 0:00",
-                              style: h6,
-                              maxLines: 1,
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: <Widget>[
+                            Container(
+                              width: 20,
                             ),
-                          ),
-                        ],
+                            Container(
+                              width: MediaQuery.of(context).size.width * 0.65,
+                              padding: const EdgeInsets.only(left: 8.0),
+                              child: AutoSizeText(
+                                "Sáb - 19:00 às 0:00",
+                                style: h5Snackbar,
+                                maxLines: 1,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

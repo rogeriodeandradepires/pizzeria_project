@@ -132,8 +132,8 @@ class _CartPageState extends State<CartPage> {
                     alignment: Alignment.center,
                     child: Container(
                       margin: EdgeInsets.only(bottom: 100),
-                      padding: EdgeInsets.only(top: 10, left: 10),
-                      width: MediaQuery.of(context).size.width * 0.85,
+                      padding: EdgeInsets.only(top: 10, left: 2),
+                      width: MediaQuery.of(context).size.width * 0.95,
                       height: MediaQuery.of(context).size.height * 0.7,
                       child: StreamBuilder(
                         builder: (context, itemsCount) {
@@ -184,13 +184,15 @@ class _CartPageState extends State<CartPage> {
                                   bottom: -5,
                                   child: Container(
                                     width:
-                                        MediaQuery.of(context).size.width * 0.8,
+                                        MediaQuery.of(context).size.width * 0.9,
                                     margin: EdgeInsets.only(bottom: 10),
-                                    child: froyoFlatBtn('Realizar Pedido',
-                                        () async {
-                                    Dialog thisDialog = showLoadingDialog();
-                                    checkWorkingHoursAndPlaceOrder();
-                                    }),
+                                    child: Center(
+                                      child: froyoFlatBtn('Realizar Pedido',
+                                          () async {
+                                      Dialog thisDialog = showLoadingDialog();
+                                      checkWorkingHoursAndPlaceOrder();
+                                      }),
+                                    ),
                                   ),
                                 ),
                                 Column(
@@ -260,7 +262,7 @@ class _CartPageState extends State<CartPage> {
 
     includedProducts = new List();
     List<Widget> columnChildren = new List();
-    columnChildren.add(Text("Items", style: h4));
+    columnChildren.add(Text("Itens", style: h4));
 
     finalAllCartItemsMap = new List();
     finalAllCartItemsMap.addAll(allCartItemsMap);
@@ -665,8 +667,8 @@ class _CartPageState extends State<CartPage> {
             children: <Widget>[
               Container(
                   //quadrado branco da imagem para fazer a sombra
-                  width: 150,
-                  height: 150,
+                  width: MediaQuery.of(context).size.width*0.2,
+                  height: MediaQuery.of(context).size.width*0.2,
                   decoration: new BoxDecoration(
                       boxShadow: <BoxShadow>[
                         BoxShadow(
@@ -828,7 +830,7 @@ class _CartPageState extends State<CartPage> {
               child: Container(
                 width: 30,
                 height: 30,
-                margin: EdgeInsets.only(right: 5),
+                margin: EdgeInsets.only(right: 2),
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.all(Radius.circular(4.0)),
@@ -838,7 +840,6 @@ class _CartPageState extends State<CartPage> {
               ),
             ),
             Container(
-              margin: EdgeInsets.only(left: 5, right: 10),
               child: Text(ammount['productAmount'].toString(), style: h3),
             ),
             InkWell(
@@ -861,8 +862,9 @@ class _CartPageState extends State<CartPage> {
                 });
               },
               child: Container(
-                width: 30,
-                height: 30,
+                width: 20,
+                height: 20,
+                margin: EdgeInsets.only(left: 2),
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.all(Radius.circular(4.0)),

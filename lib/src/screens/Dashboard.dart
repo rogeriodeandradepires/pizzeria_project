@@ -137,8 +137,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             children: [
               Image.asset(
                 'images/title_logo_icon_wide_minor.png',
-                fit: BoxFit.cover,
+                fit: BoxFit.fill,
                 height: 40.0,
+                width: MediaQuery.of(context).size.width * 0.45,
               ),
             ],
           ),
@@ -758,8 +759,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
                     if (productSnap.data.length == 0) {
                       print("deu erro nos produtos 2");
-                      return showUpdateWindow(finished:true);
-                    }else{
+                      return showUpdateWindow(finished: true);
+                    } else {
                       return globalProductsListView;
                     }
                   }
@@ -1430,11 +1431,11 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       children: <Widget>[
         Padding(
           padding: const EdgeInsets.only(left: 5.0),
-          child: Text(formatDateTime(order.dateTime), style: majorFoodNameText),
+          child: AutoSizeText(formatDateTime(order.dateTime), style: majorFoodNameText),
         ),
         Padding(
           padding: const EdgeInsets.only(right: 5.0),
-          child: Text("Total: R\$ " + order.total.replaceAll(".", ","),
+          child: AutoSizeText("Total: R\$ " + order.total.replaceAll(".", ","),
               style: majorFoodNameText, overflow: TextOverflow.ellipsis),
         )
       ],
@@ -1449,8 +1450,11 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text(item['product_description'],
-                  style: minorFoodNameText, overflow: TextOverflow.ellipsis),
+              Container(
+                width: MediaQuery.of(context).size.width*0.65,
+                child: AutoSizeText(item['product_description'],
+                    style: minorFoodNameText, overflow: TextOverflow.ellipsis),
+              ),
               (item['pizza_edge_id'] != null && item['pizza_edge_id'] != "null")
                   ? Text("Borda: " + item['pizza_edge_description'],
                       style: minorPizzaEdgeText,
@@ -1521,8 +1525,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                       children: <Widget>[
                         Container(
                             //quadrado branco da imagem para fazer a sombra
-                            width: 150,
-                            height: 150,
+                            width: MediaQuery.of(context).size.width*0.2,
+                            height: MediaQuery.of(context).size.width*0.2,
                             decoration: new BoxDecoration(
                                 boxShadow: <BoxShadow>[
                                   BoxShadow(
@@ -1698,7 +1702,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
       if (result.toString() == "Ok") {
         retrieveAllOrders(user.uid, update: true);
-
       }
 
 //          retrieveAllOrders(user.uid, update: true);
@@ -1945,7 +1948,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
   Widget showUpdateWindow({bool finished}) {
     return Align(
-        alignment: finished!=null ? (finished?Alignment.topCenter:Alignment.center):Alignment.center,
+        alignment: finished != null
+            ? (finished ? Alignment.topCenter : Alignment.center)
+            : Alignment.center,
         child: Container(
           width: MediaQuery.of(context).size.width * 0.8,
           height: MediaQuery.of(context).size.height * 0.32,
@@ -1984,8 +1989,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                             width: MediaQuery.of(context).size.width * 0.7,
                             padding: const EdgeInsets.only(left: 8.0),
                             child: Text(
-                              "Por favor, clique para atualizar ou tente novamente mais tarde.",
-                              style: h6,
+                              "Por favor, atualize ou tente novamente mais tarde.",
+                              style: h5Snackbar,
                               textAlign: TextAlign.justify,
                             ),
                           ),

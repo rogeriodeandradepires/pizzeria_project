@@ -28,9 +28,9 @@ getContainer(BuildContext context, onLike, double imgWidth, Product product,
     children: <Widget>[
       Container(
         //quadrado branco fictício do conjunto imagem
-        width: (!isProductPage) ? 100 : 200,
-        height: (!isProductPage) ? 100 : 200,
-        margin: EdgeInsets.only(left: (!isProductPage) ? 0 : 15),
+        width: (!isProductPage) ? MediaQuery.of(context).size.width*0.25 : MediaQuery.of(context).size.width*0.5,
+        height: (!isProductPage) ? MediaQuery.of(context).size.width*0.25 : MediaQuery.of(context).size.width*0.5,
+        margin: EdgeInsets.only(left: (!isProductPage) ? 0 : 25),
         child: Stack(
           // para fazer a sombra
           children: <Widget>[
@@ -102,7 +102,7 @@ getContainer(BuildContext context, onLike, double imgWidth, Product product,
                 : Text(' '),
             product.description.contains("Escolha")
                 ? Container() //se for
-                : product.description.contains("RODÍZIO")
+                : product.description.contains("RODÍZIO") || isProductPage
                     ? Container()
                     : Positioned(
                         right: -25,
