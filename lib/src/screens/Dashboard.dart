@@ -98,9 +98,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     animationController =
         AnimationController(duration: Duration(milliseconds: 600), vsync: this);
 
-    getCategories();
-//    getProducts(_selectedCategoryName);
-
     super.initState();
     WidgetsBinding.instance
         .addPostFrameCallback((_) => checkRegisterComplete());
@@ -452,14 +449,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
     return all_products_obj_list;
   }
-
-  Future getCategoriesList() async {
-    return all_categories_obj_list;
-  }
-
-//  Future getProductsList() async {
-//    return all_products_obj_list;
-//  }
 
   Future getCategories() async {
 //    String url = 'https://dom-marino-webservice.appspot.com/list_categories';
@@ -888,7 +877,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                   child: _showOverlay(context),
                 );
               },
-              future: getCategoriesList(),
+              future: getCategories(),
             ))
       ],
     );

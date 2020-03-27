@@ -88,10 +88,20 @@ class _AboutPageState extends State<AboutPage> {
                                 MapType.google)) {
                               await MapLauncher.launchMap(
                                 mapType: MapType.google,
-                                coords: Coords(-21.208633, -50.437031),
+                                coords: Coords(-21.208663, -50.437031),
                                 title: "Dom Marino Pizzaria Gourmet",
                                 description: "A melhor pizzaria da região.",
                               );
+                            }else{
+                              if (await MapLauncher.isMapAvailable(
+                                  MapType.apple)) {
+                                await MapLauncher.launchMap(
+                                  mapType: MapType.apple,
+                                  coords: Coords(-21.208663, -50.437031),
+                                  title: "Dom Marino Pizzaria Gourmet",
+                                  description: "A melhor pizzaria da região.",
+                                );
+                              }
                             }
                           },
                           child: ClipRRect(
@@ -120,10 +130,20 @@ class _AboutPageState extends State<AboutPage> {
                                 MapType.google)) {
                               await MapLauncher.launchMap(
                                 mapType: MapType.google,
-                                coords: Coords(-21.208633, -50.437031),
+                                coords: Coords(-21.208663, -50.437031),
                                 title: "Dom Marino Pizzaria Gourmet",
                                 description: "A melhor pizzaria da região.",
                               );
+                            }else{
+                              if (await MapLauncher.isMapAvailable(
+                                  MapType.apple)) {
+                                await MapLauncher.launchMap(
+                                  mapType: MapType.apple,
+                                  coords: Coords(-21.208663, -50.437031),
+                                  title: "Dom Marino Pizzaria Gourmet",
+                                  description: "A melhor pizzaria da região.",
+                                );
+                              }
                             }
                           },
                           child: Padding(
@@ -142,7 +162,7 @@ class _AboutPageState extends State<AboutPage> {
                                   width: MediaQuery.of(context).size.width * 0.6,
                                   padding: const EdgeInsets.only(left: 8.0),
                                   child: AutoSizeText(
-                                    "Rua Silva Jardim, 106 - Araçatuba",
+                                    "R. Silva Jardim, 106 - Araçatuba",
                                     style: h5Snackbar,
                                     maxLines: 2,
                                   ),
@@ -156,7 +176,7 @@ class _AboutPageState extends State<AboutPage> {
                         color: Colors.transparent,
                         child: InkWell(
                           onTap: () async {
-                            const url = "tel:+55 18 3304 2044";
+                            const url = "tel:+551833042044";
                             if (await canLaunch(url)) {
                               await launch(url);
                             } else {

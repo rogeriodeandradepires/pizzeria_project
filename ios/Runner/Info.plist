@@ -15,38 +15,54 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>dom_marino_app</string>
+	<string>D. Marino</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>fb550601015792509</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.643134120120-790iuo3ecea1gvnfh43742sb21kj6pvg</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
-    <key>facebook.com</key>
-    <dict>
-      <key>NSIncludesSubdomains</key> <true/>
-      <key>NSThirdPartyExceptionRequiresForwardSecrecy</key> <false/>
-    </dict>
-    <key>fbcdn.net</key>
-    <dict>
-      <key>NSIncludesSubdomains</key> <true/>
-      <key>NSThirdPartyExceptionRequiresForwardSecrecy</key>  <false/>
-    </dict>
 	<key>FacebookAppID</key>
 	<string>550601015792509</string>
 	<key>FacebookDisplayName</key>
 	<string>Dom Marino Pizzaria</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
-		<string>fbapi</string>
-		<string>fb-messenger-share-api</string>
-		<string>fbauth2</string>
-		<string>fbshareextension</string>
+		<string>comgooglemaps</string>
+		<string>baidumap</string>
+		<string>iosamap</string>
+		<string>waze</string>
+		<string>yandexmaps</string>
+		<string>yandexnavi</string>
+		<string>tel</string>
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>D. Marino precisa acessar sua câmera.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>D. Marino precisa acessar seu microfone.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>D. Marino precisa acessar sua galeria.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -66,42 +82,19 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
-    <!-- Google Sign-in Section -->
-    <key>CFBundleURLTypes</key>
-    <array>
-        <dict>
-            <key>CFBundleURLSchemes</key>
-            <array>
-                <string>fb550601015792509</string>
-            </array>
-        </dict>
-        
-        <dict>
-            <key>CFBundleTypeRole</key>
-            <string>Editor</string>
-            <key>CFBundleURLSchemes</key>
-            <array>
-                <!-- TODO Replace this value: -->
-                <!-- Copied from GoogleService-Info.plist key REVERSED_CLIENT_ID -->
-                <string>com.googleusercontent.apps.643134120120-790iuo3ecea1gvnfh43742sb21kj6pvg</string>
-            </array>
-        </dict>
-    </array>
-    <!-- End of the Google Sign-in Section -->
-    <key>LSApplicationQueriesSchemes</key>
-    <array>
-        <string>comgooglemaps</string>
-        <string>baidumap</string>
-        <string>iosamap</string>
-        <string>waze</string>
-        <string>yandexmaps</string>
-        <string>yandexnavi</string>
-    </array>
-    <key>NSPhotoLibraryUsageDescription</key>
-    <string>D. Marino precisa acessar sua galeria.</string>
-    <key>NSCameraUsageDescription</key>
-    <string>D. Marino precisa acessar sua câmera.</string>
-    <key>NSMicrophoneUsageDescription</key>
-    <string>D. Marino precisa acessar seu microfone.</string>
+	<key>facebook.com</key>
+	<dict>
+		<key>NSIncludesSubdomains</key>
+		<true/>
+		<key>NSThirdPartyExceptionRequiresForwardSecrecy</key>
+		<false/>
+	</dict>
+	<key>fbcdn.net</key>
+	<dict>
+		<key>NSIncludesSubdomains</key>
+		<true/>
+		<key>NSThirdPartyExceptionRequiresForwardSecrecy</key>
+		<false/>
+	</dict>
 </dict>
 </plist>
