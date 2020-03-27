@@ -97,6 +97,10 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
     animationController =
         AnimationController(duration: Duration(milliseconds: 600), vsync: this);
+
+    getCategories();
+//    getProducts(_selectedCategoryName);
+
     super.initState();
     WidgetsBinding.instance
         .addPostFrameCallback((_) => checkRegisterComplete());
@@ -448,6 +452,14 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
     return all_products_obj_list;
   }
+
+  Future getCategoriesList() async {
+    return all_categories_obj_list;
+  }
+
+//  Future getProductsList() async {
+//    return all_products_obj_list;
+//  }
 
   Future getCategories() async {
 //    String url = 'https://dom-marino-webservice.appspot.com/list_categories';
@@ -876,7 +888,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                   child: _showOverlay(context),
                 );
               },
-              future: getCategories(),
+              future: getCategoriesList(),
             ))
       ],
     );
@@ -1843,7 +1855,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       Scaffold.of(globalScaffoldContext)
           .showSnackBar(SnackBar(
             content: Container(
-              height: MediaQuery.of(context).size.height * 0.06,
+              height: MediaQuery.of(context).size.height * 0.1,
               child: Column(
                 children: <Widget>[
                   Text(
@@ -1953,7 +1965,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             : Alignment.center,
         child: Container(
           width: MediaQuery.of(context).size.width * 0.8,
-          height: MediaQuery.of(context).size.height * 0.32,
+          height: MediaQuery.of(context).size.height * 0.42,
           decoration: new BoxDecoration(
             shape: BoxShape.rectangle,
             color: Colors.white,
