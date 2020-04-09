@@ -58,6 +58,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   var _tabs;
   bool isSnackbarVisible = false;
 
+  Future<dynamic> futureCategories;
+  Future<dynamic> futureProducts;
+
   int storeTabsErrorCount = 1;
   bool isErrorShown = false;
 
@@ -98,8 +101,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     animationController =
         AnimationController(duration: Duration(milliseconds: 600), vsync: this);
 
-    getCategories();
-//    getProducts(_selectedCategoryName);
+    futureCategories = getCategories();
+    futureProducts = getProducts(_selectedCategoryName);
 
     super.initState();
     WidgetsBinding.instance
@@ -453,9 +456,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     return all_products_obj_list;
   }
 
-  Future getCategoriesList() async {
-    return all_categories_obj_list;
-  }
+//  Future getCategoriesList() async {
+//    return all_categories_obj_list;
+//  }
 
 //  Future getProductsList() async {
 //    return all_products_obj_list;
@@ -529,6 +532,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           _selectedCategory = all_categories_obj_list.elementAt(0).description;
           _selectedCategoryName = all_categories_obj_list.elementAt(0).name;
         });
+        futureProducts = getProducts(_selectedCategoryName);
       }
 
 //      setState(() {
@@ -782,7 +786,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                     child: _showOverlay(context),
                   );
                 },
-                future: getProducts(_selectedCategoryName),
+                future: futureProducts,
               ),
             )
           ]),
@@ -869,6 +873,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                         if (_selectedCategory == "") {
                           _selectedCategory = category.description;
                           _selectedCategoryName = category.name;
+                          futureProducts = getProducts(_selectedCategoryName);
                         }
                       }
                       return headerCategoryItem(
@@ -877,6 +882,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                           globalProductsListView.controller.jumpTo(0);
                           _selectedCategory = category.description;
                           _selectedCategoryName = category.name;
+                          futureProducts = getProducts(_selectedCategoryName);
                         });
                       });
                     },
@@ -888,7 +894,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                   child: _showOverlay(context),
                 );
               },
-              future: getCategoriesList(),
+              future: futureCategories,
             ))
       ],
     );
@@ -1965,7 +1971,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             : Alignment.center,
         child: Container(
           width: MediaQuery.of(context).size.width * 0.8,
-          height: MediaQuery.of(context).size.height * 0.42,
           decoration: new BoxDecoration(
             shape: BoxShape.rectangle,
             color: Colors.white,
@@ -1973,6 +1978,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               ClipRRect(
                 borderRadius: BorderRadius.only(
@@ -2013,12 +2019,13 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.only(left: 15.0, right: 15.0),
+                padding: const EdgeInsets.only(left: 15.0, right: 15.0, bottom: 10.0),
                 child: froyoFlatBtn("Atualizar", () async {
                   dioErrorCount = 0;
                   setState(() {
                     isErrorShown = false;
-                    _tabs[0] = storeTab(context);
+                    futureCategories = getCategories();
+                    futureProducts = getProducts(_selectedCategoryName);
                   });
                 }),
               ),

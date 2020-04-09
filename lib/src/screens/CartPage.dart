@@ -1136,7 +1136,6 @@ class _CartPageState extends State<CartPage> {
                         alignment: Alignment.center,
                         child: Container(
                           width: MediaQuery.of(context).size.width * 0.8,
-                          height: MediaQuery.of(context).size.width * 0.5,
                           decoration: new BoxDecoration(
                             shape: BoxShape.rectangle,
                             color: Colors.white,
@@ -1145,6 +1144,7 @@ class _CartPageState extends State<CartPage> {
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
+                            mainAxisSize: MainAxisSize.min,
                             children: <Widget>[
                               ClipRRect(
                                 borderRadius: BorderRadius.only(
@@ -1173,7 +1173,7 @@ class _CartPageState extends State<CartPage> {
                               ),
                               Padding(
                                 padding: const EdgeInsets.only(
-                                    left: 15.0, right: 15.0),
+                                    left: 15.0, right: 15.0, bottom: 10.0),
                                 child: froyoFlatBtn("Ok", () async {
                                   Navigator.of(context, rootNavigator: false).pop("Ok");
                                   Navigator.of(context, rootNavigator: true).pop("Ok");
