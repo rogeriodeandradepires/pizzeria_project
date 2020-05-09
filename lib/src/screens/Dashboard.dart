@@ -245,13 +245,20 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                 setState(() {
                   _selectedIndex = index;
                 });
-              });
 
-              if (index == 2) {
-                if (user != null) {
-                  retrieveAllOrders(user.uid, update: true);
+                if (index == 0) {
+                  setState(() {
+                    futureCategories = getCategories();
+                    futureProducts = getProducts(_selectedCategoryName);
+                  });
                 }
-              }
+
+                if (index == 2) {
+                  if (user != null) {
+                    retrieveAllOrders(user.uid, update: true);
+                  }
+                }
+              });
             } else if (index == 1 || index == 3) {
               animationController.reverse().then((data) {
                 if (index == 3) {
@@ -456,14 +463,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     return all_products_obj_list;
   }
 
-//  Future getCategoriesList() async {
-//    return all_categories_obj_list;
-//  }
-
-//  Future getProductsList() async {
-//    return all_products_obj_list;
-//  }
-
   Future getCategories() async {
 //    String url = 'https://dom-marino-webservice.appspot.com/list_categories';
 //    Response response;
@@ -490,7 +489,13 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
 //      dynamic all_categories = json.decode(response.body);
 
+      print("Aqui getCategories: "+response.statusCode.toString());
+
 //      if (response.statusCode == 200) {
+//      } else {
+//
+//      }
+
       all_categories_obj_list = new List();
       all_categories.forEach((category) {
         all_categories_obj_list.add(Category.fromJson(category));
@@ -859,7 +864,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 //                  }
 //                }
 
-                  return Container();
+                  return showUpdateWindow(finished: true);
                 } else if (categorySnap.hasData) {
                   return ListView.builder(
                     scrollDirection: Axis.horizontal,
@@ -1449,7 +1454,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       children: <Widget>[
         Padding(
           padding: const EdgeInsets.only(left: 5.0),
-          child: AutoSizeText(formatDateTime(order.dateTime), style: majorFoodNameText),
+          child: AutoSizeText(formatDateTime(order.dateTime),
+              style: majorFoodNameText),
         ),
         Padding(
           padding: const EdgeInsets.only(right: 5.0),
@@ -1469,7 +1475,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Container(
-                width: MediaQuery.of(context).size.width*0.65,
+                width: MediaQuery.of(context).size.width * 0.65,
                 child: AutoSizeText(item['product_description'],
                     style: minorFoodNameText, overflow: TextOverflow.ellipsis),
               ),
@@ -1543,8 +1549,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                       children: <Widget>[
                         Container(
                             //quadrado branco da imagem para fazer a sombra
-                            width: MediaQuery.of(context).size.width*0.2,
-                            height: MediaQuery.of(context).size.width*0.2,
+                            width: MediaQuery.of(context).size.width * 0.2,
+                            height: MediaQuery.of(context).size.width * 0.2,
                             decoration: new BoxDecoration(
                                 boxShadow: <BoxShadow>[
                                   BoxShadow(
@@ -2019,7 +2025,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.only(left: 15.0, right: 15.0, bottom: 10.0),
+                padding: const EdgeInsets.only(
+                    left: 15.0, right: 15.0, bottom: 10.0),
                 child: froyoFlatBtn("Atualizar", () async {
                   dioErrorCount = 0;
                   setState(() {

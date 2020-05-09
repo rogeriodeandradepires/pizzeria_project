@@ -44,47 +44,47 @@ class _InputWidgetState extends State<InputWidget> {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.only(right: 40, bottom: 10),
-      child: Container(
-        width: MediaQuery.of(context).size.width - 40,
-        child: Material(
-          elevation: 0,
-          color: Colors.white.withOpacity(0.8),
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.only(
-                  bottomRight: Radius.circular(widget.bottomRight),
-                  topRight: Radius.circular(widget.topRight))),
-          child: Padding(
-            padding: EdgeInsets.only(left: 40, right: 20, top: 0, bottom: 0),
-            child: TextFormField(
-              autofocus: false,
-              focusNode: widget.isPasswordField ? _passFocusNode : _emailFocusNode,
-              obscureText: widget.isPasswordField,
-              controller: widget.isPasswordField ? _passController : _emailController,
-              keyboardType: widget.isPasswordField ? TextInputType.text : TextInputType.emailAddress,
-              validator: (text){
-                if(text.isEmpty){
-                  if (widget.isPasswordField) {
-                    if (text.length<=6) {
-                      return "Digite sua Senha.";
-                    }
-                  }else{
-                    if (!text.contains("@")) {
-                      return "E-mail inválido";
-                    }
+      child: Material(
+        elevation: 0,
+        color: Colors.white.withOpacity(0.8),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.only(
+                bottomRight: Radius.circular(widget.bottomRight),
+                topRight: Radius.circular(widget.topRight))),
+        child: Padding(
+          padding: EdgeInsets.only(left: 40, right: 20, top: 0, bottom: 0),
+          child: TextFormField(
+            autofocus: false,
+            focusNode: widget.isPasswordField ? _passFocusNode : _emailFocusNode,
+            obscureText: widget.isPasswordField,
+            controller: widget.isPasswordField ? _passController : _emailController,
+            keyboardType: widget.isPasswordField ? TextInputType.text : TextInputType.emailAddress,
+            validator: (text){
+              if(text.isEmpty){
+                if (widget.isPasswordField) {
+                  if (text.length<=6) {
+                    return "Digite sua Senha.";
                   }
                 }else{
-                  if (!widget.isPasswordField) {
-                    if (!text.contains("@")) {
-                      return "E-mail inválido";
-                    }
+                  if (!text.contains("@")) {
+                    return "E-mail inválido";
                   }
                 }
-              },
-              decoration: InputDecoration(
-                  border: InputBorder.none,
-                  hintText: widget.hintText,
-                  hintStyle: TextStyle(color: Colors.grey, fontSize: 14)),
-            ),
+              }else{
+                if (!widget.isPasswordField) {
+                  if (!text.contains("@")) {
+                    return "E-mail inválido";
+                  }
+                }
+              }
+            },
+            decoration: InputDecoration(
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.only(
+                    left: 0, right: 0, top: 8, bottom: 8),
+                isDense: true,
+                hintText: widget.hintText,
+                hintStyle: TextStyle(color: Colors.grey, fontSize: 14)),
           ),
         ),
       ),

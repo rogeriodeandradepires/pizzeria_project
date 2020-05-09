@@ -43,7 +43,7 @@ class _SignUpMainPageState extends State<SignUpMainPage> {
           controller: scrollController,
           children: <Widget>[
             Container(
-                height: MediaQuery.of(context).size.height, child: SignUp(args, model, scaffoldKey)),
+                height: MediaQuery.of(context).size.height*1.5, child: SignUp(args, model, scaffoldKey)),
           ],
         );
       }),

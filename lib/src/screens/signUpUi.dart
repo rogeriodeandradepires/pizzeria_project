@@ -39,6 +39,10 @@ class _SignUpState extends State<SignUp>
 
   var _nameController;
   var _phoneController;
+  var _addStreetController;
+  var _addNumberController;
+  var _addNeighborhoodController;
+  var _addCityController;
   var _emailController;
   var _pass1Controller;
   var _pass2Controller;
@@ -76,6 +80,10 @@ class _SignUpState extends State<SignUp>
     sendResetPassFN = FocusNode();
     _nameController = TextEditingController();
     _phoneController = TextEditingController();
+    _addNumberController = TextEditingController();
+    _addStreetController = TextEditingController();
+    _addNeighborhoodController = TextEditingController();
+    _addCityController = TextEditingController();
     _emailController = TextEditingController();
     _pass1Controller = TextEditingController();
     _pass2Controller = TextEditingController();
@@ -91,6 +99,8 @@ class _SignUpState extends State<SignUp>
     imagePicker.init();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _addCityController.text = "Birigui";
+
       if (thisUser != null) {
         _nameController.text = thisUser['name'];
         _emailController.text = thisUser['email'];
@@ -110,6 +120,10 @@ class _SignUpState extends State<SignUp>
     sendResetPassFN.dispose();
     _nameController.dispose();
     _phoneController.dispose();
+    _addCityController.dispose();
+    _addNeighborhoodController.dispose();
+    _addNumberController.dispose();
+    _addStreetController.dispose();
     _emailController.dispose();
     _pass1Controller.dispose();
     _pass2Controller.dispose();
@@ -132,249 +146,389 @@ class _SignUpState extends State<SignUp>
     return Stack(
       children: <Widget>[
         thisSignUpBg,
-        Column(
-          children: <Widget>[
-            Padding(
-              padding: EdgeInsets.only(
-                  top: MediaQuery.of(context).size.height / 4.5),
-            ),
-            Column(
-              children: <Widget>[
-                ///holds email header and inputField
-                Stack(
-                  alignment: Alignment.bottomRight,
+        SingleChildScrollView(
+          physics: const NeverScrollableScrollPhysics(),
+          child: Column(
+            children: <Widget>[
+              Padding(
+                padding: EdgeInsets.only(
+                    top: MediaQuery.of(context).size.height / 3),
+              ),
+              Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
-                    Form(
-                      key: _formKey,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                          Padding(
-                            padding: EdgeInsets.only(right: 40, bottom: 10),
-                            child: Container(
-                              width: MediaQuery.of(context).size.width - 40,
-                              height: 50,
-                              child: Material(
-                                elevation: 0,
-                                color: Colors.white.withOpacity(0.8),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.only(
-                                        bottomRight: Radius.circular(0.0),
-                                        topRight: Radius.circular(30.0))),
-                                child: Padding(
-                                  padding: EdgeInsets.only(
-                                      left: 40, right: 20, top: 0, bottom: 0),
-                                  child: TextFormField(
-                                    autofocus: false,
-                                    controller: _nameController,
-                                    keyboardType: TextInputType.text,
-                                    validator: (text) {
-                                      if (text.isEmpty) {
-                                        return "Digite seu Nome Completo.";
-                                      } else {
-                                        if (text.length < 3) {
-                                          return "Nome inválido";
-                                        }
-                                      }
-                                    },
-                                    decoration: InputDecoration(
-                                        border: InputBorder.none,
-                                        hintText: "Nome Completo",
-                                        hintStyle: TextStyle(
-                                            color: Colors.grey, fontSize: 14)),
-                                  ),
-                                ),
-                              ),
-                            ),
+                    Padding(
+                      padding: EdgeInsets.only(right: 40, bottom: 10),
+                      child: Material(
+                        elevation: 0,
+                        color: Colors.white.withOpacity(0.8),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.only(
+                                bottomRight: Radius.circular(0.0),
+                                topRight: Radius.circular(30.0))),
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                              left: 10, right: 5, top: 0, bottom: 0),
+                          child: TextFormField(
+                            autofocus: false,
+                            controller: _nameController,
+                            keyboardType: TextInputType.text,
+                            validator: (text) {
+                              if (text.isEmpty) {
+                                return "Digite seu Nome Completo.";
+                              } else {
+                                if (text.length < 3) {
+                                  return "Nome inválido";
+                                }
+                              }
+                            },
+                            decoration: InputDecoration(
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.only(
+                                    left: 0, right: 0, top: 8, bottom: 8),
+                                isDense: true,
+                                hintText: "Nome Completo",
+                                hintStyle: TextStyle(
+                                    color: Colors.grey, fontSize: 14)),
                           ),
-                          Padding(
-                            padding: EdgeInsets.only(right: 40, bottom: 10),
-                            child: Container(
-                              width: MediaQuery.of(context).size.width - 40,
-                              height: 50,
-                              child: Material(
-                                elevation: 0,
-                                color: Colors.white.withOpacity(0.8),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.only(
-                                        bottomRight: Radius.circular(0.0),
-                                        topRight: Radius.circular(0.0))),
-                                child: Padding(
-                                  padding: EdgeInsets.only(
-                                      left: 40, right: 20, top: 0, bottom: 0),
-                                  child: TextFormField(
-                                    enabled: thisUser!=null?false:true,
-                                    autofocus: false,
-                                    controller: _emailController,
-                                    keyboardType: TextInputType.emailAddress,
-                                    validator: (text) {
-                                      if (text.isEmpty) {
-                                        return "Digite seu Email.";
-                                      } else {
-                                        if (!text.contains("@") ||
-                                            !text.contains(".")) {
-                                          return "Email inválido";
-                                        }
-                                      }
-                                    },
-                                    decoration: InputDecoration(
-                                        border: InputBorder.none,
-                                        hintText: "Email",
-                                        hintStyle: TextStyle(
-                                            color: Colors.grey, fontSize: 14)),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.only(right: 40, bottom: 10),
-                            child: Container(
-                              width: MediaQuery.of(context).size.width - 40,
-                              height: 50,
-                              child: Material(
-                                elevation: 0,
-                                color: Colors.white.withOpacity(0.8),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.only(
-                                        bottomRight: Radius.circular(0.0),
-                                        topRight: Radius.circular(0.0))),
-                                child: Padding(
-                                  padding: EdgeInsets.only(
-                                      left: 40, right: 20, top: 0, bottom: 0),
-                                  child: TextFormField(
-                                    inputFormatters: [maskFormatter],
-                                    autofocus: false,
-                                    controller: _phoneController,
-                                    keyboardType: TextInputType.phone,
-                                    validator: (text) {
-                                      if (text.isEmpty) {
-                                        return "Digite o Nº de seu Telefone.";
-                                      } else {
-                                        if (text.length < 10) {
-                                          return "Telefone inválido";
-                                        }
-                                      }
-                                    },
-                                    decoration: InputDecoration(
-                                        border: InputBorder.none,
-                                        hintText: "Telefone de Contato",
-                                        hintStyle: TextStyle(
-                                            color: Colors.grey, fontSize: 14)),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          thisUser != null
-                              ? Container()
-                              : Padding(
-                                  padding:
-                                      EdgeInsets.only(right: 40, bottom: 10),
-                                  child: Container(
-                                    width:
-                                        MediaQuery.of(context).size.width - 40,
-                                    height: 50,
-                                    child: Material(
-                                      elevation: 0,
-                                      color: Colors.white.withOpacity(0.8),
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.only(
-                                              bottomRight: Radius.circular(0.0),
-                                              topRight: Radius.circular(0.0))),
-                                      child: Padding(
-                                        padding: EdgeInsets.only(
-                                            left: 40,
-                                            right: 20,
-                                            top: 0,
-                                            bottom: 0),
-                                        child: TextFormField(
-                                          autofocus: false,
-                                          controller: _pass1Controller,
-                                          obscureText: true,
-                                          keyboardType:
-                                              TextInputType.visiblePassword,
-                                          validator: (text) {
-                                            if (text.isEmpty) {
-                                              return "Digite sua Senha.";
-                                            } else {
-                                              if (text.length < 6) {
-                                                return "A Senha deve conter ao menos 6 dígitos.";
-                                              }
-                                            }
-                                          },
-                                          decoration: InputDecoration(
-                                              border: InputBorder.none,
-                                              hintText: "Senha",
-                                              hintStyle: TextStyle(
-                                                  color: Colors.grey,
-                                                  fontSize: 14)),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                          thisUser != null
-                              ? Container()
-                              : Padding(
-                                  padding:
-                                      EdgeInsets.only(right: 40, bottom: 10),
-                                  child: Container(
-                                    width:
-                                        MediaQuery.of(context).size.width - 40,
-                                    height: 50,
-                                    child: Material(
-                                      elevation: 0,
-                                      color: Colors.white.withOpacity(0.8),
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.only(
-                                              bottomRight:
-                                                  Radius.circular(30.0),
-                                              topRight: Radius.circular(0.0))),
-                                      child: Padding(
-                                        padding: EdgeInsets.only(
-                                            left: 40,
-                                            right: 20,
-                                            top: 0,
-                                            bottom: 0),
-                                        child: TextFormField(
-                                          autofocus: false,
-                                          controller: _pass2Controller,
-                                          obscureText: true,
-                                          keyboardType:
-                                              TextInputType.visiblePassword,
-                                          validator: (text) {
-                                            if (text.isEmpty) {
-                                              return "Repita sua Senha.";
-                                            } else {
-                                              if (_pass1Controller.text !=
-                                                  _pass2Controller.text) {
-                                                return "As Senhas digitadas não coincidem.";
-                                              }
-                                            }
-                                          },
-                                          decoration: InputDecoration(
-                                              border: InputBorder.none,
-                                              hintText: "Repetir a Senha",
-                                              hintStyle: TextStyle(
-                                                  color: Colors.grey,
-                                                  fontSize: 14)),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                        ],
+                        ),
                       ),
                     ),
+                    Padding(
+                      padding: EdgeInsets.only(right: 40, bottom: 10),
+                      child: Material(
+                        elevation: 0,
+                        color: Colors.white.withOpacity(0.8),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.only(
+                                bottomRight: Radius.circular(0.0),
+                                topRight: Radius.circular(0.0))),
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                              left: 10, right: 5, top: 0, bottom: 0),
+                          child: TextFormField(
+                            enabled: thisUser != null ? false : true,
+                            autofocus: false,
+                            controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            validator: (text) {
+                              if (text.isEmpty) {
+                                return "Digite seu Email.";
+                              } else {
+                                if (!text.contains("@") ||
+                                    !text.contains(".")) {
+                                  return "Email inválido";
+                                }
+                              }
+                            },
+                            decoration: InputDecoration(
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.only(
+                                    left: 0, right: 0, top: 8, bottom: 8),
+                                isDense: true,
+                                hintText: "Email",
+                                hintStyle: TextStyle(
+                                    color: Colors.grey, fontSize: 14)),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(right: 40, bottom: 10),
+                      child: Material(
+                        elevation: 0,
+                        color: Colors.white.withOpacity(0.8),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.only(
+                                bottomRight: Radius.circular(0.0),
+                                topRight: Radius.circular(0.0))),
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                              left: 10, right: 5, top: 0, bottom: 0),
+                          child: TextFormField(
+                            inputFormatters: [maskFormatter],
+                            autofocus: false,
+                            controller: _phoneController,
+                            keyboardType: TextInputType.phone,
+                            validator: (text) {
+                              if (text.isEmpty) {
+                                return "Digite o Nº de seu Telefone.";
+                              } else {
+                                if (text.length < 10) {
+                                  return "Telefone inválido";
+                                }
+                              }
+                            },
+                            decoration: InputDecoration(
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.only(
+                                    left: 0, right: 0, top: 8, bottom: 8),
+                                isDense: true,
+                                hintText: "Telefone de Contato",
+                                hintStyle: TextStyle(
+                                    color: Colors.grey, fontSize: 14)),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.max,
+                      children: <Widget>[
+                        Expanded(
+                          flex: 2,
+                          child: Padding(
+                            padding: EdgeInsets.only(right: 5, bottom: 10),
+                            child: Material(
+                              elevation: 0,
+                              color: Colors.white.withOpacity(0.8),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.only(
+                                      bottomRight: Radius.circular(0.0),
+                                      topRight: Radius.circular(0.0))),
+                              child: Padding(
+                                padding: EdgeInsets.only(
+                                    left: 10, right: 5, top: 0, bottom: 0),
+                                child: TextFormField(
+                                  autofocus: false,
+                                  controller: _addStreetController,
+                                  keyboardType: TextInputType.text,
+                                  validator: (text) {
+                                    if (text.isEmpty) {
+                                      return "Digite o Endereço.";
+                                    } else {
+                                      if (text.length < 3) {
+                                        return "Endereço inválido";
+                                      }
+                                    }
+                                  },
+                                  decoration: InputDecoration(
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.only(
+                                          left: 0, right: 0, top: 8, bottom: 8),
+                                      isDense: true,
+                                      hintText: "Endereço",
+                                      hintStyle: TextStyle(
+                                          color: Colors.grey, fontSize: 14)),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Padding(
+                            padding: EdgeInsets.only(right: 40, bottom: 10),
+                            child: Material(
+                              elevation: 0,
+                              color: Colors.white.withOpacity(0.8),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.only(
+                                      bottomRight: Radius.circular(0.0),
+                                      topRight: Radius.circular(0.0))),
+                              child: Padding(
+                                padding: EdgeInsets.only(
+                                    left: 10, right: 5, top: 0, bottom: 0),
+                                child: TextFormField(
+                                  autofocus: false,
+                                  controller: _addNumberController,
+                                  keyboardType: TextInputType.text,
+                                  validator: (text) {
+                                    if (text.isEmpty) {
+                                      return "Nº";
+                                    }
+                                  },
+                                  decoration: InputDecoration(
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.only(
+                                          left: 0, right: 0, top: 8, bottom: 8),
+                                      isDense: true,
+                                      hintText: "Nº",
+                                      hintStyle: TextStyle(
+                                          color: Colors.grey, fontSize: 14)),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.max,
+                      children: <Widget>[
+                        Expanded(
+                          flex: 2,
+                          child: Padding(
+                            padding: EdgeInsets.only(right: 5, bottom: 10),
+                            child: Material(
+                              elevation: 0,
+                              color: Colors.white.withOpacity(0.8),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.only(
+                                      bottomRight: Radius.circular(0.0),
+                                      topRight: Radius.circular(0.0))),
+                              child: Padding(
+                                padding: EdgeInsets.only(
+                                    left: 10, right: 5, top: 0, bottom: 0),
+                                child: TextFormField(
+                                  autofocus: false,
+                                  controller: _addNeighborhoodController,
+                                  keyboardType: TextInputType.text,
+                                  validator: (text) {
+                                    if (text.isEmpty) {
+                                      return "Digite o Bairro.";
+                                    } else {
+                                      if (text.length < 3) {
+                                        return "Bairro inválido";
+                                      }
+                                    }
+                                  },
+                                  decoration: InputDecoration(
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.only(
+                                          left: 0, right: 0, top: 8, bottom: 8),
+                                      isDense: true,
+                                      hintText: "Bairro",
+                                      hintStyle: TextStyle(
+                                          color: Colors.grey, fontSize: 14)),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 2,
+                          child: Padding(
+                            padding: EdgeInsets.only(right: 40, bottom: 10),
+                            child: Material(
+                              elevation: 0,
+                              color: Colors.white.withOpacity(0.8),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.only(
+                                      bottomRight: Radius.circular(0.0),
+                                      topRight: Radius.circular(0.0))),
+                              child: Padding(
+                                padding: EdgeInsets.only(
+                                    left: 10, right: 5, top: 0, bottom: 0),
+                                child: TextFormField(
+                                  enabled: false,
+                                  autofocus: false,
+                                  controller: _addCityController,
+                                  keyboardType: TextInputType.text,
+                                  validator: (text) {
+                                    if (text.isEmpty) {
+                                      return "Digite a Cidade.";
+                                    } else {
+                                      if (text.length < 3) {
+                                        return "Cidade Inválida.";
+                                      }
+                                    }
+                                  },
+                                  decoration: InputDecoration(
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.only(
+                                          left: 0, right: 0, top: 8, bottom: 8),
+                                      isDense: true,
+                                      hintText: "Cidade",
+                                      hintStyle: TextStyle(
+                                          color: Colors.grey, fontSize: 14)),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    thisUser != null
+                        ? Container()
+                        : Padding(
+                            padding: EdgeInsets.only(right: 40, bottom: 10),
+                            child: Material(
+                              elevation: 0,
+                              color: Colors.white.withOpacity(0.8),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.only(
+                                      bottomRight: Radius.circular(0.0),
+                                      topRight: Radius.circular(0.0))),
+                              child: Padding(
+                                padding: EdgeInsets.only(
+                                    left: 10, right: 5, top: 0, bottom: 0),
+                                child: TextFormField(
+                                  autofocus: false,
+                                  controller: _pass1Controller,
+                                  obscureText: true,
+                                  keyboardType: TextInputType.visiblePassword,
+                                  validator: (text) {
+                                    if (text.isEmpty) {
+                                      return "Digite sua Senha.";
+                                    } else {
+                                      if (text.length < 6) {
+                                        return "A Senha deve conter ao menos 6 dígitos.";
+                                      }
+                                    }
+                                  },
+                                  decoration: InputDecoration(
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.only(
+                                          left: 0, right: 0, top: 8, bottom: 8),
+                                      isDense: true,
+                                      hintText: "Senha",
+                                      hintStyle: TextStyle(
+                                          color: Colors.grey, fontSize: 14)),
+                                ),
+                              ),
+                            ),
+                          ),
+                    thisUser != null
+                        ? Container()
+                        : Padding(
+                            padding: EdgeInsets.only(right: 40, bottom: 10),
+                            child: Material(
+                              elevation: 0,
+                              color: Colors.white.withOpacity(0.8),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.only(
+                                      bottomRight: Radius.circular(30.0),
+                                      topRight: Radius.circular(0.0))),
+                              child: Padding(
+                                padding: EdgeInsets.only(
+                                    left: 10, right: 5, top: 0, bottom: 0),
+                                child: TextFormField(
+                                  autofocus: false,
+                                  controller: _pass2Controller,
+                                  obscureText: true,
+                                  keyboardType: TextInputType.visiblePassword,
+                                  validator: (text) {
+                                    if (text.isEmpty) {
+                                      return "Repita sua Senha.";
+                                    } else {
+                                      if (_pass1Controller.text !=
+                                          _pass2Controller.text) {
+                                        return "As Senhas digitadas não coincidem.";
+                                      }
+                                    }
+                                  },
+                                  decoration: InputDecoration(
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.only(
+                                          left: 0, right: 0, top: 8, bottom: 8),
+                                      isDense: true,
+                                      hintText: "Repetir a Senha",
+                                      hintStyle: TextStyle(
+                                          color: Colors.grey, fontSize: 14)),
+                                ),
+                              ),
+                            ),
+                          ),
                   ],
                 ),
-                Padding(
-                  padding: EdgeInsets.only(top: 10),
-                ),
-                Stack(
+              ),
+              Padding(
+                padding: EdgeInsets.only(top: 10),
+                child: Stack(
                   children: <Widget>[
-                    roundedRectButton(thisUser!=null?"Salvar":"Registrar", goBtnGradients, false),
+                    roundedRectButton(thisUser != null ? "Salvar" : "Registrar",
+                        goBtnGradients, false),
                     Material(
                       color: Colors.transparent,
                       child: InkWell(
@@ -385,7 +539,7 @@ class _SignUpState extends State<SignUp>
                         child: Container(
                           alignment: Alignment.center,
                           width: MediaQuery.of(globalContext).size.width / 1.2,
-                          height: 55.0,
+                          height: 35.0,
                           decoration: ShapeDecoration(
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(30.0)),
@@ -408,65 +562,19 @@ class _SignUpState extends State<SignUp>
                                 pass: _pass1Controller.text,
                                 onSucess: _onSucess,
                                 onFail: _onFail);
-
-//                            model.signUp(
-//                              userData: userData,
-//                              pass: _passController.text,
-//                              onSucess: _onSucess,
-//                              onFail: _onFail,
-//                            );
                           }
                         }),
                       ),
                     ),
                   ],
                 ),
-              ],
-            )
-          ],
+              ),
+            ],
+          ),
         ),
       ],
     );
   }
-
-//  void initiateFacebookLogin(UserModel model) async {
-//    showLoadingDialog();
-//
-//    final facebookLogin = FacebookLogin();
-//    final facebookLoginResult =
-//        await facebookLogin.logIn(['email', 'public_profile']);
-//
-//    FacebookAccessToken myToken = facebookLoginResult.accessToken;
-//
-//    switch (facebookLoginResult.status) {
-//      case FacebookLoginStatus.error:
-//        print("Error");
-//        Navigator.of(context, rootNavigator: false).pop();
-//        //onLoginStatusChanged(false);
-//        break;
-//      case FacebookLoginStatus.cancelledByUser:
-//        print("CancelledByUser");
-////        stopLoading();
-//        Navigator.of(context, rootNavigator: false).pop();
-//        //onLoginStatusChanged(false);
-//        break;
-//      case FacebookLoginStatus.loggedIn:
-//        print("LoggedIn");
-//        AuthCredential credential =
-//            FacebookAuthProvider.getCredential(accessToken: myToken.token);
-//
-//        FirebaseUser firebaseUser =
-//            await FirebaseAuth.instance.signInWithCredential(credential);
-//
-//        Navigator.of(context, rootNavigator: false).pop();
-//
-//        model.signInFace(true, firebaseUser);
-//
-//        Navigator.of(context, rootNavigator: true).pop();
-//        //onLoginStatusChanged(true);
-//        break;
-//    }
-//  }
 
   Dialog showLoadingDialog() {
     Dialog retorno;
@@ -501,59 +609,6 @@ class _SignUpState extends State<SignUp>
     return retorno;
   }
 
-//  Future<String> signInWithGoogle() async {
-//    showLoadingDialog();
-//
-//    final GoogleSignInAccount googleSignInAccount = await googleSignIn.signIn();
-//
-//    if (googleSignInAccount != null) {
-//      final GoogleSignInAuthentication googleSignInAuthentication =
-//          await googleSignInAccount.authentication;
-//
-//      final AuthCredential credential = GoogleAuthProvider.getCredential(
-//        accessToken: googleSignInAuthentication.accessToken,
-//        idToken: googleSignInAuthentication.idToken,
-//      );
-//
-//      final FirebaseUser user = await FirebaseAuth.instance
-//          .signInWithCredential(credential)
-//          .then((thisUser) {
-//        _model.signInFace(true, thisUser);
-//        Navigator.of(context, rootNavigator: false).pop();
-//
-////      assert(!thisUser.isAnonymous);
-////      assert(thisUser.getIdToken() != null);
-//
-//        if (!thisUser.isAnonymous && thisUser.getIdToken() != null) {
-//          Navigator.of(context, rootNavigator: true).pop();
-//        } else {
-//          print("User é nulo");
-//        }
-//
-//        print("terminou: " + thisUser.toString());
-//        return thisUser;
-//      });
-//
-////    assert(!user.isAnonymous);
-////    assert(await user.getIdToken() != null);
-//
-//      final FirebaseUser currentUser =
-//          await FirebaseAuth.instance.currentUser();
-////    assert(user.uid == currentUser.uid);
-//
-//      return 'signInWithGoogle succeeded: $currentUser';
-//    } else {
-//      Navigator.of(context, rootNavigator: false).pop();
-//      return 'signInWithGoogle failed.';
-//    }
-//  }
-//
-//  void signOutGoogle() async {
-//    await googleSignIn.signOut();
-//
-//    print("User Sign Out");
-//  }
-
   @override
   userImage(File _image) {
     setState(() {
@@ -572,7 +627,7 @@ class _SignUpState extends State<SignUp>
       duration: Duration(seconds: 2),
     ));
 
-    Future.delayed(Duration(seconds:2)).then((_){
+    Future.delayed(Duration(seconds: 2)).then((_) {
       Navigator.of(context).pop();
     });
   }
@@ -587,12 +642,12 @@ class _SignUpState extends State<SignUp>
 
     showLoadingDialog();
 
-    if (thisUser!=null) {
+    if (thisUser != null) {
       sendUserToFirestore();
-    }else{
+    } else {
       _auth
           .createUserWithEmailAndPassword(
-          email: userData["email"], password: pass)
+              email: userData["email"], password: pass)
           .then((user) async {
         firebaseUser = user;
 
@@ -610,7 +665,9 @@ class _SignUpState extends State<SignUp>
   }
 
   Future<void> sendUserToFirestore() async {
-    userData["uid"] = widget.thisUser!=null?widget.thisUser['uid']:this.firebaseUser.uid.toString();
+    userData["uid"] = widget.thisUser != null
+        ? widget.thisUser['uid']
+        : this.firebaseUser.uid.toString();
     String img_url = "";
 
     var url = "https://dom-marino-webservice.appspot.com/create_user";
@@ -643,7 +700,6 @@ class _SignUpState extends State<SignUp>
 
     http.StreamedResponse response = await request.send();
 
-
     Map<String, dynamic> thisUser = {
       DatabaseHelper.columnUID: userData["uid"],
       DatabaseHelper.columnUserName: userData["name"],
@@ -657,11 +713,11 @@ class _SignUpState extends State<SignUp>
 
 //          print("retorno="+retorno.toString());
 
-    if (retorno!=null) {
-            print("Não existe, tem retorno");
+    if (retorno != null) {
+      print("Não existe, tem retorno");
       await this.widget.dbHelper.update(thisUser, "users", "uid");
-    }else{
-            print("Não existe, Não tem retorno");
+    } else {
+      print("Não existe, Não tem retorno");
       await this.widget.dbHelper.insert(thisUser, "users");
     }
 
@@ -688,6 +744,7 @@ Widget roundedRectButton(
         alignment: Alignment(1.0, 0.0),
         children: <Widget>[
           Container(
+            height: 35,
             alignment: Alignment.center,
             width: MediaQuery.of(mContext).size.width / 1.2,
             decoration: ShapeDecoration(
@@ -701,9 +758,8 @@ Widget roundedRectButton(
             child: Text(title,
                 style: TextStyle(
                     color: Colors.white,
-                    fontSize: 18,
+                    fontSize: 14,
                     fontWeight: FontWeight.w500)),
-            padding: EdgeInsets.only(top: 16, bottom: 16),
           ),
         ],
       ),

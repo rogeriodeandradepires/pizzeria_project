@@ -65,364 +65,367 @@ class _LoginState extends State<Login> {
     return Stack(
       children: <Widget>[
         SigninBg(),
-        Column(
-          children: <Widget>[
-            Padding(
-              padding:
-                  EdgeInsets.only(top: MediaQuery.of(context).size.height / 4),
-            ),
-            Column(
-              children: <Widget>[
-                ///holds email header and inputField
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Padding(
-                      padding: EdgeInsets.only(left: 40, bottom: 10),
-                      child: Text(
-                        "Login",
-                        style:
-                            TextStyle(fontSize: 16, color: Color(0xFF000000)),
+        SingleChildScrollView(
+          physics: const NeverScrollableScrollPhysics(),
+          child: Column(
+            children: <Widget>[
+              Padding(
+                padding:
+                    EdgeInsets.only(top: MediaQuery.of(context).size.height / 4),
+              ),
+              Column(
+                children: <Widget>[
+                  ///holds email header and inputField
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Padding(
+                        padding: EdgeInsets.only(left: 40, bottom: 10),
+                        child: Text(
+                          "Login",
+                          style:
+                              TextStyle(fontSize: 16, color: Color(0xFF000000)),
+                        ),
                       ),
-                    ),
-                    Stack(
-                      alignment: Alignment.bottomRight,
-                      children: <Widget>[
-                        Form(
-                          key: _formKey,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              inputEmail,
-                              inputPass,
-                              Container(
-                                width: MediaQuery.of(context).size.width * 0.7,
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.max,
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: <Widget>[
-                                    Material(
-                                      color: Colors.transparent,
-                                      child: InkWell(
-                                        focusNode: sendResetPassFN,
-                                        autofocus: true,
-                                        onTap: (() async {
-                                          FocusScope.of(context)
-                                              .requestFocus(sendResetPassFN);
+                      Stack(
+                        alignment: Alignment.bottomRight,
+                        children: <Widget>[
+                          Form(
+                            key: _formKey,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: <Widget>[
+                                inputEmail,
+                                inputPass,
+                                Container(
+                                  width: MediaQuery.of(context).size.width * 0.7,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.max,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: <Widget>[
+                                      Material(
+                                        color: Colors.transparent,
+                                        child: InkWell(
+                                          focusNode: sendResetPassFN,
+                                          autofocus: true,
+                                          onTap: (() async {
+                                            FocusScope.of(context)
+                                                .requestFocus(sendResetPassFN);
 
 //                                        inputEmail.emailFocusNode.unfocus(focusPrevious: true);
 //                                        FocusScope.of(globalContext).requestFocus(sendResetPassFN);
 
-                                          isToSendRetrievePassword = false;
-                                          if (inputEmail.emailController.text !=
-                                                  null &&
-                                              inputEmail.emailController.text
-                                                  .contains("@")) {
-                                            showLoadingDialog();
+                                            isToSendRetrievePassword = false;
+                                            if (inputEmail.emailController.text !=
+                                                    null &&
+                                                inputEmail.emailController.text
+                                                    .contains("@")) {
+                                              showLoadingDialog();
 
-                                            await FirebaseAuth.instance
-                                                .sendPasswordResetEmail(
-                                                    email: inputEmail
-                                                        .emailController.text)
-                                                .catchError((onError) {
-                                              isToSendRetrievePassword = true;
+                                              await FirebaseAuth.instance
+                                                  .sendPasswordResetEmail(
+                                                      email: inputEmail
+                                                          .emailController.text)
+                                                  .catchError((onError) {
+                                                isToSendRetrievePassword = true;
 
-                                              if (onError.toString().contains(
-                                                  "ERROR_USER_NOT_FOUND")) {
-                                                _scaffoldKey.currentState
-                                                    .showSnackBar(SnackBar(
-                                                  content: Container(
-                                                    height:
-                                                        MediaQuery.of(context)
-                                                                .size
-                                                                .height *
-                                                            0.1,
-                                                    child: Column(
-                                                      children: <Widget>[
-                                                        Text(
-                                                          "Usuário Não Encontrado.",
-                                                          textAlign:
-                                                              TextAlign.center,
-                                                          style: h6Snackbar,
-                                                        ),
-                                                        Text(
-                                                          "Verifique o email digitado e tente novamente.",
-                                                          textAlign:
-                                                              TextAlign.justify,
-                                                          style: h5Snackbar,
-                                                        ),
-                                                      ],
+                                                if (onError.toString().contains(
+                                                    "ERROR_USER_NOT_FOUND")) {
+                                                  _scaffoldKey.currentState
+                                                      .showSnackBar(SnackBar(
+                                                    content: Container(
+                                                      height:
+                                                          MediaQuery.of(context)
+                                                                  .size
+                                                                  .height *
+                                                              0.1,
+                                                      child: Column(
+                                                        children: <Widget>[
+                                                          Text(
+                                                            "Usuário Não Encontrado.",
+                                                            textAlign:
+                                                                TextAlign.center,
+                                                            style: h6Snackbar,
+                                                          ),
+                                                          Text(
+                                                            "Verifique o email digitado e tente novamente.",
+                                                            textAlign:
+                                                                TextAlign.justify,
+                                                            style: h5Snackbar,
+                                                          ),
+                                                        ],
+                                                      ),
                                                     ),
-                                                  ),
-                                                  backgroundColor:
-                                                      Colors.redAccent,
-                                                  duration:
-                                                      Duration(seconds: 2),
-                                                ));
+                                                    backgroundColor:
+                                                        Colors.redAccent,
+                                                    duration:
+                                                        Duration(seconds: 2),
+                                                  ));
 //                                                          inputEmail.emailFocusNode.unfocus(focusPrevious: true);
 //                                                          FocusScope.of(globalContext).requestFocus(inputPass.passFocusNode);
-                                              }
-                                            }).then((onValue) {
+                                                }
+                                              }).then((onValue) {
+                                                Navigator.of(context,
+                                                        rootNavigator: false)
+                                                    .pop();
+
+                                                if (!isToSendRetrievePassword) {
+                                                  _scaffoldKey.currentState
+                                                      .showSnackBar(SnackBar(
+                                                    content: Container(
+                                                      height:
+                                                          MediaQuery.of(context)
+                                                                  .size
+                                                                  .height *
+                                                              0.1,
+                                                      child: Column(
+                                                        children: <Widget>[
+                                                          Text(
+                                                            "Email enviado.",
+                                                            textAlign:
+                                                                TextAlign.center,
+                                                            style: h6Snackbar,
+                                                          ),
+                                                          Text(
+                                                            "Email de redefinição de senha enviado.",
+                                                            textAlign:
+                                                                TextAlign.justify,
+                                                            style: h5Snackbar,
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                    backgroundColor:
+                                                        Colors.greenAccent,
+                                                    duration:
+                                                        Duration(seconds: 2),
+                                                  ));
+//                                              FocusScope.of(globalContext).requestFocus(inputPass.passFocusNode);
+//                                              inputEmail.emailFocusNode.unfocus(focusPrevious: true);
+                                                }
+                                              });
+                                            } else {
+                                              _scaffoldKey.currentState
+                                                  .showSnackBar(SnackBar(
+                                                content: Container(
+                                                  height: MediaQuery.of(context)
+                                                          .size
+                                                          .height *
+                                                      0.1,
+                                                  child: Column(
+                                                    children: <Widget>[
+                                                      Text(
+                                                        "Email Inválido.",
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                        style: h6Snackbar,
+                                                      ),
+                                                      Text(
+                                                        "Verifique o email digitado e tente novamente.",
+                                                        textAlign:
+                                                            TextAlign.justify,
+                                                        style: h5Snackbar,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                backgroundColor: Colors.redAccent,
+                                                duration: Duration(seconds: 2),
+                                              ));
+                                            }
+                                          }),
+                                          child: Text(
+                                            'Redefinir senha',
+                                            textAlign: TextAlign.end,
+                                            style: TextStyle(
+                                                color: Color(0xFF000000),
+                                                fontSize: 14),
+                                          ),
+                                        ),
+                                      ),
+                                      Material(
+                                        color: Colors.transparent,
+                                        child: InkWell(
+                                          onTap: (() {
+                                            Navigator.pushNamed(context, '/signup');
+                                          }),
+                                          child: Text(
+                                            'Criar Conta',
+                                            textAlign: TextAlign.end,
+                                            style: TextStyle(
+                                                color: Color(0xFF000000),
+                                                fontSize: 14),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(right: 35, bottom: 35.0),
+                            child: Stack(
+                              children: <Widget>[
+                                Container(
+                                  padding: EdgeInsets.all(10),
+                                  decoration: ShapeDecoration(
+                                    shape: CircleBorder(),
+                                    gradient: LinearGradient(
+                                        colors: goBtnGradients,
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight),
+                                  ),
+                                  child: ImageIcon(
+                                    AssetImage("images/ic_forward.png"),
+                                    size: 40,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    focusNode: signInBtnFN,
+                                    customBorder: new CircleBorder(),
+                                    child: Container(
+                                        width: 60,
+                                        height: 60,
+                                        decoration: ShapeDecoration(
+                                            shape: CircleBorder(),
+                                            color: Colors.transparent)),
+                                    onTap: () {
+                                      FocusScope.of(context)
+                                          .requestFocus(signInBtnFN);
+
+                                      if (_formKey.currentState.validate()) {
+                                        print("validou");
+                                      }
+
+                                      if (!_model.isLoggedIn()) {
+                                        _model.signIn(
+                                            email:
+                                                inputEmail.emailController.text,
+                                            pass: inputPass.passController.text,
+                                            onSucess: (() {
+                                              print("Logou");
                                               Navigator.of(context,
                                                       rootNavigator: false)
                                                   .pop();
-
-                                              if (!isToSendRetrievePassword) {
-                                                _scaffoldKey.currentState
-                                                    .showSnackBar(SnackBar(
-                                                  content: Container(
-                                                    height:
-                                                        MediaQuery.of(context)
-                                                                .size
-                                                                .height *
-                                                            0.1,
-                                                    child: Column(
-                                                      children: <Widget>[
-                                                        Text(
-                                                          "Email enviado.",
-                                                          textAlign:
-                                                              TextAlign.center,
-                                                          style: h6Snackbar,
-                                                        ),
-                                                        Text(
-                                                          "Email de redefinição de senha enviado.",
-                                                          textAlign:
-                                                              TextAlign.justify,
-                                                          style: h5Snackbar,
-                                                        ),
-                                                      ],
-                                                    ),
+                                              Navigator.of(context,
+                                                      rootNavigator: true)
+                                                  .pop();
+                                            }),
+                                            onFail: (() {
+                                              print("Falhou");
+                                              Navigator.of(context,
+                                                      rootNavigator: false)
+                                                  .pop();
+                                              _scaffoldKey.currentState
+                                                  .showSnackBar(SnackBar(
+                                                content: Container(
+                                                  height: MediaQuery.of(context)
+                                                          .size
+                                                          .height *
+                                                      0.06,
+                                                  child: Column(
+                                                    children: <Widget>[
+                                                      Text(
+                                                        "Falha ao Entrar.",
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                        style: h6Snackbar,
+                                                      ),
+                                                      Text(
+                                                        "Verifique seus dados e tente novamente.",
+                                                        textAlign:
+                                                            TextAlign.justify,
+                                                        style: h5Snackbar,
+                                                      ),
+                                                    ],
                                                   ),
-                                                  backgroundColor:
-                                                      Colors.greenAccent,
-                                                  duration:
-                                                      Duration(seconds: 2),
-                                                ));
-//                                              FocusScope.of(globalContext).requestFocus(inputPass.passFocusNode);
-//                                              inputEmail.emailFocusNode.unfocus(focusPrevious: true);
-                                              }
-                                            });
-                                          } else {
-                                            _scaffoldKey.currentState
-                                                .showSnackBar(SnackBar(
-                                              content: Container(
-                                                height: MediaQuery.of(context)
-                                                        .size
-                                                        .height *
-                                                    0.1,
-                                                child: Column(
-                                                  children: <Widget>[
-                                                    Text(
-                                                      "Email Inválido.",
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      style: h6Snackbar,
-                                                    ),
-                                                    Text(
-                                                      "Verifique o email digitado e tente novamente.",
-                                                      textAlign:
-                                                          TextAlign.justify,
-                                                      style: h5Snackbar,
-                                                    ),
-                                                  ],
                                                 ),
-                                              ),
-                                              backgroundColor: Colors.redAccent,
-                                              duration: Duration(seconds: 2),
-                                            ));
-                                          }
-                                        }),
-                                        child: Text(
-                                          'Redefinir senha',
-                                          textAlign: TextAlign.end,
-                                          style: TextStyle(
-                                              color: Color(0xFF000000),
-                                              fontSize: 14),
-                                        ),
-                                      ),
-                                    ),
-                                    Material(
-                                      color: Colors.transparent,
-                                      child: InkWell(
-                                        onTap: (() {
-                                          Navigator.pushNamed(context, '/signup');
-                                        }),
-                                        child: Text(
-                                          'Criar Conta',
-                                          textAlign: TextAlign.end,
-                                          style: TextStyle(
-                                              color: Color(0xFF000000),
-                                              fontSize: 14),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.only(right: 35, bottom: 50.0),
-                          child: Stack(
-                            children: <Widget>[
-                              Container(
-                                padding: EdgeInsets.all(10),
-                                decoration: ShapeDecoration(
-                                  shape: CircleBorder(),
-                                  gradient: LinearGradient(
-                                      colors: goBtnGradients,
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight),
-                                ),
-                                child: ImageIcon(
-                                  AssetImage("images/ic_forward.png"),
-                                  size: 40,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  focusNode: signInBtnFN,
-                                  customBorder: new CircleBorder(),
-                                  child: Container(
-                                      width: 60,
-                                      height: 60,
-                                      decoration: ShapeDecoration(
-                                          shape: CircleBorder(),
-                                          color: Colors.transparent)),
-                                  onTap: () {
-                                    FocusScope.of(context)
-                                        .requestFocus(signInBtnFN);
-
-                                    if (_formKey.currentState.validate()) {
-                                      print("validou");
-                                    }
-
-                                    if (!_model.isLoggedIn()) {
-                                      _model.signIn(
-                                          email:
-                                              inputEmail.emailController.text,
-                                          pass: inputPass.passController.text,
-                                          onSucess: (() {
-                                            print("Logou");
-                                            Navigator.of(context,
-                                                    rootNavigator: false)
-                                                .pop();
-                                            Navigator.of(context,
-                                                    rootNavigator: true)
-                                                .pop();
-                                          }),
-                                          onFail: (() {
-                                            print("Falhou");
-                                            Navigator.of(context,
-                                                    rootNavigator: false)
-                                                .pop();
-                                            _scaffoldKey.currentState
-                                                .showSnackBar(SnackBar(
-                                              content: Container(
-                                                height: MediaQuery.of(context)
-                                                        .size
-                                                        .height *
-                                                    0.06,
-                                                child: Column(
-                                                  children: <Widget>[
-                                                    Text(
-                                                      "Falha ao Entrar.",
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      style: h6Snackbar,
-                                                    ),
-                                                    Text(
-                                                      "Verifique seus dados e tente novamente.",
-                                                      textAlign:
-                                                          TextAlign.justify,
-                                                      style: h5Snackbar,
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              backgroundColor: Colors.redAccent,
-                                              duration: Duration(seconds: 2),
-                                            ));
-                                          }));
-                                      if (_model.isLoading) {
-                                        Dialog thisDialog = showLoadingDialog();
+                                                backgroundColor: Colors.redAccent,
+                                                duration: Duration(seconds: 2),
+                                              ));
+                                            }));
+                                        if (_model.isLoading) {
+                                          Dialog thisDialog = showLoadingDialog();
+                                        }
+                                      } else {
+                                        _model.signOut();
                                       }
-                                    } else {
-                                      _model.signOut();
-                                    }
-                                  },
+                                    },
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        )
-                      ],
-                    ),
-                  ],
-                ),
-                Padding(
-                  padding: EdgeInsets.only(top: 40),
-                ),
-                Stack(
-                  children: <Widget>[
-                    roundedRectButton(
-                        "Login com Facebook", signInGradients, false),
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        customBorder: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30.0)),
-                        child: Container(
-                          alignment: Alignment.center,
-                          width: MediaQuery.of(globalContext).size.width / 1.2,
-                          height: 55.0,
-                          decoration: ShapeDecoration(
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30.0)),
-                          ),
-                          padding: EdgeInsets.only(top: 16, bottom: 16),
-                        ),
-                        onTap: (() {
-                          initiateFacebookLogin(_model);
-                        }),
+                              ],
+                            ),
+                          )
+                        ],
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(top: 40),
+                  ),
+                  Stack(
+                    children: <Widget>[
+                      roundedRectButton(
+                          "Login com Facebook", signInGradients, false),
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          customBorder: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30.0)),
+                          child: Container(
+                            alignment: Alignment.center,
+                            width: MediaQuery.of(globalContext).size.width / 1.2,
+                            height: 55.0,
+                            decoration: ShapeDecoration(
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30.0)),
+                            ),
+                            padding: EdgeInsets.only(top: 16, bottom: 16),
+                          ),
+                          onTap: (() {
+                            initiateFacebookLogin(_model);
+                          }),
+                        ),
+                      ),
+                    ],
+                  ),
 
-                Stack(
-                  children: <Widget>[
-                    roundedRectButton(
-                        "Login com Google", signUpGradients, false),
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        customBorder: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30.0)),
-                        child: Container(
-                          alignment: Alignment.center,
-                          width: MediaQuery.of(globalContext).size.width / 1.2,
-                          height: 55.0,
-                          decoration: ShapeDecoration(
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30.0)),
+                  Stack(
+                    children: <Widget>[
+                      roundedRectButton(
+                          "Login com Google", signUpGradients, false),
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          customBorder: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30.0)),
+                          child: Container(
+                            alignment: Alignment.center,
+                            width: MediaQuery.of(globalContext).size.width / 1.2,
+                            height: 55.0,
+                            decoration: ShapeDecoration(
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30.0)),
+                            ),
+                            padding: EdgeInsets.only(top: 16, bottom: 16),
                           ),
-                          padding: EdgeInsets.only(top: 16, bottom: 16),
+                          onTap: (() {
+                            signInWithGoogle();
+                          }),
                         ),
-                        onTap: (() {
-                          signInWithGoogle();
-                        }),
                       ),
-                    ),
-                  ],
-                ),
-              ],
-            )
-          ],
+                    ],
+                  ),
+                ],
+              )
+            ],
+          ),
         ),
       ],
     );

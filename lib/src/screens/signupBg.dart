@@ -28,10 +28,7 @@ class _SignupBgState extends State<SignupBg> {
       decoration: BoxDecoration(
           image: DecorationImage(
               image: AssetImage("images/main_bg.png"), fit: BoxFit.cover)),//
-      child: Scaffold(
-        resizeToAvoidBottomPadding: false,
-        backgroundColor: Colors.transparent,
-        body: Column(
+      child: Column(
           children: <Widget>[
             Stack(
               alignment: Alignment.topCenter,
@@ -71,7 +68,8 @@ class _SignupBgState extends State<SignupBg> {
               ],
             ),
             Expanded(
-              child: Container(),
+              child: Container(
+              ),
             ),
             Stack(
               alignment: Alignment.bottomLeft,
@@ -83,7 +81,6 @@ class _SignupBgState extends State<SignupBg> {
             )
           ],
         ),
-      ),
     );
   }
 }
