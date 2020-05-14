@@ -2202,7 +2202,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
             if (result.toString() == "Ok") {
               setState(() {
-                _selectedIndex = 2;
+                bottomBarView.changeIndex(2);
               });
               retrieveAllOrders(user.uid, update: true);
             }
@@ -2241,8 +2241,12 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           }
 
           if (index == 0 || index == 2) {
+//            print("entrou: index="+index.toString());
             animationController.reverse().then((data) {
-              if (!mounted) return;
+              if (!mounted) {
+                return;
+              }
+//              print("entrou: passou o return");
               setState(() {
                 _selectedIndex = index;
               });

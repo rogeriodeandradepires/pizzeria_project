@@ -609,6 +609,10 @@ class _LoginState extends State<Login> {
             DatabaseHelper.columnUserName: name,
             DatabaseHelper.columnUserEmail: email,
             DatabaseHelper.columnUserImgUrl: img_url,
+            DatabaseHelper.columnUserStreet: existentUser['street'],
+            DatabaseHelper.columnUserStreetNumber: existentUser['streetNumber'],
+            DatabaseHelper.columnUserNeighborhood: existentUser['neighborhood'],
+            DatabaseHelper.columnUserCity: existentUser['city'],
             DatabaseHelper.columnUserPhone: existentUser['phone'],
             DatabaseHelper.columnIsRegComplete: existentUser['isRegisterComplete']
           };

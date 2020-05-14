@@ -194,6 +194,32 @@ class DatabaseHelper {
     return retorno;
   }
 
+  Future<List<Map<String, dynamic>>> searchCartItemsBadge(String uid) async {
+    Database db = await instance.database;
+    List<Map<String, dynamic>> records = await db.rawQuery("SELECT * FROM $cartTable WHERE $columnUserId=\"$uid\"");
+    List<Map<String, dynamic>> cartItemRecords;
+
+//    print("records="+records.first['cartId'].toString());
+
+    var retorno = null;
+
+    if (records.length!=0) {
+      retorno = records.first;
+
+      int cardId = retorno['cartId'];
+
+//    print("cartId="+cartId.toString());
+
+      cartItemRecords = await db.rawQuery("SELECT * FROM $cartItemsTable WHERE $columnCartId=\"$cardId\"");
+
+
+      return cartItemRecords;
+
+    }
+
+    return cartItemRecords;
+  }
+
   Future<Map<String, dynamic>> searchCart(String uid) async {
     Database db = await instance.database;
     List<Map<String, dynamic>> records = await db.rawQuery("SELECT * FROM $cartTable WHERE $columnUserId=\"$uid\"");

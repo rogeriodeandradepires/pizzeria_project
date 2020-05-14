@@ -330,7 +330,7 @@ class _ChoosePizzaDialogState extends State<ChoosePizzaDialog>  with TickerProvi
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(product.description, style: chooseFlavorFoodNameText),
-//                  checkIngredients(context, product),
+                  checkIngredients(context, product),
 //                  checkNotes(context, product),
 //                  checkSizes(context, product),
                   getProductPrice(product),

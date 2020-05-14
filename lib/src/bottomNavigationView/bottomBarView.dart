@@ -18,7 +18,9 @@ class BottomBarView extends StatefulWidget {
       : super(key: key);
 
   @override
-  _BottomBarViewState createState() => _BottomBarViewState();
+  _BottomBarViewState createState() {
+    return _BottomBarViewState(dbHelper, user);
+  }
 }
 
 class _BottomBarViewState extends State<BottomBarView>
@@ -26,13 +28,19 @@ class _BottomBarViewState extends State<BottomBarView>
   AnimationController animationController;
   int cartId=0;
   int cartItemsSize=0;
+  final thisDbHelper;
+  final FirebaseUser thisUser;
 
   Future<dynamic> allCartItems;
+
+  _BottomBarViewState(this.thisDbHelper, this.thisUser);
 
   @override
   void initState() {
 
-//    //print("initState user: "+widget.user.toString());
+    if (thisUser!=null) {
+      //print("initState user: "+thisUser.uid.toString());
+    }
 
 //    retrieveCartId();
 
@@ -48,14 +56,21 @@ class _BottomBarViewState extends State<BottomBarView>
       duration: new Duration(milliseconds: 1000),
     );
     animationController.forward();
+
+//    Future.delayed(Duration.zero, () {
+//      //This setState is necessary because it refreshes the listView
+//      setState(() {});
+//    });
+
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
 
-    retrieveCartId();
-    allCartItems = retrieveAllCartItemsList();
+//    retrieveCartId();
+//    allCartItems = retrieveAllCartItemsList();
+    helperMethod();
 
     return Stack(
       alignment: AlignmentDirectional.bottomCenter,
@@ -250,9 +265,9 @@ class _BottomBarViewState extends State<BottomBarView>
 
   Future<void> retrieveCartId() async {
 
-    if (widget.user!=null) {
-      //print("entrou user: "+widget.user.uid.toString());
-      Map<String, dynamic> cart = await widget.dbHelper.searchCart(widget.user.uid);
+    if (thisUser!=null) {
+      //print("entrou user: "+thisUser.uid.toString());
+      Map<String, dynamic> cart = await thisDbHelper.searchCart(thisUser.uid);
 
       if (cart != null) {
         //se tem carrinho
@@ -264,26 +279,59 @@ class _BottomBarViewState extends State<BottomBarView>
 //      //print("passou a instancia do allCartItems");
 
     }else{
-//      //print("entrou user: "+widget.user.toString());
+//      //print("entrou user: "+thisUser.toString());
 //      allCartItems = resetAllCartItems();
 //      cartItemsSize = 0;
     }
 
   }
 
+  Future retrieveAllCartItemsList2() async {
+//    cartItemsSize = 0;
+
+    List<Map<String, dynamic>> thisAllCartItems;
+
+    if (widget.user!=null) {
+      //print("entrou retrieveAllCartItemsSize user: "+widget.user.uid.toString());
+//      //print("entrou retrieveAllCartItemsSize user!=null");
+      thisAllCartItems =
+      await thisDbHelper.searchCartItemsBadge(widget.user.uid);
+    }else{
+      //print("entrou retrieveAllCartItemsSize user: "+widget.user.toString());
+      thisAllCartItems =
+      await thisDbHelper.retrieveAllCartItems(0);
+    }
+
+
+
+//    for (int i = 0; i < thisAllCartItems.length; i++) {
+//      //print("entrou for");
+////      setState(() {
+////        cartItemsSize += thisAllCartItems[i]['productAmount'];
+////      });
+//    }
+
+    //print("entrou thisAllCartItems: "+thisAllCartItems.length.toString());
+
+//    allCartItems = thisAllCartItems;
+
+    return thisAllCartItems;
+  }
+
   Future retrieveAllCartItemsList() async {
 //    cartItemsSize = 0;
 
-  //print("entrou retrieveAllCartItemsSize user: "+widget.user.toString());
   List<Map<String, dynamic>> thisAllCartItems;
 
-  if (widget.user!=null) {
-
+  if (thisUser!=null) {
+    //print("entrou retrieveAllCartItemsSize user: "+thisUser.uid.toString());
+    //print("entrou retrieveAllCartItemsSize user!=null");
     thisAllCartItems =
-    await widget.dbHelper.retrieveAllCartItems(cartId);
+    await thisDbHelper.retrieveAllCartItems(cartId);
   }else{
+    //print("entrou retrieveAllCartItemsSize user: "+thisUser.toString());
     thisAllCartItems =
-    await widget.dbHelper.retrieveAllCartItems(0);
+    await thisDbHelper.retrieveAllCartItems(0);
   }
 
 
@@ -300,6 +348,10 @@ class _BottomBarViewState extends State<BottomBarView>
 //    allCartItems = thisAllCartItems;
 
     return thisAllCartItems;
+  }
+
+  void helperMethod() {
+    allCartItems = retrieveAllCartItemsList2();
   }
 }
 
@@ -357,9 +409,9 @@ class _TabIconsState extends State<TabIcons> with TickerProviderStateMixin {
           highlightColor: Colors.transparent,
           hoverColor: Colors.transparent,
           onTap: () {
-            if (!widget.tabIconData.isSelected) {
+//            if (!widget.tabIconData.isSelected) {
               setAnimation();
-            }
+//            }
           },
           child: IgnorePointer(
             child: Stack(
