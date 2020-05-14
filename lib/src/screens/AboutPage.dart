@@ -158,13 +158,15 @@ class _AboutPageState extends State<AboutPage> {
                                     fit: BoxFit.scaleDown,
                                   ),
                                 ),
-                                Container(
-                                  width: MediaQuery.of(context).size.width * 0.6,
-                                  padding: const EdgeInsets.only(left: 8.0),
-                                  child: AutoSizeText(
-                                    "R. Silva Jardim, 106 - Araçatuba",
-                                    style: h5Snackbar,
-                                    maxLines: 2,
+                                Flexible(
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(left: 8.0),
+                                    child: AutoSizeText(
+                                      "R. Silva Jardim, 106 - Araçatuba",
+                                      style: h5Snackbar,
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -222,11 +224,12 @@ class _AboutPageState extends State<AboutPage> {
                                 fit: BoxFit.scaleDown,
                               ),
                             ),
-                            Container(
-                              width: MediaQuery.of(context).size.width * 0.65,
-                              padding: const EdgeInsets.only(left: 8.0),
-                              child: AutoSizeText("Horário de funcionamento:",
-                                style: h6, maxLines: 1, textAlign: TextAlign.justify,
+                            Flexible(
+                              child: Padding(
+                                padding: const EdgeInsets.only(left: 8.0),
+                                child: AutoSizeText("Horário de funcionamento:",
+                                  style: h6, maxLines: 1, textAlign: TextAlign.justify,
+                                ),
                               ),
                             ),
                           ],
@@ -238,13 +241,14 @@ class _AboutPageState extends State<AboutPage> {
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: <Widget>[
                             Container(width: 20),
-                            Container(
-                              width: MediaQuery.of(context).size.width * 0.65,
-                              padding: const EdgeInsets.only(left: 8.0),
-                              child: AutoSizeText(
-                                "Dom à Sex - 19:00 às 23:30",
-                                style: h5Snackbar,
-                                maxLines: 1, textAlign: TextAlign.justify,
+                            Flexible(
+                              child: Padding(
+                                padding: const EdgeInsets.only(left: 8.0),
+                                child: AutoSizeText(
+                                  "Dom à Sex - 19:00 às 23:30",
+                                  style: h5Snackbar,
+                                  maxLines: 1, textAlign: TextAlign.justify,
+                                ),
                               ),
                             ),
                           ],
@@ -258,13 +262,14 @@ class _AboutPageState extends State<AboutPage> {
                             Container(
                               width: 20,
                             ),
-                            Container(
-                              width: MediaQuery.of(context).size.width * 0.65,
-                              padding: const EdgeInsets.only(left: 8.0),
-                              child: AutoSizeText(
-                                "Sáb - 19:00 às 0:00",
-                                style: h5Snackbar,
-                                maxLines: 1,
+                            Flexible(
+                              child: Padding(
+                                padding: const EdgeInsets.only(left: 8.0),
+                                child: AutoSizeText(
+                                  "Sáb - 19:00 às 0:00",
+                                  style: h5Snackbar,
+                                  maxLines: 1,
+                                ),
                               ),
                             ),
                           ],

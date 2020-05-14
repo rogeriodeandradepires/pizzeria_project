@@ -77,6 +77,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
   int dioErrorCount = 0;
 
+  BottomBarView bottomBarView;
+
   @override
   void initState() {
     fbAuth.onAuthStateChanged.listen((newUser) {
@@ -85,6 +87,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       });
 
       if (newUser != null) {
+//        setBottombarView();
+
         retrieveAllOrders(user.uid);
       }
     });
@@ -184,96 +188,13 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   }
 
   Widget bottomBar() {
+
     return Column(
       children: <Widget>[
         Expanded(
           child: SizedBox(),
         ),
-        BottomBarView(
-          tabIconsList: tabIconsList,
-          addClick: () async {
-//            print("clicou no carrinho");
-            bool isLogged = await checkIfUserIsLoggedIn();
-            if (isLogged) {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) =>
-                        new CartPage(dbHelper: dbHelper, user: user)),
-              );
-
-              if (result.toString() == "Ok") {
-                setState(() {
-                  _selectedIndex = 2;
-                });
-                retrieveAllOrders(user.uid, update: true);
-              }
-
-//              retrieveAllOrders(user.uid, update: true);
-
-//              print("Resultado: " + result.toString());
-            } else {
-              final result = await Navigator.pushNamed(context, '/signin');
-
-//              print("1 Result=" + result);
-
-              if (result == "Ok") {
-                checkRegisterComplete();
-              }
-            }
-          },
-          changeIndex: (index) async {
-            if (index != 0) {
-              bool isLogged = await checkIfUserIsLoggedIn();
-              if (!isLogged) {
-                final result = await Navigator.pushNamed(context, '/signin');
-
-//                print(" 2 Result=" + result);
-
-                if (result == "Ok") {
-//                  print("result==Ok");
-                  checkRegisterComplete();
-                } else {
-//                  print("result!=Ok");
-                }
-              }
-            }
-
-            if (index == 0 || index == 2) {
-              animationController.reverse().then((data) {
-                if (!mounted) return;
-                setState(() {
-                  _selectedIndex = index;
-                });
-
-                if (index == 0) {
-                  setState(() {
-                    futureCategories = getCategories();
-                    futureProducts = getProducts(_selectedCategoryName);
-                  });
-                }
-
-                if (index == 2) {
-                  if (user != null) {
-                    retrieveAllOrders(user.uid, update: true);
-                  }
-                }
-              });
-            } else if (index == 1 || index == 3) {
-              animationController.reverse().then((data) {
-                if (index == 3) {
-//                  FirebaseAuth.instance.signOut();
-//                  user = null;
-                }
-
-                if (!mounted) return;
-                setState(() {
-                  _selectedIndex = index;
-                });
-              });
-            }
-          },
-        ),
+        bottomBarView == null ? Container() : bottomBarView,
       ],
     );
   }
@@ -489,7 +410,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
 //      dynamic all_categories = json.decode(response.body);
 
-      print("Aqui getCategories: "+response.statusCode.toString());
+//      print("Aqui getCategories: " + response.statusCode.toString());
 
 //      if (response.statusCode == 200) {
 //      } else {
@@ -1160,8 +1081,12 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             child: InkWell(
               onTap: (() {
                 FirebaseAuth.instance.signOut();
-                user = null;
-                thisUser = new Map();
+
+                checkRegisterComplete();
+
+                  user = null;
+                  thisUser = new Map();
+
               }),
               child: Text(
                 'Sair >>',
@@ -1206,8 +1131,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           Padding(
             padding: EdgeInsets.only(right: 40, bottom: 10),
             child: Container(
-              width: MediaQuery.of(context).size.width - 40,
-              height: 50,
+              height: 40,
               child: Material(
                 elevation: 0,
                 color: Colors.white.withOpacity(0.8),
@@ -1217,13 +1141,14 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                         topRight: Radius.circular(30.0))),
                 child: Padding(
                   padding:
-                      EdgeInsets.only(left: 40, right: 20, top: 0, bottom: 0),
+                      EdgeInsets.only(left: 10, right: 5, top: 0, bottom: 0),
                   child: Align(
                       alignment: Alignment.centerLeft,
                       child: thisUser['name'] != null
-                          ? Text(
+                          ? AutoSizeText(
                               thisUser['name'],
                               style: h8,
+                              maxLines: 1,
                             )
                           : Container()),
                 ),
@@ -1233,8 +1158,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           Padding(
             padding: EdgeInsets.only(right: 40, bottom: 10),
             child: Container(
-              width: MediaQuery.of(context).size.width - 40,
-              height: 50,
+              height: 40,
               child: Material(
                 elevation: 0,
                 color: Colors.white.withOpacity(0.8),
@@ -1244,7 +1168,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                         topRight: Radius.circular(0.0))),
                 child: Padding(
                   padding:
-                      EdgeInsets.only(left: 40, right: 20, top: 0, bottom: 0),
+                      EdgeInsets.only(left: 10, right: 5, top: 0, bottom: 0),
                   child: Align(
                       alignment: Alignment.centerLeft,
                       child: thisUser['email'] != null
@@ -1261,36 +1185,165 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           Padding(
             padding: EdgeInsets.only(right: 40, bottom: 10),
             child: Container(
-              width: MediaQuery.of(context).size.width - 40,
-              height: 50,
+              height: 40,
               child: Material(
                 elevation: 0,
                 color: Colors.white.withOpacity(0.8),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.only(
-                        bottomRight: Radius.circular(30.0),
+                        bottomRight: Radius.circular(0.0),
                         topRight: Radius.circular(0.0))),
                 child: Padding(
                   padding:
-                      EdgeInsets.only(left: 40, right: 20, top: 0, bottom: 0),
+                      EdgeInsets.only(left: 10, right: 5, top: 0, bottom: 0),
                   child: Align(
                       alignment: Alignment.centerLeft,
                       child: thisUser['phone'] != null
-                          ? Text(
+                          ? AutoSizeText(
                               thisUser['phone'],
                               style: h8,
+                              maxLines: 1,
                             )
                           : Container()),
                 ),
               ),
             ),
           ),
+          Row(
+            mainAxisSize: MainAxisSize.max,
+            children: <Widget>[
+              Expanded(
+                flex: 2,
+                child: Padding(
+                  padding: EdgeInsets.only(right: 5, bottom: 10),
+                  child: Container(
+                    height: 40,
+                    child: Material(
+                      elevation: 0,
+                      color: Colors.white.withOpacity(0.8),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.only(
+                              bottomRight: Radius.circular(0.0),
+                              topRight: Radius.circular(0.0))),
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                            left: 10, right: 5, top: 0, bottom: 0),
+                        child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: thisUser['street'] != null
+                                ? AutoSizeText(
+                                    thisUser['street'],
+                                    style: h8,
+                                    maxLines: 1,
+                                  )
+                                : Container()),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(right: 40, bottom: 10),
+                  child: Container(
+                    height: 40,
+                    child: Material(
+                      elevation: 0,
+                      color: Colors.white.withOpacity(0.8),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.only(
+                              bottomRight: Radius.circular(0.0),
+                              topRight: Radius.circular(0.0))),
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                            left: 10, right: 5, top: 0, bottom: 0),
+                        child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: thisUser['streetNumber'] != null
+                                ? AutoSizeText(
+                                    thisUser['streetNumber'],
+                                    style: h8,
+                                    maxLines: 1,
+                                  )
+                                : Container()),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Row(
+            mainAxisSize: MainAxisSize.max,
+            children: <Widget>[
+              Expanded(
+                flex: 2,
+                child: Padding(
+                  padding: EdgeInsets.only(right: 5, bottom: 10),
+                  child: Container(
+                    height: 40,
+                    child: Material(
+                      elevation: 0,
+                      color: Colors.white.withOpacity(0.8),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.only(
+                              bottomRight: Radius.circular(0.0),
+                              topRight: Radius.circular(0.0))),
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                            left: 10, right: 5, top: 0, bottom: 0),
+                        child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: thisUser['neighborhood'] != null
+                                ? AutoSizeText(
+                                    thisUser['neighborhood'],
+                                    style: h8,
+                                    maxLines: 1,
+                                  )
+                                : Container()),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 2,
+                child: Padding(
+                  padding: EdgeInsets.only(right: 40, bottom: 10),
+                  child: Container(
+                    height: 40,
+                    child: Material(
+                      elevation: 0,
+                      color: Colors.white.withOpacity(0.8),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.only(
+                              bottomRight: Radius.circular(30.0),
+                              topRight: Radius.circular(0.0))),
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                            left: 10, right: 5, top: 0, bottom: 0),
+                        child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: thisUser['city'] != null
+                                ? AutoSizeText(
+                                    thisUser['city'],
+                                    style: h8,
+                                    maxLines: 1,
+                                  )
+                                : Container()),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       ));
 
       profileWidgetLists.add(
         Padding(
-          padding: const EdgeInsets.only(top: 10.0),
+          padding: const EdgeInsets.only(bottom: 40.0),
           child: Stack(
             children: <Widget>[
               Center(child: roundedRectButton("Editar", goBtnGradients, false)),
@@ -1304,7 +1357,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                     child: Container(
                       alignment: Alignment.center,
                       width: MediaQuery.of(globalContext).size.width / 1.2,
-                      height: 55.0,
+                      height: 35.0,
                       decoration: ShapeDecoration(
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30.0)),
@@ -1354,7 +1407,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                         child: Container(
                           alignment: Alignment.center,
                           width: MediaQuery.of(globalContext).size.width / 1.2,
-                          height: 55.0,
+                          height: 40.0,
                           decoration: ShapeDecoration(
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(30.0)),
@@ -1365,9 +1418,12 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                           final result =
                               await Navigator.pushNamed(context, '/signin');
 
-                          if (result != "Ok") {
+//                          print("Restult 5 = "+result);
+
+                          if (result == "Ok") {
                             checkRegisterComplete();
                           }
+
                         }),
                       ),
                     ),
@@ -1462,6 +1518,72 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           child: AutoSizeText("Total: R\$ " + order.total.replaceAll(".", ","),
               style: majorFoodNameText, overflow: TextOverflow.ellipsis),
         )
+      ],
+    ));
+
+    var addressSplit = order.deliveryAddress.split('-');
+
+    listViewChildren.add(Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.only(left: 5.0, top: 5.0),
+              child: AutoSizeText(
+                  "Pagamento: " +
+                      (order.payment_method == "money" ? "Dinheiro" : "Cartão"),
+                  style: minorCartItemObservationsText),
+            ),
+          ],
+        ),
+        Divider(
+          height: 5,
+        ),
+        Row(
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.only(left: 5.0, top: 5.0),
+              child: AutoSizeText(
+                  "Entrega: " +
+                      (order.delivery == "delivery" ? "Delivery" : "Retirada"),
+                  style: minorCartItemObservationsText),
+            ),
+          ],
+        ),
+        order.delivery == "delivery"
+            ? Row(
+                children: <Widget>[
+                  Flexible(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 5.0, right: 5.0),
+                      child: AutoSizeText("Endereço: " + addressSplit[0],
+                          style: minorCartItemObservationsText,
+                          overflow: TextOverflow.ellipsis),
+                    ),
+                  ),
+                ],
+              )
+            : Container(),
+        order.delivery == "delivery"
+            ? Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 5.0, left: 5.0),
+                      child: AutoSizeText(
+                          addressSplit[1] + " - " + addressSplit[2],
+                          style: minorCartItemObservationsText,
+                          overflow: TextOverflow.ellipsis),
+                    ),
+                  ),
+                ],
+              )
+            : Container(),
+        Divider(
+          height: 5,
+        ),
       ],
     ));
 
@@ -1721,12 +1843,16 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       final result = await Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => new CartPage(dbHelper: dbHelper, user: user)),
+            builder: (context) =>
+                new CartPage(dbHelper: dbHelper, thisUser: thisUser)),
       );
 
       if (result.toString() == "Ok") {
         retrieveAllOrders(user.uid, update: true);
       }
+
+//      bottomBarView.createState();
+      setBottombarView();
 
 //          retrieveAllOrders(user.uid, update: true);
 
@@ -1788,7 +1914,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                         alignment: Alignment.center,
                         child: Container(
                           width: MediaQuery.of(context).size.width * 0.8,
-                          height: MediaQuery.of(context).size.width * 0.5,
                           decoration: new BoxDecoration(
                             shape: BoxShape.rectangle,
                             color: Colors.white,
@@ -1796,6 +1921,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                 new BorderRadius.all(new Radius.circular(10.0)),
                           ),
                           child: Column(
+                            mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: <Widget>[
                               ClipRRect(
@@ -1894,11 +2020,15 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   }
 
   Future<void> checkRegisterComplete() async {
+
+//    print("entrou checkRegisterComplete");
+
     dbHelper = DatabaseHelper.instance;
     user = await fbAuth.currentUser();
+    setBottombarView();
 
     if (user != null) {
-      print("user!=null: " + user.uid);
+//      print("checkRegisterComplete user!=null: " + user.uid);
       //isRegisterComplete
       Map<String, dynamic> localThisUser = await dbHelper.searchUser(user.uid);
 //      print("thisuser="+thisUser['isRegComplete'].toString());
@@ -1910,14 +2040,15 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           showRegisterDialog(localThisUser);
         } else {
 //          print(localThisUser.toString());
+        retrieveUser();
           setState(() {
-            thisUser = localThisUser;
+            thisUser = thisUser;
           });
 //          print("isRegComplete="+thisUser['isRegComplete'].toString());
         }
       }
     } else {
-//      print("user==null");
+//      print("checkRegisterComplete user==null");
     }
   }
 
@@ -1950,6 +2081,10 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             DatabaseHelper.columnUserEmail: existentUser['email'],
             DatabaseHelper.columnUserImgUrl: existentUser['image_url'],
             DatabaseHelper.columnUserPhone: existentUser['phone'],
+            DatabaseHelper.columnUserStreet: existentUser['street'],
+            DatabaseHelper.columnUserStreetNumber: existentUser['streetNumber'],
+            DatabaseHelper.columnUserNeighborhood: existentUser['neighborhood'],
+            DatabaseHelper.columnUserCity: existentUser['city'],
             DatabaseHelper.columnIsRegComplete:
                 existentUser['isRegisterComplete']
           };
@@ -2040,19 +2175,122 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           ),
         ));
   }
+
+  void setBottombarView() {
+//    print("entrou setBottombarView");
+//    setState(() {
+//
+//      bottomBarView = null;
+//    });
+
+    setState(() {
+      bottomBarView = null;
+      bottomBarView = BottomBarView(
+        tabIconsList: tabIconsList,
+        dbHelper: dbHelper,
+        user: user,
+        addClick: () async {
+//            print("clicou no carrinho");
+          bool isLogged = await checkIfUserIsLoggedIn();
+          if (isLogged) {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) =>
+                      new CartPage(dbHelper: dbHelper, thisUser: thisUser)),
+            );
+
+            if (result.toString() == "Ok") {
+              setState(() {
+                _selectedIndex = 2;
+              });
+              retrieveAllOrders(user.uid, update: true);
+            }
+
+//            bottomBarView.createState();
+            setBottombarView();
+
+//              retrieveAllOrders(user.uid, update: true);
+
+//              print("Resultado: " + result.toString());
+          } else {
+            final result = await Navigator.pushNamed(context, '/signin');
+
+//              print("1 Result=" + result);
+
+            if (result == "Ok") {
+              checkRegisterComplete();
+            }
+          }
+        },
+        changeIndex: (index) async {
+          if (index != 0) {
+            bool isLogged = await checkIfUserIsLoggedIn();
+            if (!isLogged) {
+              final result = await Navigator.pushNamed(context, '/signin');
+
+//                print(" 2 Result=" + result);
+
+              if (result == "Ok") {
+//                  print("result==Ok");
+                checkRegisterComplete();
+              } else {
+//                  print("result!=Ok");
+              }
+            }
+          }
+
+          if (index == 0 || index == 2) {
+            animationController.reverse().then((data) {
+              if (!mounted) return;
+              setState(() {
+                _selectedIndex = index;
+              });
+
+              if (index == 0) {
+                setState(() {
+                  futureCategories = getCategories();
+                  futureProducts = getProducts(_selectedCategoryName);
+                });
+              }
+
+              if (index == 2) {
+                if (user != null) {
+                  retrieveAllOrders(user.uid, update: true);
+                }
+              }
+            });
+          } else if (index == 1 || index == 3) {
+            animationController.reverse().then((data) {
+              if (index == 3) {
+//                  FirebaseAuth.instance.signOut();
+//                  user = null;
+              }
+
+              if (!mounted) return;
+              setState(() {
+                _selectedIndex = index;
+              });
+            });
+          }
+        },
+      );
+    });
+  }
 }
 
 Widget roundedRectButton(
     String title, List<Color> gradient, bool isEndIconVisible) {
   return Builder(builder: (BuildContext mContext) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 10),
+      padding: EdgeInsets.only(bottom: 30),
       child: Stack(
         alignment: Alignment(1.0, 0.0),
         children: <Widget>[
           Container(
             alignment: Alignment.center,
             width: MediaQuery.of(mContext).size.width / 1.2,
+            height: 35,
             decoration: ShapeDecoration(
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30.0)),
@@ -2066,7 +2304,7 @@ Widget roundedRectButton(
                     color: Colors.white,
                     fontSize: 18,
                     fontWeight: FontWeight.w500)),
-            padding: EdgeInsets.only(top: 16, bottom: 16),
+            padding: EdgeInsets.only(top: 0, bottom: 0),
           ),
         ],
       ),

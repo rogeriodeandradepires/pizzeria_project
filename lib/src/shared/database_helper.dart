@@ -19,6 +19,10 @@ class DatabaseHelper {
   static final columnUserEmail = 'email';
   static final columnUserImgUrl = 'imgUrl';
   static final columnUserPhone = 'phone';
+  static final columnUserStreet = 'street';
+  static final columnUserStreetNumber = 'streetNumber';
+  static final columnUserNeighborhood = 'neighborhood';
+  static final columnUserCity = 'city';
   static final columnIsRegComplete = 'isRegComplete';
 
   static final columnId = '_id';
@@ -110,6 +114,10 @@ class DatabaseHelper {
             $columnUserEmail TEXT NOT NULL,
             $columnUserImgUrl TEXT,
             $columnUserPhone TEXT,
+            $columnUserStreet TEXT,
+            $columnUserStreetNumber TEXT,
+            $columnUserNeighborhood TEXT,
+            $columnUserCity TEXT,
             $columnIsRegComplete INTEGER NOT NULL DEFAULT 0
           )
           ''');

@@ -1,6 +1,8 @@
 import 'package:dom_marino_app/src/models/tabIconData.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import 'package:badges/badges.dart';
 
 import 'package:flutter/widgets.dart';
 
@@ -8,9 +10,11 @@ class BottomBarView extends StatefulWidget {
   final Function(int index) changeIndex;
   final Function addClick;
   final List<TabIconData> tabIconsList;
+  final dbHelper;
+  final FirebaseUser user;
 
   const BottomBarView(
-      {Key key, this.tabIconsList, this.changeIndex, this.addClick})
+      {Key key, this.tabIconsList, this.changeIndex, this.addClick, this.dbHelper,this.user})
       : super(key: key);
 
   @override
@@ -20,9 +24,25 @@ class BottomBarView extends StatefulWidget {
 class _BottomBarViewState extends State<BottomBarView>
     with TickerProviderStateMixin {
   AnimationController animationController;
+  int cartId=0;
+  int cartItemsSize=0;
+
+  Future<dynamic> allCartItems;
 
   @override
   void initState() {
+
+//    //print("initState user: "+widget.user.toString());
+
+//    retrieveCartId();
+
+//    WidgetsBinding.instance
+//        .addPostFrameCallback((_) {
+//      setState(() {
+//        cartItemsSize = allCartItems.length;
+//      });
+//    });
+
     animationController = new AnimationController(
       vsync: this,
       duration: new Duration(milliseconds: 1000),
@@ -33,6 +53,10 @@ class _BottomBarViewState extends State<BottomBarView>
 
   @override
   Widget build(BuildContext context) {
+
+    retrieveCartId();
+    allCartItems = retrieveAllCartItemsList();
+
     return Stack(
       alignment: AlignmentDirectional.bottomCenter,
       children: <Widget>[
@@ -135,39 +159,72 @@ class _BottomBarViewState extends State<BottomBarView>
                     scale: Tween(begin: 0.0, end: 1.0).animate(CurvedAnimation(
                         parent: animationController,
                         curve: Curves.fastOutSlowIn)),
-                    child: Container(
-                      // alignment: Alignment.center,s
-                      decoration: BoxDecoration(
-                        color: Colors.brown,
-                        gradient: LinearGradient(
-                            colors: [
-                              Color(0xff4c2717),
-                              Colors.brown,
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight),
-                        shape: BoxShape.circle,
-                        boxShadow: <BoxShadow>[
-                          BoxShadow(
-                              color: Colors.brown.withOpacity(0.4),
-                              offset: Offset(8.0, 16.0),
-                              blurRadius: 16.0),
-                        ],
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                            splashColor: Colors.yellow.withOpacity(0.1),
-                            highlightColor: Colors.transparent,
-                            focusColor: Colors.transparent,
-                            onTap: () {
-                              widget.addClick();
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.all(5.0),
-                              child: Image.asset('images/cart.png'),
-                            )),
-                      ),
+                    child: FutureBuilder(
+                      builder: (context, productSnap) {
+
+                        cartItemsSize = 0;
+
+                        //print("productSnap: "+productSnap.data.toString());
+
+//                        if (productSnap.connectionState == ConnectionState.done) {
+//
+//                        }
+
+                        if (productSnap.data!=null) {
+                          for (int i = 0; i < productSnap.data.length; i++) {
+                            //print("entrou for: "+productSnap.data[i]['productAmount'].toString());
+                            cartItemsSize += productSnap.data[i]['productAmount'];
+                          }
+
+                        }
+
+//                        //print(productSnap);
+                        //print("Entrou FutureBuilder: "+cartItemsSize.toString());
+
+                        return Badge(
+                          badgeColor: Colors.red,
+                          badgeContent: Text(cartItemsSize.toString(), style: TextStyle(color: Colors.white)),
+                          showBadge: cartItemsSize!=0?true:false,
+                          toAnimate: false,
+                          elevation: 5,
+                          position: BadgePosition.topRight(top: -5, right: -5),
+                          child: Container(
+                            // alignment: Alignment.center,s
+                            decoration: BoxDecoration(
+                              color: Colors.brown,
+                              gradient: LinearGradient(
+                                  colors: [
+                                    Color(0xff4c2717),
+                                    Colors.brown,
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight),
+                              shape: BoxShape.circle,
+                              boxShadow: <BoxShadow>[
+                                BoxShadow(
+                                    color: Colors.brown.withOpacity(0.4),
+                                    offset: Offset(8.0, 16.0),
+                                    blurRadius: 16.0),
+                              ],
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                  splashColor: Colors.yellow.withOpacity(0.1),
+                                  highlightColor: Colors.transparent,
+                                  focusColor: Colors.transparent,
+                                  onTap: () {
+                                    widget.addClick();
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(5.0),
+                                    child: Image.asset('images/cart.png'),
+                                  )),
+                            ),
+                          ),
+                        );
+                      },
+                      future: allCartItems,
                     ),
                   ),
                 ),
@@ -189,6 +246,60 @@ class _BottomBarViewState extends State<BottomBarView>
         }
       });
     });
+  }
+
+  Future<void> retrieveCartId() async {
+
+    if (widget.user!=null) {
+      //print("entrou user: "+widget.user.uid.toString());
+      Map<String, dynamic> cart = await widget.dbHelper.searchCart(widget.user.uid);
+
+      if (cart != null) {
+        //se tem carrinho
+        cartId = cart['cartId'];
+        //print("cart!=null");
+      }
+
+//      allCartItems = retrieveAllCartItems();
+//      //print("passou a instancia do allCartItems");
+
+    }else{
+//      //print("entrou user: "+widget.user.toString());
+//      allCartItems = resetAllCartItems();
+//      cartItemsSize = 0;
+    }
+
+  }
+
+  Future retrieveAllCartItemsList() async {
+//    cartItemsSize = 0;
+
+  //print("entrou retrieveAllCartItemsSize user: "+widget.user.toString());
+  List<Map<String, dynamic>> thisAllCartItems;
+
+  if (widget.user!=null) {
+
+    thisAllCartItems =
+    await widget.dbHelper.retrieveAllCartItems(cartId);
+  }else{
+    thisAllCartItems =
+    await widget.dbHelper.retrieveAllCartItems(0);
+  }
+
+
+
+//    for (int i = 0; i < thisAllCartItems.length; i++) {
+//      //print("entrou for");
+////      setState(() {
+////        cartItemsSize += thisAllCartItems[i]['productAmount'];
+////      });
+//    }
+
+    //print("entrou thisAllCartItems: "+thisAllCartItems.length.toString());
+
+//    allCartItems = thisAllCartItems;
+
+    return thisAllCartItems;
   }
 }
 

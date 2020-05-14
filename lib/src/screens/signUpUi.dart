@@ -105,6 +105,10 @@ class _SignUpState extends State<SignUp>
         _nameController.text = thisUser['name'];
         _emailController.text = thisUser['email'];
         _phoneController.text = thisUser['phone'];
+        _addStreetController.text = thisUser['street'];
+        _addNumberController.text = thisUser['streetNumber'];
+        _addNeighborhoodController.text = thisUser['neighborhood'];
+        _addCityController.text = thisUser['city'];
 
         if (thisUser['imgUrl'] != null) {
           setState(() {
@@ -554,6 +558,10 @@ class _SignUpState extends State<SignUp>
                               "name": _nameController.text,
                               "email": _emailController.text,
                               "phone": _phoneController.text,
+                              "street": _addStreetController.text,
+                              "streetNumber": _addNumberController.text,
+                              "neighborhood": _addNeighborhoodController.text,
+                              "city": _addCityController.text,
 //                              "picture": _image
                             };
 
@@ -688,6 +696,10 @@ class _SignUpState extends State<SignUp>
     request.fields['name'] = userData["name"];
     request.fields['email'] = userData["email"];
     request.fields['phone'] = userData["phone"];
+    request.fields['street'] = userData["street"];
+    request.fields['streetNumber'] = userData["streetNumber"];
+    request.fields['neighborhood'] = userData["neighborhood"];
+    request.fields['city'] = userData["city"];
     request.fields['img_url'] = "";
     request.fields['isRegisterComplete'] = "1";
 
@@ -706,6 +718,10 @@ class _SignUpState extends State<SignUp>
       DatabaseHelper.columnUserEmail: userData["email"],
       DatabaseHelper.columnUserImgUrl: img_url,
       DatabaseHelper.columnUserPhone: userData["phone"],
+      DatabaseHelper.columnUserPhone: userData["street"],
+      DatabaseHelper.columnUserPhone: userData["streetNumber"],
+      DatabaseHelper.columnUserPhone: userData["neighborhood"],
+      DatabaseHelper.columnUserPhone: userData["city"],
       DatabaseHelper.columnIsRegComplete: 1
     };
 

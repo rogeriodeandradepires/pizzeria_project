@@ -702,10 +702,11 @@ class _ProductPageState extends State<ProductPage> {
                       borderSide: BorderSide(color: Colors.black38),
                       onPressed: () {
                         setState(() {
-                          _quantity += 1;
+                          if (_quantity == 1) return;
+                          _quantity -= 1;
                         });
                       },
-                      child: Icon(Icons.add),
+                      child: Icon(Icons.remove),
                     ),
                   ),
                   Container(
@@ -719,11 +720,10 @@ class _ProductPageState extends State<ProductPage> {
                       borderSide: BorderSide(color: Colors.black38),
                       onPressed: () {
                         setState(() {
-                          if (_quantity == 1) return;
-                          _quantity -= 1;
+                          _quantity += 1;
                         });
                       },
-                      child: Icon(Icons.remove),
+                      child: Icon(Icons.add),
                     ),
                   )
                 ],

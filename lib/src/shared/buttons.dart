@@ -3,10 +3,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import './colors.dart';
 
-FlatButton froyoFlatBtn(String text, onPressed) {
+FlatButton froyoFlatBtn(String text, onPressed, {TextStyle style}) {
+  TextStyle thisStyle = style != null ? style : h2;
   return FlatButton(
     onPressed: onPressed,
-    child: Text(text, style: h2,textAlign: TextAlign.center,),
+    child: Text(text, style: thisStyle,textAlign: TextAlign.center,),
     textColor: white,
     color: primaryColor,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),

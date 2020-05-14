@@ -6,6 +6,8 @@ class Order {
   String payment_method;
   String total;
   String userId;
+  String deliveryAddress;
+  String paymentChange;
   List<dynamic> products_id;
 
   Order({
@@ -13,7 +15,9 @@ class Order {
     this.dateTime,
     this.id,
     this.delivery,
+    this.deliveryAddress,
     this.payment_method,
+    this.paymentChange,
     this.total,
     this.userId,
     this.products_id,
@@ -49,8 +53,10 @@ class Order {
     return Order(
       coupon_id: json['coupon_id'],
       id: json['id'],
-      delivery: json['image'],
+      delivery: json['delivery'],
+      deliveryAddress: json['delivery_address'],
       payment_method: json['payment_method'],
+      paymentChange: json['payment_change'],
       total: json['total'],
       dateTime: json['dateTime'],
       userId: json['userId'],

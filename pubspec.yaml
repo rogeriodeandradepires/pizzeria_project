@@ -38,6 +38,7 @@ dependencies:
   auto_size_text: ^2.1.0
   url_launcher: ^5.4.1
   map_launcher: ^0.4.2
+  badges: ^1.1.1
 #  shared_preferences: ^0.5.6+1
 
 

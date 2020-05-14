@@ -77,6 +77,12 @@ const h6 = TextStyle(
     fontWeight: FontWeight.w500,
     fontFamily: 'Poppins');
 
+const h6White = TextStyle(
+    color: Colors.white,
+    fontSize: 16,
+    fontWeight: FontWeight.w500,
+    fontFamily: 'Poppins');
+
 const h8 = TextStyle(
     color: Colors.black,
     fontSize: 18,
