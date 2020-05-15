@@ -1730,18 +1730,15 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
       List<Map<String, dynamic>> allCartItems =
           await dbHelper.retrieveAllCartItems(cartId);
-      int equalId = null;
+//      int equalId = null;
 //      print("Entrou: ");
       order.products_id.forEach((orderItem) async {
+        int equalId = null;
 //        print("OrderItem: "+orderItem.toString());
         allCartItems.forEach((cartItem) {
 //          print("CartItem:"+cartItem['productId'].toString()+", "+cartItem['pizzaEdgeId'].toString()+", "+cartItem['productSize'].toString());
 //          print("OrderItem:"+orderItem['product_id'].toString()+", "+orderItem['pizza_edge_id'].toString()+", "+orderItem['size'].toString());
 //          print("OrderItem:"+orderItem.toString());
-
-          if (orderItem['pizza_edge_id'].toString() == "None") {
-            orderItem['pizza_edge_id'] = "null";
-          }
 
           if (orderItem['pizza_edge_id'].toString() == "None") {
             orderItem['pizza_edge_id'] = "null";
@@ -1801,6 +1798,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         });
 
         if (equalId != null) {
+//          print("já tem igual");
           //se já tem item igual
           Map<String, dynamic> productRow =
               await dbHelper.searchCartItem(equalId);
@@ -1810,11 +1808,15 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
               int.parse(orderItem['quantity']);
           await dbHelper.update(tempProductRow, "cartItems", "cartItemsId");
         } else {
+//          print("não tem igual");
+
+//          print("orderItem: "+orderItem.toString());
+
           //se ainda não tem item igual
           int isTwoFlavoredPizza = 0;
 
           if (orderItem['product2_id'] != null &&
-              orderItem['product2_id'] != "None") {
+              orderItem['product2_id'] != "None" && orderItem['product2_id'] != "null") {
             isTwoFlavoredPizza = 1;
           }
 

@@ -192,7 +192,7 @@ class _CartPageState extends State<CartPage> {
                       height: MediaQuery.of(context).size.height * 0.7,
                       child: StreamBuilder(
                         builder: (context, itemsCount) {
-//                          print(itemsCount.data);
+//                          //print(itemsCount.data);
 
                           if (itemsCount.data == null) {
                             return Container(
@@ -228,7 +228,7 @@ class _CartPageState extends State<CartPage> {
                                       );
 
                                       retorno = createdLists;
-//                                    print("not null");
+//                                    //print("not null");
 //                                    buildCartItemsList();
                                     }
 
@@ -290,6 +290,15 @@ class _CartPageState extends State<CartPage> {
     allCartItemsMap = new List();
     allCartItemsMap.addAll(tempAllCartItems);
 
+    var newMap = new Map();
+
+//    tempAllCartItems.forEach((map) {
+//      //print("item do carrinho: "+map.toString());
+//      newMap.addAll(map);
+//    });
+
+//    //print("todos os itens do carrinho: "+newMap.toString());
+
     allCartItemsMap
         .sort((a, b) => a['productCategory'].compareTo(b['productCategory']));
     allCartItemsMap = allCartItemsMap.reversed.toList();
@@ -313,7 +322,7 @@ class _CartPageState extends State<CartPage> {
   Future<Widget> buildCartItemsList() async {
     totalPrice = "0,00";
 //
-//    print("entrou");
+//    //print("entrou");
 
     includedProducts = new List();
     List<Widget> columnChildren = new List();
@@ -322,14 +331,21 @@ class _CartPageState extends State<CartPage> {
     finalAllCartItemsMap = new List();
     finalAllCartItemsMap.addAll(allCartItemsMap);
 
+//    allCartItemsMap.forEach((element) {
+//      //print("item do carrinho: "+element.toString());
+//    });
+
+
     for (int i = 0; i < finalAllCartItemsMap.length; i++) {
       CartItem tempProduct = CartItem.fromJson(finalAllCartItemsMap[i]);
       tempProduct.productCategory = finalAllCartItemsMap[i]['productCategory'];
       Product thisProduct;
 
+      //print("tempProduct: "+finalAllCartItemsMap[i].toString());
+
       if (finalAllCartItemsMap[i]['isTwoFlavoredPizza'] == 1) {
-//        print("É pizza de 2 sabores");
-//        print("Product: "+finalAllCartItemsMap[i].toString());
+//        //print("É pizza de 2 sabores");
+        //print("getProduct 1: ");
 
         //se for pizza de 2 sabores
         thisProduct = await getProduct(
@@ -337,17 +353,20 @@ class _CartPageState extends State<CartPage> {
             id: finalAllCartItemsMap[i]['product1Id'],
             productOrder: "product1");
 
+        //print("getProduct 2: ");
+
         Product product2 = await getProduct(
             category: finalAllCartItemsMap[i]['product2CategoryName'],
             id: finalAllCartItemsMap[i]['product2Id'],
             productOrder: "product2");
 
         Product retrievedPizzaEdge;
-//        print("Pizza Edge: "+finalAllCartItemsMap[i]['pizzaEdgeId'].toString());
+//        //print("Pizza Edge: "+finalAllCartItemsMap[i]['pizzaEdgeId'].toString());
 
         if (finalAllCartItemsMap[i]['pizzaEdgeId'] != null &&
             finalAllCartItemsMap[i]['pizzaEdgeId'] != "null") {
-//          print("Entrou errado");
+//          //print("Entrou errado");
+          //print("getProduct 3: ");
           retrievedPizzaEdge = await getProduct(
               id: finalAllCartItemsMap[i]['pizzaEdgeId'],
               category: 'pizza_edges');
@@ -397,8 +416,10 @@ class _CartPageState extends State<CartPage> {
         totalPrice_bloc.totalPriceSink.add(totalPrice.replaceAll(".", ","));
       } else {
         //se não for pizza de 2 sabores
-//        print("Não é pizza de 2 sabores");
-//        print("Product: "+finalAllCartItemsMap[i].toString());
+//        //print("Não é pizza de 2 sabores");
+//        //print("Product: "+finalAllCartItemsMap[i].toString());
+
+        //print("getProduct 4: ");
 
         thisProduct = await getProduct(map: finalAllCartItemsMap[i]);
         thisProduct.category =
@@ -427,6 +448,7 @@ class _CartPageState extends State<CartPage> {
           if (finalAllCartItemsMap[i]['pizzaEdgeId'] != null &&
               finalAllCartItemsMap[i]['pizzaEdgeId'] != "null") {
 //            pizzaEdgePriceBlocs.insert(i, new PizzaEdgePriceBloc());
+            //print("getProduct 5: ");
             retrievedPizzaEdge = await getProduct(
                 id: finalAllCartItemsMap[i]['pizzaEdgeId'],
                 category: 'pizza_edges');
@@ -521,10 +543,10 @@ class _CartPageState extends State<CartPage> {
       String id,
       String category,
       String productOrder}) async {
-//    print("problema");
-//    print("category: $category, id: $id");
-//    print("map: $map");
-//    print("productOrder: $productOrder");
+//    //print("problema");
+//    //print("category: $category, id: $id");
+//    //print("map: $map");
+//    //print("productOrder: $productOrder");
     if (map != null) {
       if (map['isTwoFlavoredPizza'] == 1) {
         if (productOrder == "product1") {
@@ -543,6 +565,8 @@ class _CartPageState extends State<CartPage> {
     var queryParameters = {
       'id': '$id',
     };
+
+    //print("category: "+category+", product: "+map.toString());
 
     var uri = Uri.https(
         'dom-marino-webservice.appspot.com', 'list_$category', queryParameters);
@@ -767,7 +791,7 @@ class _CartPageState extends State<CartPage> {
 
     Widget retorno;
 
-    print("Aqui: " + product.category.toString());
+    //print("Aqui: " + product.category.toString());
 
     if (!product.category.toString().toLowerCase().contains("pizza") &&
         product.category.toString() != "null") {
@@ -1378,7 +1402,7 @@ class _CartPageState extends State<CartPage> {
     var date = DateTime.parse(realDateTime['formatted'].toString());
     String dayOfTheWeek = DateFormat('EEE').format(date).toLowerCase();
 
-//    print(dayOfTheWeek);
+//    //print(dayOfTheWeek);
 
     String currentHoursString =
         realDateTime["formatted"].toString().substring(11, 13);
@@ -1400,10 +1424,10 @@ class _CartPageState extends State<CartPage> {
             ":" +
             realDateTime["formatted"].toString().substring(14, 16) +
             ":00";
-    print(formattedActualDateTime);
+    //print(formattedActualDateTime);
 //  var now = new DateTime.now();
 //
-//  print(now.toString().substring(0, 19));
+//  //print(now.toString().substring(0, 19));
 
     int serverHoursFrom;
     int serverMinutesFrom;
@@ -1443,9 +1467,9 @@ class _CartPageState extends State<CartPage> {
       throw Exception('Failed to load product');
     }
 
-    print(currentTimeSum);
-    print(serverTimeSumFrom);
-    print(serverTimeSumTo);
+    //print(currentTimeSum);
+    //print(serverTimeSumFrom);
+    //print(serverTimeSumTo);
 
     //para fim de testes:
     currentTimeSum = serverTimeSumFrom;
@@ -1836,10 +1860,10 @@ class _CartPageState extends State<CartPage> {
                                             Navigator.of(context,
                                                     rootNavigator: true)
                                                 .pop();
-                                            print("Aqui: endereço user");
+                                            //print("Aqui: endereço user");
                                             showPaymentOptions();
                                           } else {
-                                            print("Aqui: outro endereço");
+                                            //print("Aqui: outro endereço");
 
                                             if (_addressFormKey.currentState
                                                 .validate()) {
@@ -1847,9 +1871,9 @@ class _CartPageState extends State<CartPage> {
                                                       rootNavigator: true)
                                                   .pop();
                                               showPaymentOptions();
-                                              print("Aqui: validou");
+                                              //print("Aqui: validou");
                                             } else {
-                                              print("Aqui: não validou");
+                                              //print("Aqui: não validou");
                                             }
                                           }
                                         }, style: h6White),
@@ -1904,7 +1928,7 @@ class _CartPageState extends State<CartPage> {
       Map<String, dynamic> productsId = {};
 
       finalAllCartItemsMap.forEach((item) {
-//      print("Item: "+item.toString());
+//      //print("Item: "+item.toString());
 
         String pizza_edge_id = item['pizzaEdgeId'];
         String product1_category = item["categoryName"];
@@ -1934,10 +1958,10 @@ class _CartPageState extends State<CartPage> {
 
         productsId[tempProductsId] = tempMap;
 
-//      print(tempMap);
+//      //print(tempMap);
       });
 
-//      print("productsId: "+json.encode(productsId));
+//      //print("productsId: "+json.encode(productsId));
 
       var queryParameters = {
         'date_time': '$formattedActualDateTime',
@@ -1957,7 +1981,7 @@ class _CartPageState extends State<CartPage> {
 
       diolib.Dio dio = new diolib.Dio();
       diolib.Response apiResponse = await dio.post(url, data: queryParameters);
-      print(apiResponse.data.toString());
+      //print(apiResponse.data.toString());
 
       Navigator.of(context, rootNavigator: false).pop();
 
@@ -2351,7 +2375,7 @@ class CurrencyInputFormatter extends TextInputFormatter {
   TextEditingValue formatEditUpdate(
       TextEditingValue oldValue, TextEditingValue newValue) {
     if (newValue.selection.baseOffset == 0) {
-      print(true);
+      //print(true);
       return newValue;
     }
 
