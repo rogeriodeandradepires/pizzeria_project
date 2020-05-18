@@ -5,11 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:keyboard_visibility/keyboard_visibility.dart';
 import 'package:scoped_model/scoped_model.dart';
 
-import 'loginUi.dart';
+import 'signInUi.dart';
 
 class SignInMainPage extends StatefulWidget {
-  SignInMainPage({Key key, this.title}) : super(key: key);
+  SignInMainPage({Key key, this.title, this.uri, this.url}) : super(key: key);
   final String title;
+  String uri;
+  String url;
 
   @override
   _SignInMainPageState createState() => _SignInMainPageState();
@@ -42,7 +44,7 @@ class _SignInMainPageState extends State<SignInMainPage> {
           controller: scrollController,
           children: <Widget>[
             Container(
-                height: MediaQuery.of(context).size.height, child: Login(model, scaffoldKey)),
+                height: MediaQuery.of(context).size.height, child: Login(model, scaffoldKey, url: widget.url, uri: widget.uri)),
           ],
         );
       }),

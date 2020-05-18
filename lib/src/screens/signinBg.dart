@@ -1,4 +1,4 @@
-import 'package:dom_marino_app/src/screens/loginUi.dart';
+import 'package:dom_marino_app/src/screens/signInUi.dart';
 import 'package:flutter/material.dart';
 
 class SigninBg extends StatelessWidget {

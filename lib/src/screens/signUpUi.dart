@@ -22,8 +22,10 @@ class SignUp extends StatefulWidget {
   final scaffoldKey;
   Map<String, dynamic> thisUser;
   final dbHelper = DatabaseHelper.instance;
+  String url;
+  String uri;
 
-  SignUp(this.thisUser, this.model, this.scaffoldKey);
+  SignUp(this.thisUser, this.model, this.scaffoldKey, {@required this.uri, @required this.url});
 
   @override
   _SignUpState createState() =>
@@ -678,7 +680,7 @@ class _SignUpState extends State<SignUp>
         : this.firebaseUser.uid.toString();
     String img_url = "";
 
-    var url = "https://dom-marino-webservice.appspot.com/create_user";
+    var url = widget.url + "create_user";
 
     final postUri = Uri.parse(url);
     http.MultipartRequest request = http.MultipartRequest('POST', postUri);

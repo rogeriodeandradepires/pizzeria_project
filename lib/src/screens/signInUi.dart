@@ -10,6 +10,7 @@ import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 
+import 'SignUpMainPage.dart';
 import 'signinBg.dart';
 import 'inputWidget.dart';
 
@@ -17,8 +18,10 @@ class Login extends StatefulWidget {
   final UserModel model;
   final scaffoldKey;
   final dbHelper = DatabaseHelper.instance;
+  String uri;
+  String url;
 
-  Login(this.model, this.scaffoldKey);
+  Login(this.model, this.scaffoldKey, {@required this.url, @required this.uri});
 
 
 
@@ -248,7 +251,12 @@ class _LoginState extends State<Login> {
                                         color: Colors.transparent,
                                         child: InkWell(
                                           onTap: (() {
-                                            Navigator.pushNamed(context, '/signup');
+//                                            Navigator.pushNamed(context, '/signup');
+                                            Navigator.push(context,
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                  new SignUpMainPage(uri: widget.uri, url: widget.url)),
+                                            );
                                           }),
                                           child: Text(
                                             'Criar Conta',
@@ -587,7 +595,7 @@ class _LoginState extends State<Login> {
     };
 
     var uri = Uri.https(
-        'dom-marino-webservice.appspot.com', 'list_users', queryParameters);
+        widget.uri, 'list_users', queryParameters);
 
     try {
       http.Response response = await http.get(uri);
@@ -629,7 +637,7 @@ class _LoginState extends State<Login> {
 
         }else{
 //          print("não existe");
-          var url = "https://dom-marino-webservice.appspot.com/create_user";
+          var url = widget.url+"create_user";
 
           final postUri = Uri.parse(url);
           http.MultipartRequest request = http.MultipartRequest('POST', postUri);

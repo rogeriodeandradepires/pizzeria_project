@@ -13,19 +13,23 @@
         </shape>
     </item>
 
-    <item
-        android:top="100dp">
+    <item android:width="293dp"
+        android:height="215dp"
+        android:top="100dp"
+        android:right="150dp"
+        android:left="150dp"
+        android:drawable="@drawable/launch_image"
+        android:gravity="center_horizontal|top">
 
-        <bitmap
-        android:gravity="center_horizontal|top"
-        android:src="@drawable/launch_image" />
+<!--        <bitmap-->
+<!--        android:gravity="center"-->
+<!--        android:src="@drawable/launch_image" />-->
     </item>
     <item
+        android:width="120dp"
+        android:height="90dp"
+        android:drawable="@drawable/pandras_logo"
+        android:gravity="center_horizontal|bottom"
         android:bottom="35dp">
-
-        <bitmap
-            android:gravity="center_horizontal|bottom"
-            android:src="@drawable/pandras_logo" />
-
     </item>
 </layer-list>

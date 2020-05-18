@@ -22,6 +22,8 @@ class ProductPage extends StatefulWidget {
   final Product productData;
   final dbHelper;
   final FirebaseUser user;
+  String url;
+  String uri;
 
   ProductPage(
       {Key key,
@@ -30,6 +32,8 @@ class ProductPage extends StatefulWidget {
       this.category,
       this.categoryName,
       this.dbHelper,
+      this.url,
+      this.uri,
       this.user})
       : super(key: key);
 
@@ -63,7 +67,6 @@ class _ProductPageState extends State<ProductPage> {
   BuildContext globalContext;
 
   TextEditingController observationsController = new TextEditingController();
-
 
   @override
   void initState() {
@@ -325,11 +328,11 @@ class _ProductPageState extends State<ProductPage> {
         onTap: () {
           if (product.description.contains("Escolha")) {
             if (product1ToReturn == null || product2ToReturn == null) {
-              Scaffold.of(globalContext).showSnackBar(
-                  SnackBar(content: Text("Por favor, escolha os sabores da Pizza."),
-                    backgroundColor: Colors.redAccent,
-                    duration: Duration(seconds: 3),)
-              );
+              Scaffold.of(globalContext).showSnackBar(SnackBar(
+                content: Text("Por favor, escolha os sabores da Pizza."),
+                backgroundColor: Colors.redAccent,
+                duration: Duration(seconds: 3),
+              ));
             } else {
               showPizzaEdgeDialog();
             }
@@ -358,6 +361,8 @@ class _ProductPageState extends State<ProductPage> {
               Product productToReturn =
                   flavorOrder == "1º" ? product1ToReturn : product2ToReturn;
               ChoosePizzaDialog dialog = ChoosePizzaDialog(
+                url: widget.url,
+                uri: widget.uri,
                 returnedProduct: productToReturn,
                 onReturnedProductChanged: (productToReturn) {
                   if (flavorOrder == "1º") {
@@ -370,8 +375,7 @@ class _ProductPageState extends State<ProductPage> {
                     });
                   }
                   if (brotoPrice_global != "--") {
-
-                    if (product2ToReturn!=null) {
+                    if (product2ToReturn != null) {
                       double maximum_broto = max(
                           double.parse(product1ToReturn.price_broto),
                           double.parse(product2ToReturn.price_broto));
@@ -381,15 +385,15 @@ class _ProductPageState extends State<ProductPage> {
 
                       setState(() {
                         brotoPrice_global = maximum_broto.toStringAsFixed(2);
-                        inteiraPrice_global = maximum_inteira.toStringAsFixed(2);
+                        inteiraPrice_global =
+                            maximum_inteira.toStringAsFixed(2);
                       });
-                    }else{
+                    } else {
                       setState(() {
                         brotoPrice_global = productToReturn.price_broto;
                         inteiraPrice_global = productToReturn.price_inteira;
                       });
                     }
-
                   } else {
                     setState(() {
                       brotoPrice_global = productToReturn.price_broto;
@@ -558,6 +562,8 @@ class _ProductPageState extends State<ProductPage> {
       builder: (BuildContext context) {
         Product pizzaEdgeToReturn = global_pizzaEdgeChosen;
         ChoosePizzaEdgeDialog dialog = ChoosePizzaEdgeDialog(
+          url: widget.url,
+          uri: widget.uri,
           returnedProduct: pizzaEdgeToReturn,
           onReturnedProductChanged: (pizzaEdgeToReturn) {
             global_pizzaEdgeChosen = pizzaEdgeToReturn;
@@ -674,7 +680,9 @@ class _ProductPageState extends State<ProductPage> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         Center(child: Text(widget.productData.description, style: h4)),
-        widget.productData.size==null?Container():Center(child: Text(widget.productData.size, style: h6)),
+        widget.productData.size == null
+            ? Container()
+            : Center(child: Text(widget.productData.size, style: h6)),
         Align(
             alignment: Alignment.center,
             child: checkIngredients(widget.productData)),
@@ -793,13 +801,15 @@ class _ProductPageState extends State<ProductPage> {
                           if (widget.category.contains("Pizza")) {
                             //se é pizza
                             if (!widget.category.contains("Sabores")) {
-                              if (sizePriceSelected=="") {
-                                Scaffold.of(globalContext).showSnackBar(
-                                    SnackBar(content: Text("Por favor, escolha o tamanho da Pizza."),
-                                      backgroundColor: Colors.redAccent,
-                                      duration: Duration(seconds: 3),)
-                                );
-                              }else{
+                              if (sizePriceSelected == "") {
+                                Scaffold.of(globalContext)
+                                    .showSnackBar(SnackBar(
+                                  content: Text(
+                                      "Por favor, escolha o tamanho da Pizza."),
+                                  backgroundColor: Colors.redAccent,
+                                  duration: Duration(seconds: 3),
+                                ));
+                              } else {
                                 //se Não é two_flavored_pizza
                                 checkSizeAndRunDb(cartId, cart, cartRow);
                               }
@@ -807,20 +817,25 @@ class _ProductPageState extends State<ProductPage> {
                               //se é Pizza de 2 Sabores
                               if (product1ToReturn == null ||
                                   product2ToReturn == null) {
-                                Scaffold.of(globalContext).showSnackBar(
-                                    SnackBar(content: Text("Por favor, escolha os sabores da Pizza."),
-                                      backgroundColor: Colors.redAccent,
-                                      duration: Duration(seconds: 3),)
-                                );
+                                Scaffold.of(globalContext)
+                                    .showSnackBar(SnackBar(
+                                  content: Text(
+                                      "Por favor, escolha os sabores da Pizza."),
+                                  backgroundColor: Colors.redAccent,
+                                  duration: Duration(seconds: 3),
+                                ));
                               } else {
-                                if (sizePriceSelected=="") {
-                                  Scaffold.of(globalContext).showSnackBar(
-                                      SnackBar(content: Text("Por favor, escolha o tamanho da Pizza."),
-                                        backgroundColor: Colors.redAccent,
-                                        duration: Duration(seconds: 3),)
-                                  );
-                                }else{
-                                  checkSizeAndRunDb(cartId, cart, cartRow, isTwoFlavoredPizza: true);
+                                if (sizePriceSelected == "") {
+                                  Scaffold.of(globalContext)
+                                      .showSnackBar(SnackBar(
+                                    content: Text(
+                                        "Por favor, escolha o tamanho da Pizza."),
+                                    backgroundColor: Colors.redAccent,
+                                    duration: Duration(seconds: 3),
+                                  ));
+                                } else {
+                                  checkSizeAndRunDb(cartId, cart, cartRow,
+                                      isTwoFlavoredPizza: true);
                                 }
                               }
                             }
@@ -892,84 +907,24 @@ class _ProductPageState extends State<ProductPage> {
     );
   }
 
-  Future<void> checkSizeAndRunDb(int cartId, Map<String, dynamic> cart,
-      Map<String, dynamic> cartRow, {bool isTwoFlavoredPizza}) async {
+  Future<void> checkSizeAndRunDb(
+      int cartId, Map<String, dynamic> cart, Map<String, dynamic> cartRow,
+      {bool isTwoFlavoredPizza}) async {
     if (sizePriceSelected == "") {
       //se não escolheu o tamanho
-      Scaffold.of(globalContext).showSnackBar(
-          SnackBar(content: Text("Por favor, escolha o tamanho da Pizza."),
-            backgroundColor: Colors.redAccent,
-            duration: Duration(seconds: 3),)
-      );
+      Scaffold.of(globalContext).showSnackBar(SnackBar(
+        content: Text("Por favor, escolha o tamanho da Pizza."),
+        backgroundColor: Colors.redAccent,
+        duration: Duration(seconds: 3),
+      ));
     } else {
       //se tiver selecionado o tamanho
 
-      if (isTwoFlavoredPizza!=null) {
-          //é pizza de 2 sabores
-          String observations = observationsController.text;
-          String pizzaEdgeId =
-          global_pizzaEdgeChosen != null ? global_pizzaEdgeChosen.id : null;
-
-          if (cart == null) {
-            //se não tem carrinho
-            cartId = await widget.dbHelper.insert(cartRow, "cart");
-          } else {
-            //se já tem carrinho
-            cartId = cart['cartId'];
-          }
-
-          List<Map<String, dynamic>> allCartItems =
-          await widget.dbHelper.retrieveAllCartItems(cartId);
-          int equalId = null;
-
-          allCartItems.forEach((item) {
-            if (item['productId'] == widget.productData.id &&
-                item['pizzaEdgeId'] == pizzaEdgeId &&
-                item['productSize'] == sizePriceSelected) {
-              if (item['product1Id']==product1ToReturn.id||item['product1Id']==product2ToReturn.id
-                  &&item['product2Id']==product1ToReturn.id||item['product2Id']==product2ToReturn.id) {
-                //se já tem item igual
-                equalId = item['cartItemsId'];
-              }
-            }
-          });
-
-          if (equalId != null) {
-            //se já tem item igual
-            Map<String, dynamic> productRow =
-            await widget.dbHelper.searchCartItem(equalId);
-            Map<String, dynamic> tempProductRow = new Map();
-            tempProductRow.addAll(productRow);
-            tempProductRow["productAmount"] =
-                tempProductRow["productAmount"] + 1;
-            await widget.dbHelper.update(
-                tempProductRow, "cartItems", "cartItemsId");
-          } else {
-            //se ainda não tem item igual
-
-            Map<String, dynamic> productRow = {
-              DatabaseHelper.columnCartId: cartId,
-              DatabaseHelper.columnProductId: widget.productData.id,
-              DatabaseHelper.columnProduct1Id: product1ToReturn.id,
-              DatabaseHelper.columnProduct2Id: product2ToReturn.id,
-              DatabaseHelper.columnProductCategory: widget.category,
-              DatabaseHelper.columnCategoryName: product1ToReturn.categoryName,
-              DatabaseHelper.columnProduct2CategoryName: product2ToReturn.categoryName,
-              DatabaseHelper.columnProductAmount: _quantity,
-              DatabaseHelper.columnProductObservations: observations,
-              DatabaseHelper.columnPizzaEdgeId: pizzaEdgeId,
-              DatabaseHelper.columnProductSize: sizePriceSelected,
-              DatabaseHelper.columnIsTwoFlavoredPizza: 1
-            };
-
-            await widget.dbHelper.insert(productRow, "cartItems");
-          }
-
-
-      }else{
+      if (isTwoFlavoredPizza != null) {
+        //é pizza de 2 sabores
         String observations = observationsController.text;
         String pizzaEdgeId =
-        global_pizzaEdgeChosen != null ? global_pizzaEdgeChosen.id : null;
+            global_pizzaEdgeChosen != null ? global_pizzaEdgeChosen.id : null;
 
         if (cart == null) {
           //se não tem carrinho
@@ -980,7 +935,68 @@ class _ProductPageState extends State<ProductPage> {
         }
 
         List<Map<String, dynamic>> allCartItems =
-        await widget.dbHelper.retrieveAllCartItems(cartId);
+            await widget.dbHelper.retrieveAllCartItems(cartId);
+        int equalId = null;
+
+        allCartItems.forEach((item) {
+          if (item['productId'] == widget.productData.id &&
+              item['pizzaEdgeId'] == pizzaEdgeId &&
+              item['productSize'] == sizePriceSelected) {
+            if (item['product1Id'] == product1ToReturn.id ||
+                item['product1Id'] == product2ToReturn.id &&
+                    item['product2Id'] == product1ToReturn.id ||
+                item['product2Id'] == product2ToReturn.id) {
+              //se já tem item igual
+              equalId = item['cartItemsId'];
+            }
+          }
+        });
+
+        if (equalId != null) {
+          //se já tem item igual
+          Map<String, dynamic> productRow =
+              await widget.dbHelper.searchCartItem(equalId);
+          Map<String, dynamic> tempProductRow = new Map();
+          tempProductRow.addAll(productRow);
+          tempProductRow["productAmount"] = tempProductRow["productAmount"] + 1;
+          await widget.dbHelper
+              .update(tempProductRow, "cartItems", "cartItemsId");
+        } else {
+          //se ainda não tem item igual
+
+          Map<String, dynamic> productRow = {
+            DatabaseHelper.columnCartId: cartId,
+            DatabaseHelper.columnProductId: widget.productData.id,
+            DatabaseHelper.columnProduct1Id: product1ToReturn.id,
+            DatabaseHelper.columnProduct2Id: product2ToReturn.id,
+            DatabaseHelper.columnProductCategory: widget.category,
+            DatabaseHelper.columnCategoryName: product1ToReturn.categoryName,
+            DatabaseHelper.columnProduct2CategoryName:
+                product2ToReturn.categoryName,
+            DatabaseHelper.columnProductAmount: _quantity,
+            DatabaseHelper.columnProductObservations: observations,
+            DatabaseHelper.columnPizzaEdgeId: pizzaEdgeId,
+            DatabaseHelper.columnProductSize: sizePriceSelected,
+            DatabaseHelper.columnIsTwoFlavoredPizza: 1
+          };
+
+          await widget.dbHelper.insert(productRow, "cartItems");
+        }
+      } else {
+        String observations = observationsController.text;
+        String pizzaEdgeId =
+            global_pizzaEdgeChosen != null ? global_pizzaEdgeChosen.id : null;
+
+        if (cart == null) {
+          //se não tem carrinho
+          cartId = await widget.dbHelper.insert(cartRow, "cart");
+        } else {
+          //se já tem carrinho
+          cartId = cart['cartId'];
+        }
+
+        List<Map<String, dynamic>> allCartItems =
+            await widget.dbHelper.retrieveAllCartItems(cartId);
         int equalId = null;
 
         allCartItems.forEach((item) {
@@ -995,13 +1011,12 @@ class _ProductPageState extends State<ProductPage> {
         if (equalId != null) {
           //se já tem item igual
           Map<String, dynamic> productRow =
-          await widget.dbHelper.searchCartItem(equalId);
+              await widget.dbHelper.searchCartItem(equalId);
           Map<String, dynamic> tempProductRow = new Map();
           tempProductRow.addAll(productRow);
-          tempProductRow["productAmount"] =
-              tempProductRow["productAmount"] + 1;
-          await widget.dbHelper.update(
-              tempProductRow, "cartItems", "cartItemsId");
+          tempProductRow["productAmount"] = tempProductRow["productAmount"] + 1;
+          await widget.dbHelper
+              .update(tempProductRow, "cartItems", "cartItemsId");
         } else {
           //se ainda não tem item igual
 

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 import 'image_picker_handler.dart';
-import 'loginUi.dart';
+import 'signInUi.dart';
 
 class ImagePickerDialog extends StatelessWidget {
   ImagePickerHandler _listener;

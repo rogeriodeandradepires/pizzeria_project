@@ -11,6 +11,8 @@ class ChoosePizzaDialog extends StatefulWidget {
   final String title, description, buttonText;
   final Image image;
   final Product returnedProduct;
+  String uri;
+  String url;
 
   final ValueChanged<Product> onReturnedProductChanged;
 
@@ -19,6 +21,8 @@ class ChoosePizzaDialog extends StatefulWidget {
     @required this.description,
     @required this.buttonText,
     @required this.returnedProduct,
+    @required this.url,
+    @required this.uri,
     this.image, this.onReturnedProductChanged,
   });
 
@@ -178,7 +182,7 @@ class _ChoosePizzaDialogState extends State<ChoosePizzaDialog>  with TickerProvi
 
   Future getProducts(String selectedCategory) async {
     String category = selectedCategory;
-    String url = 'https://dom-marino-webservice.appspot.com/list_' + category;
+    String url = widget.url+'list_' + category;
 //    print(url);
 
     Response response = await get(url);

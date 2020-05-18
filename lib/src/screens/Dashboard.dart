@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dom_marino_app/src/bottomNavigationView/bottomBarView.dart';
 import 'package:dom_marino_app/src/models/category_result_model.dart';
 import 'package:dom_marino_app/src/models/order_result_model.dart';
@@ -12,6 +13,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../shared/styles.dart';
 import '../shared/colors.dart';
 import '../shared/fryo_icons.dart';
@@ -24,6 +26,9 @@ import 'AboutPage.dart';
 import 'CartPage.dart';
 
 import 'package:dio/dio.dart' as diolib;
+
+import 'SignInMainPage.dart';
+import 'SignUpMainPage.dart';
 
 List<Category> all_categories_obj_list = new List();
 List<Product> all_products_obj_list = new List();
@@ -64,6 +69,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   int storeTabsErrorCount = 1;
   bool isErrorShown = false;
 
+  CollectionReference _collection = Firestore.instance.collection('webservice_address');
+  SharedPreferences prefs;
+
   Widget tabBody = new Container(
     decoration: new BoxDecoration(
       image: new DecorationImage(
@@ -79,18 +87,22 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
   BottomBarView bottomBarView;
 
+  String uri;
+  String url;
+
   @override
   void initState() {
+
     fbAuth.onAuthStateChanged.listen((newUser) {
       setState(() {
         user = newUser;
       });
 
-      if (newUser != null) {
-//        setBottombarView();
-
-        retrieveAllOrders(user.uid);
-      }
+//      if (newUser != null) {
+////        setBottombarView();
+//
+//        retrieveAllOrders(user.uid);
+//      }
     });
 
     retrieveAllFavorites(null);
@@ -105,12 +117,17 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     animationController =
         AnimationController(duration: Duration(milliseconds: 600), vsync: this);
 
-    futureCategories = getCategories();
-    futureProducts = getProducts(_selectedCategoryName);
+//    futureCategories = getCategories();
+//    futureProducts = getProducts(_selectedCategoryName);
 
     super.initState();
     WidgetsBinding.instance
-        .addPostFrameCallback((_) => checkRegisterComplete());
+        .addPostFrameCallback((_) {
+      checkRegisterComplete();
+
+      checkWebserviceSharedPreferences();
+
+    });
   }
 
   @override
@@ -148,9 +165,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             children: [
               Image.asset(
                 'images/title_logo_icon_wide_minor.png',
-                fit: BoxFit.fill,
+                fit: BoxFit.contain,
                 height: 40.0,
-                width: MediaQuery.of(context).size.width * 0.45,
               ),
             ],
           ),
@@ -273,8 +289,12 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         } else {
           //não está logado
-          final result = await Navigator.pushNamed(context, '/signin');
-
+//          final result = await Navigator.pushNamed(context, '/signin');
+          final result = await Navigator.push(context,
+            MaterialPageRoute(
+                builder: (context) =>
+                new SignInMainPage(uri: uri, url: url)),
+          );
 //          print(" 3 Result=" + result);
 
           if (result == "Ok") {
@@ -318,12 +338,12 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       'id': '$id',
     };
 
-    String url = 'https://dom-marino-webservice.appspot.com/list_' + category;
-    var uri = Uri.https(
-        'dom-marino-webservice.appspot.com', 'list_$category', queryParameters);
+    String thisUrl = url + 'list_' + category;
+    var thisUri = Uri.https(
+        uri, 'list_$category', queryParameters);
 
     try {
-      Response response = await get(uri);
+      Response response = await get(thisUri);
       // sample info available in response
       int statusCode = response.statusCode;
       Map<String, String> headers = response.headers;
@@ -343,18 +363,18 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         throw Exception('Failed to load product');
       }
     } catch (e) {
-      showSnackbarError();
+//      showSnackbarError();
       print("Aqui getProduct erro: " + e.toString());
     }
   }
 
   Future getProducts(String category) async {
 //    String category = _selectedCategoryName;
-    String url = 'https://dom-marino-webservice.appspot.com/list_' + category;
+    String thisUrl = url+'list_' + category;
 //    print(url);
 
     try {
-      Response response = await get(url);
+      Response response = await get(thisUrl);
       // sample info available in response
       int statusCode = response.statusCode;
       Map<String, String> headers = response.headers;
@@ -389,7 +409,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 //    Response response;
 //    final client = Client();
 
-    var url = "https://dom-marino-webservice.appspot.com/list_categories";
+    var thisUrl = url+"list_categories";
 //      var url = "http://192.168.63.1:8080/makeorder";
 
     diolib.Dio dio = new diolib.Dio();
@@ -399,7 +419,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 //      response = await client.get(url);
 //      client.close();
       diolib.Response apiResponse =
-          await dio.get(url, cancelToken: cancelToken);
+          await dio.get(thisUrl, cancelToken: cancelToken);
 //      print(apiResponse.data.toString());
       // sample info available in response
 //      int statusCode = response.statusCode;
@@ -682,8 +702,13 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                               retrieveAllFavorites(user.uid);
                             } else {
                               //não está logado
-                              final result =
-                                  await Navigator.pushNamed(context, '/signin');
+//                              final result =
+//                                  await Navigator.pushNamed(context, '/signin');
+                              final result = await Navigator.push(context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                    new SignInMainPage(uri: uri, url: url)),
+                              );
 
 //                              print("4 Result=" + result);
 
@@ -935,11 +960,11 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       'id': '$uid',
     };
 
-    var uri = Uri.https('dom-marino-webservice.appspot.com', 'list_user_orders',
+    var thisUri = Uri.https(uri, 'list_user_orders',
         queryParameters);
 
     try {
-      Response response = await get(uri);
+      Response response = await get(thisUri);
       // sample info available in response
       int statusCode = response.statusCode;
       Map<String, String> headers = response.headers;
@@ -963,7 +988,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         return bDateTime.compareTo(aDateTime);
       });
     } catch (e) {
-      showSnackbarError();
+//      showSnackbarError();
       print("Aqui retrieveAllOrders erro: " + e.toString());
     }
 
@@ -1365,9 +1390,15 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                       padding: EdgeInsets.only(top: 16, bottom: 16),
                     ),
                     onTap: (() async {
-                      final result = await Navigator.pushNamed(
-                          context, '/signup',
-                          arguments: thisUser);
+//                      final result = await Navigator.pushNamed(
+//                          context, '/signup',
+//                          arguments: thisUser);
+
+                      final result = await Navigator.push(context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                            new SignUpMainPage(uri: uri, url: url)),
+                      );
 
                       if (result != "Ok") {
                         checkRegisterComplete();
@@ -1415,8 +1446,14 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                           padding: EdgeInsets.only(top: 16, bottom: 16),
                         ),
                         onTap: (() async {
-                          final result =
-                              await Navigator.pushNamed(context, '/signin');
+//                          final result =
+//                              await Navigator.pushNamed(context, '/signin');
+
+                          final result = await Navigator.push(context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                new SignInMainPage(uri: uri, url: url)),
+                          );
 
 //                          print("Restult 5 = "+result);
 
@@ -1846,7 +1883,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         context,
         MaterialPageRoute(
             builder: (context) =>
-                new CartPage(dbHelper: dbHelper, thisUser: thisUser)),
+                new CartPage(dbHelper: dbHelper, thisUser: thisUser, uri: uri, url: url)),
       );
 
       if (result.toString() == "Ok") {
@@ -1955,10 +1992,16 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                 padding: const EdgeInsets.only(
                                     left: 15.0, right: 15.0),
                                 child: froyoFlatBtn("Ok", () async {
-                                  final result =
-                                      await Navigator.pushReplacementNamed(
-                                          context, '/signup',
-                                          arguments: thisUser);
+//                                  final result =
+//                                      await Navigator.pushReplacementNamed(
+//                                          context, '/signup',
+//                                          arguments: thisUser);
+
+                                  final result = await Navigator.push(context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                        new SignUpMainPage(uri: uri, url: url)),
+                                  );
 
 //                                  print("dialog result ="+result.toString());
 
@@ -2059,11 +2102,11 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       'uid': user.uid,
     };
 
-    var uri = Uri.https(
-        'dom-marino-webservice.appspot.com', 'list_users', queryParameters);
+    var thisUri = Uri.https(
+        uri, 'list_users', queryParameters);
 
     try {
-      Response response = await get(uri);
+      Response response = await get(thisUri);
       // sample info available in response
       int statusCode = response.statusCode;
       Map<String, String> headers = response.headers;
@@ -2199,7 +2242,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
               context,
               MaterialPageRoute(
                   builder: (context) =>
-                      new CartPage(dbHelper: dbHelper, thisUser: thisUser)),
+                      new CartPage(dbHelper: dbHelper, thisUser: thisUser, uri: uri, url: url)),
             );
 
             if (result.toString() == "Ok") {
@@ -2216,7 +2259,12 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
 //              print("Resultado: " + result.toString());
           } else {
-            final result = await Navigator.pushNamed(context, '/signin');
+//            final result = await Navigator.pushNamed(context, '/signin');
+            final result = await Navigator.push(context,
+              MaterialPageRoute(
+                  builder: (context) =>
+                  new SignInMainPage(uri: uri, url: url)),
+            );
 
 //              print("1 Result=" + result);
 
@@ -2229,8 +2277,12 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           if (index != 0) {
             bool isLogged = await checkIfUserIsLoggedIn();
             if (!isLogged) {
-              final result = await Navigator.pushNamed(context, '/signin');
-
+//              final result = await Navigator.pushNamed(context, '/signin');
+              final result = await Navigator.push(context,
+                MaterialPageRoute(
+                    builder: (context) =>
+                    new SignInMainPage(uri: uri, url: url)),
+              );
 //                print(" 2 Result=" + result);
 
               if (result == "Ok") {
@@ -2282,6 +2334,47 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         },
       );
     });
+  }
+
+  void checkWebserviceSharedPreferences() async {
+    prefs = await SharedPreferences.getInstance();
+
+    uri = prefs.getString('webservice.uri');
+    url = prefs.getString('webservice.url');
+
+    if (uri == null && url == null) {
+//      print("SharedPreferences nulas");
+      _collection.document('webservice_address').get().then((DocumentSnapshot ds) {
+//        print("SharedPreferences leu os documents");
+        // use ds as a snapshot
+
+        setState(() {
+          uri = ds.data["uri"];
+          url = ds.data["url"];
+        });
+
+        prefs.setString('webservice.uri', uri);
+        prefs.setString('webservice.url', url);
+
+        futureCategories = getCategories();
+        futureProducts = getProducts(_selectedCategoryName);
+
+        if(user!=null){
+          retrieveAllOrders(user.uid);
+        }
+
+      });
+    }else{
+
+//      print("SharedPreferences NÃO nulas");
+
+      futureCategories = getCategories();
+      futureProducts = getProducts(_selectedCategoryName);
+
+      if(user!=null){
+        retrieveAllOrders(user.uid);
+      }
+    }
   }
 }
 

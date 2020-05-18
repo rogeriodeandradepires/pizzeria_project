@@ -20,8 +20,10 @@ import 'package:dio/dio.dart' as diolib;
 class CartPage extends StatefulWidget {
   final dbHelper;
   Map<String, dynamic> thisUser;
+  String uri;
+  String url;
 
-  CartPage({Key key, this.dbHelper, this.thisUser}) : super(key: key);
+  CartPage({Key key, this.dbHelper, this.thisUser, this.uri, this.url}) : super(key: key);
 
   @override
   _CartPageState createState() => _CartPageState();
@@ -569,7 +571,7 @@ class _CartPageState extends State<CartPage> {
     //print("category: "+category+", product: "+map.toString());
 
     var uri = Uri.https(
-        'dom-marino-webservice.appspot.com', 'list_$category', queryParameters);
+        widget.uri, 'list_$category', queryParameters);
 
     Response response = await get(uri);
     // sample info available in response
@@ -1441,7 +1443,7 @@ class _CartPageState extends State<CartPage> {
       'weekDay': '$dayOfTheWeek',
     };
 
-    var uri = Uri.https('dom-marino-webservice.appspot.com',
+    var uri = Uri.https(widget.uri,
         'get_working_hours', queryParameters);
 
     Response wh_response = await get(uri);
@@ -1976,7 +1978,7 @@ class _CartPageState extends State<CartPage> {
         'products_id': json.encode(productsId),
       };
 
-      var url = "https://dom-marino-webservice.appspot.com/makeorder";
+      var url = widget.url+"makeorder";
 //      var url = "http://192.168.63.1:8080/makeorder";
 
       diolib.Dio dio = new diolib.Dio();

@@ -7,8 +7,10 @@ import 'package:keyboard_visibility/keyboard_visibility.dart';
 import 'package:scoped_model/scoped_model.dart';
 
 class SignUpMainPage extends StatefulWidget {
-  SignUpMainPage({Key key, this.title}) : super(key: key);
+  SignUpMainPage({Key key, this.title, @required this.uri, @required this.url}) : super(key: key);
   final String title;
+  String uri;
+  String url;
 
   @override
   _SignUpMainPageState createState() => _SignUpMainPageState();
@@ -43,7 +45,7 @@ class _SignUpMainPageState extends State<SignUpMainPage> {
           controller: scrollController,
           children: <Widget>[
             Container(
-                height: MediaQuery.of(context).size.height*1.5, child: SignUp(args, model, scaffoldKey)),
+                height: MediaQuery.of(context).size.height*1.5, child: SignUp(args, model, scaffoldKey, uri: widget.uri, url: widget.url)),
           ],
         );
       }),
