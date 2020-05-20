@@ -22,8 +22,9 @@ class CartPage extends StatefulWidget {
   Map<String, dynamic> thisUser;
   String uri;
   String url;
+  Map<String, dynamic> aboutInfo;
 
-  CartPage({Key key, this.dbHelper, this.thisUser, this.uri, this.url}) : super(key: key);
+  CartPage({Key key, this.dbHelper, this.thisUser, this.uri, this.url, this.aboutInfo}) : super(key: key);
 
   @override
   _CartPageState createState() => _CartPageState();
@@ -1330,7 +1331,7 @@ class _CartPageState extends State<CartPage> {
                                                 },
                                               ),
                                               AutoSizeText(
-                                                "Entrega (+ R\$ 2,00)",
+                                                "Entrega (+ R\$ "+widget.aboutInfo['delivery_tax'].toString().replaceAll(".",",")+")",
                                                 style: h6,
                                                 maxLines: 1,
                                               ),
@@ -2178,7 +2179,7 @@ class _CartPageState extends State<CartPage> {
   }
 
   Widget returnPaymentChangeForm() {
-    double deliveryTax = _radioValueDelivery == "delivery" ? 2.00 : 0.00;
+    double deliveryTax = _radioValueDelivery == "delivery" ? double.parse(widget.aboutInfo['delivery_tax']) : 0.00;
 
     calculateNewTotal = totalPrice.replaceAll(",", ".");
     calculateNewTotal =

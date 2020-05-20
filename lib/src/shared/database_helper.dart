@@ -13,6 +13,30 @@ class DatabaseHelper {
   static final favoritesTable = 'favorites';
   static final cartTable = 'cart';
   static final cartItemsTable = 'cartItems';
+  static final aboutInfoTable = 'aboutInfo';
+
+  static final columnAboutInfoId = 'about_info_id';
+  static final columnAddress1 = 'address1';
+  static final columnAddress2 = 'address2';
+  static final columnAddress3 = 'address3';
+  static final columnCity1 = 'city1';
+  static final columnCity2 = 'city2';
+  static final columnCity3 = 'city3';
+  static final columnLatitude1 = 'latitude1';
+  static final columnLongitude1 = 'longitude1';
+  static final columnLatitude2 = 'latitude2';
+  static final columnLongitude2 = 'longitude2';
+  static final columnLatitude3 = 'latitude3';
+  static final columnLongitude3 = 'longitude3';
+  static final columnDeliveryTax = 'delivery_tax';
+  static final columnMapTitle = 'map_title';
+  static final columnMapDescription = 'map_description';
+  static final columnPhone1 = 'phone1';
+  static final columnPhone2 = 'phone2';
+  static final columnPhone3 = 'phone3';
+  static final columnWorkingHour1 = 'working_hour1';
+  static final columnWorkingHour2 = 'working_hour2';
+  static final columnWorkingHour3 = 'working_hour3';
 
   static final columnUID = 'uid';
   static final columnUserName = 'name';
@@ -122,6 +146,33 @@ class DatabaseHelper {
           )
           ''');
 
+    await db.execute('''
+          CREATE TABLE $aboutInfoTable (
+            $columnAboutInfoId INTEGER PRIMARY KEY AUTOINCREMENT,
+            $columnAddress1 TEXT,
+            $columnAddress2 TEXT,
+            $columnAddress3 TEXT,
+            $columnCity1 TEXT,
+            $columnCity2 TEXT,
+            $columnCity3 TEXT,
+            $columnLatitude1 TEXT,
+            $columnLongitude1 TEXT,
+            $columnLatitude2 TEXT,
+            $columnLongitude2 TEXT,
+            $columnLatitude3 TEXT,
+            $columnLongitude3 TEXT,
+            $columnDeliveryTax TEXT NOT NULL,
+            $columnMapTitle TEXT NOT NULL,
+            $columnMapDescription TEXT NOT NULL,
+            $columnPhone1 TEXT,
+            $columnPhone2 TEXT,
+            $columnPhone3 TEXT,
+            $columnWorkingHour1 TEXT,
+            $columnWorkingHour2 TEXT,
+            $columnWorkingHour3 TEXT
+          )
+          ''');
+
   }
 
   // Helper methods
@@ -218,6 +269,19 @@ class DatabaseHelper {
     }
 
     return cartItemRecords;
+  }
+
+  Future<Map<String, dynamic>> searchAboutInfo() async {
+    Database db = await instance.database;
+    List<Map<String, dynamic>> records = await db.rawQuery("SELECT * FROM $aboutInfoTable");
+
+    var retorno = null;
+
+    if (records.length!=0) {
+      retorno = records.first;
+    }
+
+    return retorno;
   }
 
   Future<Map<String, dynamic>> searchCart(String uid) async {

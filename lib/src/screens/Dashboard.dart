@@ -30,9 +30,9 @@ import 'package:dio/dio.dart' as diolib;
 import 'SignInMainPage.dart';
 import 'SignUpMainPage.dart';
 
-List<Category> all_categories_obj_list = new List();
-List<Product> all_products_obj_list = new List();
-List<Order> all_orders_obj_list = new List();
+List<Category> allCategoriesObjList = new List();
+List<Product> allProductsObjList = new List();
+List<Order> allOrdersObjList = new List();
 
 class Dashboard extends StatefulWidget {
   final String pageTitle;
@@ -65,11 +65,16 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
   Future<dynamic> futureCategories;
   Future<dynamic> futureProducts;
+  Future<dynamic> futureAboutInfo;
+  Map<String, dynamic> aboutInfo;
 
   int storeTabsErrorCount = 1;
   bool isErrorShown = false;
 
-  CollectionReference _collection = Firestore.instance.collection('webservice_address');
+  CollectionReference _webservice_address_collection =
+      Firestore.instance.collection('webservice_address');
+  CollectionReference _about_info_collection =
+      Firestore.instance.collection('about_info');
   SharedPreferences prefs;
 
   Widget tabBody = new Container(
@@ -90,19 +95,14 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   String uri;
   String url;
 
+  Map<String, dynamic> localThisUser;
+
   @override
   void initState() {
-
     fbAuth.onAuthStateChanged.listen((newUser) {
       setState(() {
         user = newUser;
       });
-
-//      if (newUser != null) {
-////        setBottombarView();
-//
-//        retrieveAllOrders(user.uid);
-//      }
     });
 
     retrieveAllFavorites(null);
@@ -121,12 +121,14 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 //    futureProducts = getProducts(_selectedCategoryName);
 
     super.initState();
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       checkRegisterComplete();
 
       checkWebserviceSharedPreferences();
 
+//      setState(() {
+      futureAboutInfo = checkAboutInfo();
+//      });
     });
   }
 
@@ -155,7 +157,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           leading: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Image.asset(
-              'images/leading_logo_icon_wide.png',
+              'images/leading_icon.png',
               fit: BoxFit.cover,
             ),
           ),
@@ -164,9 +166,10 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Image.asset(
-                'images/title_logo_icon_wide_minor.png',
+                'images/title_logo.png',
                 fit: BoxFit.contain,
                 height: 40.0,
+                width: MediaQuery.of(context).size.width * 0.45,
               ),
             ],
           ),
@@ -176,7 +179,10 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => new AboutPage()),
+                  MaterialPageRoute(
+                      builder: (context) => new AboutPage(
+                            aboutInfo: aboutInfo,
+                          )),
                 );
               },
               iconSize: 21,
@@ -204,7 +210,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   }
 
   Widget bottomBar() {
-
     return Column(
       children: <Widget>[
         Expanded(
@@ -213,12 +218,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         bottomBarView == null ? Container() : bottomBarView,
       ],
     );
-  }
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
   }
 
   Future<Widget> getFavoritedProducts(
@@ -289,11 +288,11 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
         } else {
           //não está logado
-//          final result = await Navigator.pushNamed(context, '/signin');
-          final result = await Navigator.push(context,
+          final result = await Navigator.push(
+            context,
             MaterialPageRoute(
-                builder: (context) =>
-                new SignInMainPage(uri: uri, url: url)),
+                builder: (context) => new SignInMainPage(
+                    uri: uri, url: url, aboutInfo: aboutInfo)),
           );
 //          print(" 3 Result=" + result);
 
@@ -339,8 +338,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     };
 
     String thisUrl = url + 'list_' + category;
-    var thisUri = Uri.https(
-        uri, 'list_$category', queryParameters);
+    var thisUri = Uri.https(uri, 'list_$category', queryParameters);
 
     try {
       Response response = await get(thisUri);
@@ -353,9 +351,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 //    print(all_products.toString());
 
       if (response.statusCode == 200) {
-        all_products_obj_list = new List();
+        allProductsObjList = new List();
 
-        all_products_obj_list.add(Product.fromJson(allProducts));
+        allProductsObjList.add(Product.fromJson(allProducts));
 
         return Product.fromJson(allProducts);
       } else {
@@ -370,7 +368,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
   Future getProducts(String category) async {
 //    String category = _selectedCategoryName;
-    String thisUrl = url+'list_' + category;
+    String thisUrl = url + 'list_' + category;
 //    print(url);
 
     try {
@@ -382,9 +380,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       dynamic all_products = json.decode(response.body);
 
       if (response.statusCode == 200) {
-        all_products_obj_list = new List();
+        allProductsObjList = new List();
         all_products.forEach((product) {
-          all_products_obj_list.add(Product.fromJson(product));
+          allProductsObjList.add(Product.fromJson(product));
 //        print(product);
         });
       } else {
@@ -392,7 +390,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         throw Exception('Failed to load products');
       }
 
-      all_products_obj_list.sort((a, b) {
+      allProductsObjList.sort((a, b) {
         return a.description
             .toLowerCase()
             .compareTo(b.description.toLowerCase());
@@ -401,7 +399,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 //      print("Aqui getProducts erro: " + e.toString());
     }
 
-    return all_products_obj_list;
+    return allProductsObjList;
   }
 
   Future getCategories() async {
@@ -409,7 +407,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 //    Response response;
 //    final client = Client();
 
-    var thisUrl = url+"list_categories";
+    var thisUrl = url + "list_categories";
 //      var url = "http://192.168.63.1:8080/makeorder";
 
     diolib.Dio dio = new diolib.Dio();
@@ -437,9 +435,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 //
 //      }
 
-      all_categories_obj_list = new List();
+      allCategoriesObjList = new List();
       all_categories.forEach((category) {
-        all_categories_obj_list.add(Category.fromJson(category));
+        allCategoriesObjList.add(Category.fromJson(category));
 //        print(category);
       });
 //      } else {
@@ -448,19 +446,19 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 //        throw Exception('Failed to load category');
 //      }
 
-      all_categories_obj_list.sort((a, b) {
+      allCategoriesObjList.sort((a, b) {
         return a.title.toLowerCase().compareTo(b.title.toLowerCase());
       });
 
       List<Category> temp_all_categories_obj_list = new List();
-      temp_all_categories_obj_list.addAll(all_categories_obj_list);
+      temp_all_categories_obj_list.addAll(allCategoriesObjList);
       Category temp_last_category = temp_all_categories_obj_list
           .elementAt(temp_all_categories_obj_list.length - 1);
       temp_all_categories_obj_list
           .removeAt(temp_all_categories_obj_list.length - 1);
       Category temp_category;
 
-      for (Category category in all_categories_obj_list) {
+      for (Category category in allCategoriesObjList) {
         if (category.name == "two_flavored_pizzas") {
           Category other_category = category;
           temp_category = category;
@@ -471,12 +469,12 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       temp_all_categories_obj_list.add(temp_category);
       temp_all_categories_obj_list.add(temp_last_category);
 
-      all_categories_obj_list = temp_all_categories_obj_list.reversed.toList();
+      allCategoriesObjList = temp_all_categories_obj_list.reversed.toList();
 
       if (_selectedCategory == "") {
         setState(() {
-          _selectedCategory = all_categories_obj_list.elementAt(0).description;
-          _selectedCategoryName = all_categories_obj_list.elementAt(0).name;
+          _selectedCategory = allCategoriesObjList.elementAt(0).description;
+          _selectedCategoryName = allCategoriesObjList.elementAt(0).name;
         });
         futureProducts = getProducts(_selectedCategoryName);
       }
@@ -539,7 +537,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       print("Aqui getCategories erro:" + e.toString());
     }
 
-    return all_categories_obj_list;
+    return allCategoriesObjList;
   }
 
   Widget storeTab(BuildContext context) {
@@ -702,12 +700,13 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                               retrieveAllFavorites(user.uid);
                             } else {
                               //não está logado
-//                              final result =
-//                                  await Navigator.pushNamed(context, '/signin');
-                              final result = await Navigator.push(context,
+                              final result = await Navigator.push(
+                                context,
                                 MaterialPageRoute(
-                                    builder: (context) =>
-                                    new SignInMainPage(uri: uri, url: url)),
+                                    builder: (context) => new SignInMainPage(
+                                        uri: uri,
+                                        url: url,
+                                        aboutInfo: aboutInfo)),
                               );
 
 //                              print("4 Result=" + result);
@@ -951,6 +950,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   }
 
   Future<void> retrieveAllOrders(String uid, {bool update}) async {
+
+    print("retrieveAllOrders: "+update.toString());
+
     if (update != null) {
       if (update) {
         Dialog thisDialog = showLoadingDialog();
@@ -960,8 +962,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       'id': '$uid',
     };
 
-    var thisUri = Uri.https(uri, 'list_user_orders',
-        queryParameters);
+    var thisUri = Uri.https(uri, 'list_user_orders', queryParameters);
 
     try {
       Response response = await get(thisUri);
@@ -972,16 +973,16 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       dynamic all_orders = json.decode(response.body);
 
       if (response.statusCode == 200) {
-        all_orders_obj_list = new List();
+        allOrdersObjList = new List();
         all_orders.forEach((order) {
-          all_orders_obj_list.add(Order.fromJson(order));
+          allOrdersObjList.add(Order.fromJson(order));
         });
       } else {
         // If that response was not OK, throw an error.
         throw Exception('Failed to load products');
       }
 
-      all_orders_obj_list.sort((a, b) {
+      allOrdersObjList.sort((a, b) {
         var aDateTime = DateTime.parse(a.dateTime);
         var bDateTime = DateTime.parse(b.dateTime);
 
@@ -1001,7 +1002,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       }
     }
 
-    return all_orders_obj_list;
+    return allOrdersObjList;
   }
 
   Future<void> retrieveAllFavorites(String uid) async {
@@ -1107,11 +1108,12 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
               onTap: (() {
                 FirebaseAuth.instance.signOut();
 
-                checkRegisterComplete();
+                allOrdersObjList = new List();
 
-                  user = null;
-                  thisUser = new Map();
+//                checkRegisterComplete();
 
+                user = null;
+                thisUser = new Map();
               }),
               child: Text(
                 'Sair >>',
@@ -1125,8 +1127,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     ));
 
     if (user != null && thisUser != null) {
-      retrieveUser();
-
       profileWidgetLists.add(Padding(
         padding: const EdgeInsets.only(top: 10.0, bottom: 10.0),
         child: Align(
@@ -1394,10 +1394,12 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 //                          context, '/signup',
 //                          arguments: thisUser);
 
-                      final result = await Navigator.push(context,
+                      final result = await Navigator.push(
+                        context,
                         MaterialPageRoute(
-                            builder: (context) =>
-                            new SignUpMainPage(uri: uri, url: url)),
+                            settings: RouteSettings(arguments: thisUser),
+                            builder: (context) => new SignUpMainPage(
+                                uri: uri, url: url, aboutInfo: aboutInfo)),
                       );
 
                       if (result != "Ok") {
@@ -1446,13 +1448,11 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                           padding: EdgeInsets.only(top: 16, bottom: 16),
                         ),
                         onTap: (() async {
-//                          final result =
-//                              await Navigator.pushNamed(context, '/signin');
-
-                          final result = await Navigator.push(context,
+                          final result = await Navigator.push(
+                            context,
                             MaterialPageRoute(
-                                builder: (context) =>
-                                new SignInMainPage(uri: uri, url: url)),
+                                builder: (context) => new SignInMainPage(
+                                    uri: uri, url: url, aboutInfo: aboutInfo)),
                           );
 
 //                          print("Restult 5 = "+result);
@@ -1460,7 +1460,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                           if (result == "Ok") {
                             checkRegisterComplete();
                           }
-
                         }),
                       ),
                     ),
@@ -1493,8 +1492,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   Widget buildOrdersLists() {
     List<Widget> columnChildren = new List();
 
-    if (user != null && all_orders_obj_list != null) {
-      for (Order order in all_orders_obj_list) {
+    if (user != null && allOrdersObjList != null) {
+      for (Order order in allOrdersObjList) {
         Widget thisOrder = Container(
           margin: EdgeInsets.only(left: 5, bottom: 10, right: 5),
           decoration: BoxDecoration(
@@ -1526,7 +1525,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       children: columnChildren,
     );
 
-    return all_orders_obj_list.length == 0
+    return allOrdersObjList.length == 0
         ? Center(
             child: Container(
             margin:
@@ -1853,7 +1852,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           int isTwoFlavoredPizza = 0;
 
           if (orderItem['product2_id'] != null &&
-              orderItem['product2_id'] != "None" && orderItem['product2_id'] != "null") {
+              orderItem['product2_id'] != "None" &&
+              orderItem['product2_id'] != "null") {
             isTwoFlavoredPizza = 1;
           }
 
@@ -1882,8 +1882,13 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       final result = await Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) =>
-                new CartPage(dbHelper: dbHelper, thisUser: thisUser, uri: uri, url: url)),
+            builder: (context) => new CartPage(
+                  dbHelper: dbHelper,
+                  thisUser: thisUser,
+                  uri: uri,
+                  url: url,
+                  aboutInfo: aboutInfo,
+                )),
       );
 
       if (result.toString() == "Ok") {
@@ -1892,8 +1897,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
 //      bottomBarView.createState();
       setBottombarView();
-
-//          retrieveAllOrders(user.uid, update: true);
 
       print("Retorno do CartPage: " + result.toString());
     }));
@@ -1997,10 +2000,17 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 //                                          context, '/signup',
 //                                          arguments: thisUser);
 
-                                  final result = await Navigator.push(context,
+                                  final result =
+                                      await Navigator.pushReplacement(
+                                    context,
                                     MaterialPageRoute(
+                                        settings:
+                                            RouteSettings(arguments: thisUser),
                                         builder: (context) =>
-                                        new SignUpMainPage(uri: uri, url: url)),
+                                            new SignUpMainPage(
+                                                uri: uri,
+                                                url: url,
+                                                aboutInfo: aboutInfo)),
                                   );
 
 //                                  print("dialog result ="+result.toString());
@@ -2065,7 +2075,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   }
 
   Future<void> checkRegisterComplete() async {
-
 //    print("entrou checkRegisterComplete");
 
     dbHelper = DatabaseHelper.instance;
@@ -2075,17 +2084,28 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     if (user != null) {
 //      print("checkRegisterComplete user!=null: " + user.uid);
       //isRegisterComplete
-      Map<String, dynamic> localThisUser = await dbHelper.searchUser(user.uid);
+      localThisUser = await dbHelper.searchUser(user.uid);
 //      print("thisuser="+thisUser['isRegComplete'].toString());
 
       if (localThisUser != null) {
 //        print("isRegComplete="+thisUser['isRegComplete'].toString());
         if (localThisUser['isRegComplete'] == 0) {
 //          print("isRegComplete="+thisUser['isRegComplete'].toString());
+//          print("thisUser=" + localThisUser.toString());
+
+          if (thisUser != localThisUser) {
+            setState(() {
+              thisUser = localThisUser;
+            });
+          }
           showRegisterDialog(localThisUser);
         } else {
-//          print(localThisUser.toString());
-        retrieveUser();
+//          print(thisUser.toString());
+
+
+          retrieveAllOrders(user.uid, update: true);
+
+          await retrieveUser();
           setState(() {
             thisUser = thisUser;
           });
@@ -2098,55 +2118,53 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   }
 
   Future<void> retrieveUser() async {
-    var queryParameters = {
-      'uid': user.uid,
-    };
+    print("retrieveUser");
+    if (user != null) {
+      var queryParameters = {
+        'uid': user.uid,
+      };
 
-    var thisUri = Uri.https(
-        uri, 'list_users', queryParameters);
+      var thisUri = Uri.https(uri, 'list_users', queryParameters);
 
-    try {
-      Response response = await get(thisUri);
-      // sample info available in response
-      int statusCode = response.statusCode;
-      Map<String, String> headers = response.headers;
-      String contentType = headers['content-type'];
+      try {
+        Response response = await get(thisUri);
+        // sample info available in response
+        int statusCode = response.statusCode;
+        Map<String, String> headers = response.headers;
+        String contentType = headers['content-type'];
 
 //      print(response.body);
 
-      if (response.statusCode == 200) {
-        dynamic existentUser = json.decode(response.body);
+        if (response.statusCode == 200) {
+          dynamic existentUser = json.decode(response.body);
 
-        if (existentUser != null) {
+          if (existentUser != null) {
 //          print("já existe");
-
-          thisUser = {
-            DatabaseHelper.columnUID: user.uid,
-            DatabaseHelper.columnUserName: existentUser['name'],
-            DatabaseHelper.columnUserEmail: existentUser['email'],
-            DatabaseHelper.columnUserImgUrl: existentUser['image_url'],
-            DatabaseHelper.columnUserPhone: existentUser['phone'],
-            DatabaseHelper.columnUserStreet: existentUser['street'],
-            DatabaseHelper.columnUserStreetNumber: existentUser['streetNumber'],
-            DatabaseHelper.columnUserNeighborhood: existentUser['neighborhood'],
-            DatabaseHelper.columnUserCity: existentUser['city'],
-            DatabaseHelper.columnIsRegComplete:
-                existentUser['isRegisterComplete']
-          };
+            thisUser = {
+              DatabaseHelper.columnUID: user.uid,
+              DatabaseHelper.columnUserName: existentUser['name'],
+              DatabaseHelper.columnUserEmail: existentUser['email'],
+              DatabaseHelper.columnUserImgUrl: existentUser['image_url'],
+              DatabaseHelper.columnUserPhone: existentUser['phone'],
+              DatabaseHelper.columnUserStreet: existentUser['street'],
+              DatabaseHelper.columnUserStreetNumber:
+                  existentUser['streetNumber'],
+              DatabaseHelper.columnUserNeighborhood:
+                  existentUser['neighborhood'],
+              DatabaseHelper.columnUserCity: existentUser['city'],
+              DatabaseHelper.columnIsRegComplete:
+                  existentUser['isRegisterComplete']
+            };
+          } else {
+            thisUser = new Map();
+          }
         } else {
-          thisUser = new Map();
+          // If that response was not OK, throw an error.
+          throw Exception('Failed to load product');
         }
-//        all_products_obj_list = new List();
-//
-//        all_products_obj_list.add(Product.fromJson(allProducts));
-//
-//        return Product.fromJson(allProducts);
-      } else {
-        // If that response was not OK, throw an error.
-        throw Exception('Failed to load product');
+      } catch (e) {
+        print("Aqui listUsers erro: " + e.toString());
       }
-    } catch (e) {
-      print("Aqui listUsers erro: " + e.toString());
     }
   }
 
@@ -2241,8 +2259,13 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             final result = await Navigator.push(
               context,
               MaterialPageRoute(
-                  builder: (context) =>
-                      new CartPage(dbHelper: dbHelper, thisUser: thisUser, uri: uri, url: url)),
+                  builder: (context) => new CartPage(
+                        dbHelper: dbHelper,
+                        thisUser: thisUser,
+                        uri: uri,
+                        url: url,
+                        aboutInfo: aboutInfo,
+                      )),
             );
 
             if (result.toString() == "Ok") {
@@ -2252,18 +2275,15 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
               retrieveAllOrders(user.uid, update: true);
             }
 
-//            bottomBarView.createState();
             setBottombarView();
-
-//              retrieveAllOrders(user.uid, update: true);
 
 //              print("Resultado: " + result.toString());
           } else {
-//            final result = await Navigator.pushNamed(context, '/signin');
-            final result = await Navigator.push(context,
+            final result = await Navigator.push(
+              context,
               MaterialPageRoute(
-                  builder: (context) =>
-                  new SignInMainPage(uri: uri, url: url)),
+                  builder: (context) => new SignInMainPage(
+                      uri: uri, url: url, aboutInfo: aboutInfo)),
             );
 
 //              print("1 Result=" + result);
@@ -2274,14 +2294,16 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           }
         },
         changeIndex: (index) async {
+//          print("index: " + index.toString());
+          _selectedIndex = index;
           if (index != 0) {
             bool isLogged = await checkIfUserIsLoggedIn();
             if (!isLogged) {
-//              final result = await Navigator.pushNamed(context, '/signin');
-              final result = await Navigator.push(context,
+              final result = await Navigator.push(
+                context,
                 MaterialPageRoute(
-                    builder: (context) =>
-                    new SignInMainPage(uri: uri, url: url)),
+                    builder: (context) => new SignInMainPage(
+                        uri: uri, url: url, aboutInfo: aboutInfo)),
               );
 //                print(" 2 Result=" + result);
 
@@ -2292,9 +2314,21 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 //                  print("result!=Ok");
               }
             }
+          } else {
+            animationController.reverse().then((data) {
+              if (!mounted) {
+                return;
+              }
+//              print("entrou: passou o return");
+              setState(() {
+                _selectedIndex = index;
+                futureCategories = getCategories();
+                futureProducts = getProducts(_selectedCategoryName);
+              });
+            });
           }
 
-          if (index == 0 || index == 2) {
+          if (index == 2) {
 //            print("entrou: index="+index.toString());
             animationController.reverse().then((data) {
               if (!mounted) {
@@ -2305,26 +2339,14 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                 _selectedIndex = index;
               });
 
-              if (index == 0) {
-                setState(() {
-                  futureCategories = getCategories();
-                  futureProducts = getProducts(_selectedCategoryName);
-                });
-              }
-
-              if (index == 2) {
-                if (user != null) {
-                  retrieveAllOrders(user.uid, update: true);
-                }
-              }
+//              if (user != null) {
+//                retrieveAllOrders(user.uid, update: true);
+//              }
             });
           } else if (index == 1 || index == 3) {
+            if (index == 3) {
+            }
             animationController.reverse().then((data) {
-              if (index == 3) {
-//                  FirebaseAuth.instance.signOut();
-//                  user = null;
-              }
-
               if (!mounted) return;
               setState(() {
                 _selectedIndex = index;
@@ -2344,7 +2366,10 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
     if (uri == null && url == null) {
 //      print("SharedPreferences nulas");
-      _collection.document('webservice_address').get().then((DocumentSnapshot ds) {
+      _webservice_address_collection
+          .document('webservice_address')
+          .get()
+          .then((DocumentSnapshot ds) {
 //        print("SharedPreferences leu os documents");
         // use ds as a snapshot
 
@@ -2359,22 +2384,81 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         futureCategories = getCategories();
         futureProducts = getProducts(_selectedCategoryName);
 
-        if(user!=null){
+        if (user != null) {
           retrieveAllOrders(user.uid);
         }
-
       });
-    }else{
-
+    } else {
 //      print("SharedPreferences NÃO nulas");
 
       futureCategories = getCategories();
       futureProducts = getProducts(_selectedCategoryName);
 
-      if(user!=null){
+      if (user != null) {
         retrieveAllOrders(user.uid);
       }
     }
+  }
+
+  Future<void> checkAboutInfo() async {
+    Map<String, dynamic> thisAboutInfo;
+    try {
+      thisAboutInfo = await dbHelper.searchAboutInfo();
+    } on Exception catch (e, s) {
+      print("Exception: " + e.toString() + ", Stacktrace: " + s.toString());
+    }
+
+    if (thisAboutInfo == null) {
+      await _about_info_collection
+          .document('about_info')
+          .get()
+          .then((DocumentSnapshot ds) async {
+        Map<String, dynamic> row = {
+          DatabaseHelper.columnAddress1: ds.data['address1'],
+          DatabaseHelper.columnAddress2: ds.data['address2'],
+          DatabaseHelper.columnAddress3: ds.data['address3'],
+          DatabaseHelper.columnCity1: ds.data['city1'],
+          DatabaseHelper.columnCity2: ds.data['city2'],
+          DatabaseHelper.columnCity3: ds.data['city3'],
+          DatabaseHelper.columnLatitude1: ds.data['latitude1'],
+          DatabaseHelper.columnLongitude1: ds.data['longitude1'],
+          DatabaseHelper.columnLatitude2: ds.data['latitude2'],
+          DatabaseHelper.columnLongitude2: ds.data['longitude2'],
+          DatabaseHelper.columnLatitude3: ds.data['latitude3'],
+          DatabaseHelper.columnLongitude3: ds.data['longitude3'],
+          DatabaseHelper.columnDeliveryTax: ds.data['delivery_tax'],
+          DatabaseHelper.columnMapTitle: ds.data['map_title'],
+          DatabaseHelper.columnMapDescription: ds.data['map_description'],
+          DatabaseHelper.columnPhone1: ds.data['phone1'],
+          DatabaseHelper.columnPhone2: ds.data['phone2'],
+          DatabaseHelper.columnPhone3: ds.data['phone3'],
+          DatabaseHelper.columnWorkingHour1: ds.data['working_hour1'],
+          DatabaseHelper.columnWorkingHour2: ds.data['working_hour2'],
+          DatabaseHelper.columnWorkingHour3: ds.data['working_hour3']
+        };
+
+        aboutInfo = row;
+
+        await dbHelper.insert(row, "aboutInfo");
+
+//        setState(() {
+//          aboutInfo = row;
+//        });
+
+//        print("aboutInfo Firebase: " + row.toString());
+
+//        return row;
+      });
+    } else {
+//      setState(() {
+      aboutInfo = thisAboutInfo;
+//      });
+
+//      print("aboutInfo BD: " + thisAboutInfo.toString());
+//      return thisAboutInfo;
+    }
+
+    return aboutInfo;
   }
 }
 

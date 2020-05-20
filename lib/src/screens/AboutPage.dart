@@ -1,28 +1,15 @@
-import 'dart:convert';
-import 'dart:math';
-
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:dom_marino_app/src/BLoC/allCartItems_bloc.dart';
-import 'package:dom_marino_app/src/BLoC/listenAllCartItemsRetrieved_bloc.dart';
-import 'package:dom_marino_app/src/BLoC/totalPrice_bloc.dart';
-import 'package:dom_marino_app/src/models/cart_item_result_model.dart';
-import 'package:dom_marino_app/src/models/product_result_model.dart';
-import 'package:dom_marino_app/src/screens/Dashboard.dart';
-import 'package:dom_marino_app/src/shared/cart_partials.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart';
 import 'package:map_launcher/map_launcher.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../shared/styles.dart';
 import '../shared/colors.dart';
-import '../shared/buttons.dart';
-import 'package:intl/intl.dart';
-import 'package:dio/dio.dart' as diolib;
 
 class AboutPage extends StatefulWidget {
-  AboutPage({Key key}) : super(key: key);
+  Map<String, dynamic> aboutInfo;
+
+  AboutPage({Key key, this.aboutInfo}) : super(key: key);
 
   @override
   _AboutPageState createState() => _AboutPageState();
@@ -32,7 +19,11 @@ class _AboutPageState extends State<AboutPage> {
   var globalContext;
 
   @override
-  Future<void> initState() {}
+  Future<void> initState() {
+//    WidgetsBinding.instance
+//        .addPostFrameCallback((_) {
+//    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +47,7 @@ class _AboutPageState extends State<AboutPage> {
               width: 200,
               padding: EdgeInsets.only(bottom: 10),
               child: Image.asset(
-                'images/logo_icon_wide_minor.png',
+                'images/logo_minor.png',
                 fit: BoxFit.scaleDown,
               ),
             ),
@@ -88,18 +79,27 @@ class _AboutPageState extends State<AboutPage> {
                                 MapType.google)) {
                               await MapLauncher.launchMap(
                                 mapType: MapType.google,
-                                coords: Coords(-21.208663, -50.437031),
-                                title: "Dom Marino Pizzaria Gourmet",
-                                description: "A melhor pizzaria da região.",
+                                coords: Coords(
+                                    double.parse(widget.aboutInfo['latitude1']),
+                                    double.parse(
+                                        widget.aboutInfo['longitude1'])),
+                                title: widget.aboutInfo['map_title'],
+                                description:
+                                    widget.aboutInfo['map_description'],
                               );
-                            }else{
+                            } else {
                               if (await MapLauncher.isMapAvailable(
                                   MapType.apple)) {
                                 await MapLauncher.launchMap(
                                   mapType: MapType.apple,
-                                  coords: Coords(-21.208663, -50.437031),
-                                  title: "Dom Marino Pizzaria Gourmet",
-                                  description: "A melhor pizzaria da região.",
+                                  coords: Coords(
+                                      double.parse(
+                                          widget.aboutInfo['latitude1']),
+                                      double.parse(
+                                          widget.aboutInfo['longitude1'])),
+                                  title: widget.aboutInfo['map_title'],
+                                  description:
+                                      widget.aboutInfo['map_description'],
                                 );
                               }
                             }
@@ -122,159 +122,142 @@ class _AboutPageState extends State<AboutPage> {
                           ),
                         ),
                       ),
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () async {
-                            if (await MapLauncher.isMapAvailable(
-                                MapType.google)) {
-                              await MapLauncher.launchMap(
-                                mapType: MapType.google,
-                                coords: Coords(-21.208663, -50.437031),
-                                title: "Dom Marino Pizzaria Gourmet",
-                                description: "A melhor pizzaria da região.",
-                              );
-                            }else{
-                              if (await MapLauncher.isMapAvailable(
-                                  MapType.apple)) {
-                                await MapLauncher.launchMap(
-                                  mapType: MapType.apple,
-                                  coords: Coords(-21.208663, -50.437031),
-                                  title: "Dom Marino Pizzaria Gourmet",
-                                  description: "A melhor pizzaria da região.",
-                                );
-                              }
-                            }
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: 8.0, bottom: 8.0, top: 8.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: <Widget>[
-                                Container(
-                                  width: 20,
-                                  child: Image.asset(
-                                    'images/place.png',
-                                    fit: BoxFit.scaleDown,
-                                  ),
-                                ),
-                                Flexible(
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(left: 8.0),
-                                    child: AutoSizeText(
-                                      "R. Silva Jardim, 106 - Araçatuba",
-                                      style: h5Snackbar,
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () async {
-                            const url = "tel:+551833042044";
-                            if (await canLaunch(url)) {
-                              await launch(url);
-                            } else {
-                              throw 'Could not launch $url';
-                            }
-                          },
-                          child: Padding(
+                      Row(
+                        children: [
+                          Padding(
                             padding: const EdgeInsets.only(
-                                right: 8.0, left: 8.0, bottom: 8.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: <Widget>[
-                                Container(
-                                  width: 20,
-                                  child: Image.asset(
-                                    'images/phone.png',
-                                    fit: BoxFit.scaleDown,
-                                  ),
-                                ),
-                                Container(
-                                  width: MediaQuery.of(context).size.width * 0.6,
-                                  padding: const EdgeInsets.only(left: 8.0),
-                                  child: AutoSizeText(
-                                    "Ligar (18) 3304-2044",
-                                    style: h5Snackbar,
-                                    maxLines: 1,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 8.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: <Widget>[
-                            Container(
+                                left: 8.0, bottom: 8.0, top: 8.0),
+                            child: Container(
                               width: 20,
                               child: Image.asset(
-                                'images/clock.png',
+                                'images/place.png',
                                 fit: BoxFit.scaleDown,
                               ),
                             ),
-                            Flexible(
-                              child: Padding(
-                                padding: const EdgeInsets.only(left: 8.0),
-                                child: AutoSizeText("Horário de funcionamento:",
-                                  style: h6, maxLines: 1, textAlign: TextAlign.justify,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                          Expanded(
+                            child: returnAddressColumn(),
+                          ),
+                        ],
                       ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 8.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: <Widget>[
-                            Container(width: 20),
-                            Flexible(
-                              child: Padding(
-                                padding: const EdgeInsets.only(left: 8.0),
-                                child: AutoSizeText(
-                                  "Dom à Sex - 19:00 às 23:30",
-                                  style: h5Snackbar,
-                                  maxLines: 1, textAlign: TextAlign.justify,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 8.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: <Widget>[
-                            Container(
+                      Row(
+                        children: [
+                          Padding(
+                            padding:
+                                const EdgeInsets.only(left: 8.0, bottom: 8.0),
+                            child: Container(
                               width: 20,
-                            ),
-                            Flexible(
-                              child: Padding(
-                                padding: const EdgeInsets.only(left: 8.0),
-                                child: AutoSizeText(
-                                  "Sáb - 19:00 às 0:00",
-                                  style: h5Snackbar,
-                                  maxLines: 1,
-                                ),
+                              child: Image.asset(
+                                'images/phone.png',
+                                fit: BoxFit.scaleDown,
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                          Expanded(
+                            child: returnPhoneColumn(),
+                          ),
+                        ],
                       ),
+                      widget.aboutInfo['working_hour1'] != null &&
+                              widget.aboutInfo['working_hour1'] != "null"
+                          ? Padding(
+                              padding: const EdgeInsets.only(left: 8.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: <Widget>[
+                                  Container(
+                                    width: 20,
+                                    child: Image.asset(
+                                      'images/clock.png',
+                                      fit: BoxFit.scaleDown,
+                                    ),
+                                  ),
+                                  Flexible(
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(left: 8.0),
+                                      child: AutoSizeText(
+                                        "Horário de funcionamento:",
+                                        style: h6,
+                                        maxLines: 1,
+                                        textAlign: TextAlign.justify,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : Container(),
+                      widget.aboutInfo['working_hour1'] != null &&
+                              widget.aboutInfo['working_hour1'] != "null"
+                          ? Padding(
+                              padding: const EdgeInsets.only(left: 8.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: <Widget>[
+                                  Container(width: 20),
+                                  Flexible(
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(left: 8.0),
+                                      child: AutoSizeText(
+                                        widget.aboutInfo['working_hour1'],
+                                        style: h6,
+                                        maxLines: 1,
+                                        textAlign: TextAlign.justify,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : Container(),
+                      widget.aboutInfo['working_hour2'] != null &&
+                              widget.aboutInfo['working_hour2'] != "null"
+                          ? Padding(
+                              padding: const EdgeInsets.only(left: 8.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: <Widget>[
+                                  Container(
+                                    width: 20,
+                                  ),
+                                  Flexible(
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(left: 8.0),
+                                      child: AutoSizeText(
+                                        widget.aboutInfo['working_hour2'],
+                                        style: h6,
+                                        maxLines: 1,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : Container(),
+                      widget.aboutInfo['working_hour3'] != null &&
+                              widget.aboutInfo['working_hour3'] != "null"
+                          ? Padding(
+                              padding: const EdgeInsets.only(left: 8.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: <Widget>[
+                                  Container(
+                                    width: 20,
+                                  ),
+                                  Flexible(
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(left: 8.0),
+                                      child: AutoSizeText(
+                                        widget.aboutInfo['working_hour3'],
+                                        style: h6,
+                                        maxLines: 1,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : Container(),
                     ],
                   ),
                 ),
@@ -282,6 +265,239 @@ class _AboutPageState extends State<AboutPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget returnAddressColumn() {
+    return Container(
+      color: Colors.transparent,
+      padding: EdgeInsets.only(right: 8.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.max,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Material(
+              color: Colors.transparent,
+              child: InkWell(
+                  onTap: () async {
+                    if (await MapLauncher.isMapAvailable(MapType.google)) {
+                      await MapLauncher.launchMap(
+                        mapType: MapType.google,
+                        coords: Coords(
+                            double.parse(widget.aboutInfo['latitude1']),
+                            double.parse(widget.aboutInfo['longitude1'])),
+                        title: widget.aboutInfo['map_title'],
+                        description: widget.aboutInfo['map_description'],
+                      );
+                    } else {
+                      if (await MapLauncher.isMapAvailable(MapType.apple)) {
+                        await MapLauncher.launchMap(
+                          mapType: MapType.apple,
+                          coords: Coords(
+                              double.parse(widget.aboutInfo['latitude1']),
+                              double.parse(widget.aboutInfo['longitude1'])),
+                          title: widget.aboutInfo['map_title'],
+                          description: widget.aboutInfo['map_description'],
+                        );
+                      }
+                    }
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+                    child: (widget.aboutInfo['address1'] != null &&
+                            widget.aboutInfo['address1'] != "null")
+                        ? AutoSizeText(
+                            widget.aboutInfo['address1'] +
+                                " - " +
+                                widget.aboutInfo['city1'],
+                            style: h6,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          )
+                        : Container(),
+                  ))),
+          Material(
+              color: Colors.transparent,
+              child: InkWell(
+                  onTap: () async {
+                    if (await MapLauncher.isMapAvailable(MapType.google)) {
+                      await MapLauncher.launchMap(
+                        mapType: MapType.google,
+                        coords: Coords(
+                            double.parse(widget.aboutInfo['latitude2']),
+                            double.parse(widget.aboutInfo['longitude2'])),
+                        title: widget.aboutInfo['map_title'],
+                        description: widget.aboutInfo['map_description'],
+                      );
+                    } else {
+                      if (await MapLauncher.isMapAvailable(MapType.apple)) {
+                        await MapLauncher.launchMap(
+                          mapType: MapType.apple,
+                          coords: Coords(
+                              double.parse(widget.aboutInfo['latitude2']),
+                              double.parse(widget.aboutInfo['longitude2'])),
+                          title: widget.aboutInfo['map_title'],
+                          description: widget.aboutInfo['map_description'],
+                        );
+                      }
+                    }
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+                    child: (widget.aboutInfo['address2'] != null &&
+                            widget.aboutInfo['address2'] != "null")
+                        ? AutoSizeText(
+                            widget.aboutInfo['address2'] +
+                                " - " +
+                                widget.aboutInfo['city2'],
+                            style: h6,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          )
+                        : Container(),
+                  ))),
+          Material(
+              color: Colors.transparent,
+              child: InkWell(
+                  onTap: () async {
+                    if (await MapLauncher.isMapAvailable(MapType.google)) {
+                      await MapLauncher.launchMap(
+                        mapType: MapType.google,
+                        coords: Coords(
+                            double.parse(widget.aboutInfo['latitude3']),
+                            double.parse(widget.aboutInfo['longitude3'])),
+                        title: widget.aboutInfo['map_title'],
+                        description: widget.aboutInfo['map_description'],
+                      );
+                    } else {
+                      if (await MapLauncher.isMapAvailable(MapType.apple)) {
+                        await MapLauncher.launchMap(
+                          mapType: MapType.apple,
+                          coords: Coords(
+                              double.parse(widget.aboutInfo['latitude3']),
+                              double.parse(widget.aboutInfo['longitude3'])),
+                          title: widget.aboutInfo['map_title'],
+                          description: widget.aboutInfo['map_description'],
+                        );
+                      }
+                    }
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+                    child: (widget.aboutInfo['address3'] != null &&
+                            widget.aboutInfo['address3'] != "null")
+                        ? AutoSizeText(
+                            widget.aboutInfo['address3'] +
+                                " - " +
+                                widget.aboutInfo['city3'],
+                            style: h6,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          )
+                        : Container(),
+                  ))),
+        ],
+      ),
+    );
+  }
+
+  Widget returnPhoneColumn() {
+    return Container(
+      color: Colors.transparent,
+      padding: EdgeInsets.only(right: 8.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.max,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Material(
+              color: Colors.transparent,
+              child: InkWell(
+                  onTap: () async {
+                    String phone1Url = widget.aboutInfo['phone1']
+                        .toString()
+                        .replaceAll(" ", ""); //"tel:+551833042044";
+                    phone1Url = phone1Url.replaceAll("(", "");
+                    phone1Url = phone1Url.replaceAll(")", "");
+                    phone1Url = phone1Url.replaceAll("-", "");
+                    phone1Url = "tel:+55" + phone1Url;
+                    if (await canLaunch(phone1Url)) {
+                      await launch(phone1Url);
+                    } else {
+                      throw 'Could not launch $phone1Url';
+                    }
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+                    child: (widget.aboutInfo['phone1'] != null &&
+                            widget.aboutInfo['phone1'] != "null")
+                        ? AutoSizeText(
+                            "Ligar " + widget.aboutInfo['phone1'],
+                            style: h6,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          )
+                        : Container(),
+                  ))),
+          Material(
+              color: Colors.transparent,
+              child: InkWell(
+                  onTap: () async {
+                    String phone2Url = widget.aboutInfo['phone2']
+                        .toString()
+                        .replaceAll(" ", ""); //"tel:+551833042044";
+                    phone2Url = phone2Url.replaceAll("(", "");
+                    phone2Url = phone2Url.replaceAll(")", "");
+                    phone2Url = phone2Url.replaceAll("-", "");
+                    phone2Url = "tel:+55" + phone2Url;
+                    if (await canLaunch(phone2Url)) {
+                      await launch(phone2Url);
+                    } else {
+                      throw 'Could not launch $phone2Url';
+                    }
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+                    child: (widget.aboutInfo['phone2'] != null &&
+                            widget.aboutInfo['phone2'] != "null")
+                        ? AutoSizeText(
+                            widget.aboutInfo['phone2'],
+                            style: h6,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          )
+                        : Container(),
+                  ))),
+          Material(
+              color: Colors.transparent,
+              child: InkWell(
+                  onTap: () async {
+                    String phone3Url = widget.aboutInfo['phone3']
+                        .toString()
+                        .replaceAll(" ", ""); //"tel:+551833042044";
+                    phone3Url = phone3Url.replaceAll("(", "");
+                    phone3Url = phone3Url.replaceAll(")", "");
+                    phone3Url = phone3Url.replaceAll("-", "");
+                    phone3Url = "tel:+55" + phone3Url;
+                    if (await canLaunch(phone3Url)) {
+                      await launch(phone3Url);
+                    } else {
+                      throw 'Could not launch $phone3Url';
+                    }
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+                    child: (widget.aboutInfo['phone3'] != null &&
+                            widget.aboutInfo['phone3'] != "null")
+                        ? AutoSizeText(
+                            widget.aboutInfo['phone3'],
+                            style: h6,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          )
+                        : Container(),
+                  ))),
+        ],
       ),
     );
   }

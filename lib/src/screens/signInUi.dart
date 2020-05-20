@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:dom_marino_app/src/models/user_model.dart';
-import 'package:dom_marino_app/src/screens/signUpUi.dart';
 import 'package:dom_marino_app/src/shared/database_helper.dart';
 import 'package:dom_marino_app/src/shared/styles.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -21,7 +20,9 @@ class Login extends StatefulWidget {
   String uri;
   String url;
 
-  Login(this.model, this.scaffoldKey, {@required this.url, @required this.uri});
+  Map<String, dynamic> aboutInfo;
+
+  Login(this.model, this.scaffoldKey, {@required this.url, @required this.uri, this.aboutInfo});
 
 
 
@@ -255,7 +256,7 @@ class _LoginState extends State<Login> {
                                             Navigator.push(context,
                                               MaterialPageRoute(
                                                   builder: (context) =>
-                                                  new SignUpMainPage(uri: widget.uri, url: widget.url)),
+                                                  new SignUpMainPage(uri: widget.uri, url: widget.url, aboutInfo: widget.aboutInfo)),
                                             );
                                           }),
                                           child: Text(

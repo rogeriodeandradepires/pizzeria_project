@@ -68,11 +68,11 @@ flutter:
   # assets:
   assets:
     - images/
-#    - images/logo_icon_wide_minor.png
+#    - images/logo_minor.png
 #    - images/loading_pizza_faster.gif
 #    - images/main_bg.png
-#    - images/title_logo_icon_wide_minor.png
-#    - images/leading_logo_icon_wide.png
+#    - images/title_logo.png
+#    - images/leading_icon.png
 #    - images/menu.png
 #    - images/favorites.png
 #    - images/cart.png

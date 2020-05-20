@@ -24,8 +24,9 @@ class SignUp extends StatefulWidget {
   final dbHelper = DatabaseHelper.instance;
   String url;
   String uri;
+  Map<String, dynamic> aboutInfo;
 
-  SignUp(this.thisUser, this.model, this.scaffoldKey, {@required this.uri, @required this.url});
+  SignUp(this.thisUser, this.model, this.scaffoldKey, {@required this.uri, @required this.url, this.aboutInfo});
 
   @override
   _SignUpState createState() =>
@@ -101,7 +102,7 @@ class _SignUpState extends State<SignUp>
     imagePicker.init();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _addCityController.text = "Birigui";
+      _addCityController.text = widget.aboutInfo['city1'];
 
       if (thisUser != null) {
         _nameController.text = thisUser['name'];
@@ -142,6 +143,7 @@ class _SignUpState extends State<SignUp>
   }
 
   Future<void> onTap() async {
+//    print("onTap");
     imagePicker.showDialog(context);
   }
 
@@ -158,7 +160,7 @@ class _SignUpState extends State<SignUp>
             children: <Widget>[
               Padding(
                 padding: EdgeInsets.only(
-                    top: MediaQuery.of(context).size.height / 3),
+                    top: MediaQuery.of(context).size.height / 3.5),
               ),
               Form(
                 key: _formKey,
@@ -582,6 +584,40 @@ class _SignUpState extends State<SignUp>
             ],
           ),
         ),
+        Align(
+          alignment: Alignment.topCenter,
+          child: Padding(
+            padding: const EdgeInsets.only(top: 10.0),
+            child: Stack(
+              children: <Widget>[
+                Container(
+                  width: 120.0,
+                  height: 120.0,
+                  padding: const EdgeInsets.all(8.0), // borde width
+                  decoration: new BoxDecoration(
+                    color: Colors.white, // border color
+                    shape: BoxShape.circle,
+                  ),
+                  child: CircleAvatar(
+                    radius: 60.0,
+                    backgroundColor: Colors.transparent,
+                    backgroundImage: _image != null ? FileImage(_image):imgUrl!=null?NetworkImage(imgUrl):AssetImage('images/avatar.png'),
+                  ),
+                ),
+                Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: onTap,
+                      customBorder: new CircleBorder(),
+                      child: CircleAvatar(
+                        radius: 60.0,
+                        backgroundColor: Colors.transparent,
+                      ),
+                    )),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -720,10 +756,10 @@ class _SignUpState extends State<SignUp>
       DatabaseHelper.columnUserEmail: userData["email"],
       DatabaseHelper.columnUserImgUrl: img_url,
       DatabaseHelper.columnUserPhone: userData["phone"],
-      DatabaseHelper.columnUserPhone: userData["street"],
-      DatabaseHelper.columnUserPhone: userData["streetNumber"],
-      DatabaseHelper.columnUserPhone: userData["neighborhood"],
-      DatabaseHelper.columnUserPhone: userData["city"],
+      DatabaseHelper.columnUserStreet: userData["street"],
+      DatabaseHelper.columnUserStreetNumber: userData["streetNumber"],
+      DatabaseHelper.columnUserNeighborhood: userData["neighborhood"],
+      DatabaseHelper.columnUserCity: userData["city"],
       DatabaseHelper.columnIsRegComplete: 1
     };
 

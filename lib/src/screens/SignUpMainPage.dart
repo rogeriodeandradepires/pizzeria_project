@@ -7,10 +7,11 @@ import 'package:keyboard_visibility/keyboard_visibility.dart';
 import 'package:scoped_model/scoped_model.dart';
 
 class SignUpMainPage extends StatefulWidget {
-  SignUpMainPage({Key key, this.title, @required this.uri, @required this.url}) : super(key: key);
+  SignUpMainPage({Key key, this.title, @required this.uri, @required this.url, this.aboutInfo}) : super(key: key);
   final String title;
   String uri;
   String url;
+  Map<String, dynamic> aboutInfo;
 
   @override
   _SignUpMainPageState createState() => _SignUpMainPageState();
@@ -43,9 +44,10 @@ class _SignUpMainPageState extends State<SignUpMainPage> {
 
         return ListView(
           controller: scrollController,
+          physics: ClampingScrollPhysics(),
           children: <Widget>[
             Container(
-                height: MediaQuery.of(context).size.height*1.5, child: SignUp(args, model, scaffoldKey, uri: widget.uri, url: widget.url)),
+                height: MediaQuery.of(context).size.height*1.5, child: SignUp(args, model, scaffoldKey, uri: widget.uri, url: widget.url, aboutInfo: widget.aboutInfo,)),
           ],
         );
       }),

@@ -191,10 +191,10 @@ class _ChoosePizzaEdgeDialogState extends State<ChoosePizzaEdgeDialog>
     dynamic all_products = json.decode(response.body);
 
     if (response.statusCode == 200) {
-      all_products_obj_list = new List();
+      allProductsObjList = new List();
 
       all_products.forEach((product) {
-        all_products_obj_list.add(Product.fromJson(product));
+        allProductsObjList.add(Product.fromJson(product));
 //        print(product);
       });
     } else {
@@ -202,7 +202,7 @@ class _ChoosePizzaEdgeDialogState extends State<ChoosePizzaEdgeDialog>
       throw Exception('Failed to load products');
     }
 
-    all_products_obj_list.sort((a, b) {
+    allProductsObjList.sort((a, b) {
       return a.description.toLowerCase().compareTo(b.description.toLowerCase());
     });
 
@@ -221,12 +221,12 @@ class _ChoosePizzaEdgeDialogState extends State<ChoosePizzaEdgeDialog>
           price_inteira: null,
           promotional_price: null);
       temp_all_products_obj_list.add(dummyProduct);
-      temp_all_products_obj_list.addAll(all_products_obj_list);
-      all_products_obj_list = temp_all_products_obj_list;
+      temp_all_products_obj_list.addAll(allProductsObjList);
+      allProductsObjList = temp_all_products_obj_list;
 
     }
 
-    return all_products_obj_list;
+    return allProductsObjList;
   }
 
   Widget _showOverlay(BuildContext context) {

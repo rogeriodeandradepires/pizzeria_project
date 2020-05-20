@@ -8,10 +8,11 @@ import 'package:scoped_model/scoped_model.dart';
 import 'signInUi.dart';
 
 class SignInMainPage extends StatefulWidget {
-  SignInMainPage({Key key, this.title, this.uri, this.url}) : super(key: key);
+  SignInMainPage({Key key, this.title, this.uri, this.url, this.aboutInfo}) : super(key: key);
   final String title;
   String uri;
   String url;
+  Map<String, dynamic> aboutInfo;
 
   @override
   _SignInMainPageState createState() => _SignInMainPageState();
@@ -44,7 +45,7 @@ class _SignInMainPageState extends State<SignInMainPage> {
           controller: scrollController,
           children: <Widget>[
             Container(
-                height: MediaQuery.of(context).size.height, child: Login(model, scaffoldKey, url: widget.url, uri: widget.uri)),
+                height: MediaQuery.of(context).size.height, child: Login(model, scaffoldKey, url: widget.url, uri: widget.uri, aboutInfo: widget.aboutInfo,)),
           ],
         );
       }),

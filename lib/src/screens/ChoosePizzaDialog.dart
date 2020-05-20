@@ -193,9 +193,9 @@ class _ChoosePizzaDialogState extends State<ChoosePizzaDialog>  with TickerProvi
     dynamic all_products = json.decode(response.body);
 
     if (response.statusCode == 200) {
-      all_products_obj_list = new List();
+      allProductsObjList = new List();
       all_products.forEach((product) {
-        all_products_obj_list.add(Product.fromJson(product));
+        allProductsObjList.add(Product.fromJson(product));
 //        print(product);
       });
     } else {
@@ -203,11 +203,11 @@ class _ChoosePizzaDialogState extends State<ChoosePizzaDialog>  with TickerProvi
       throw Exception('Failed to load products');
     }
 
-    all_products_obj_list.sort((a, b) {
+    allProductsObjList.sort((a, b) {
       return a.description.toLowerCase().compareTo(b.description.toLowerCase());
     });
 
-    return all_products_obj_list;
+    return allProductsObjList;
   }
 
   Widget _showOverlay(BuildContext context) {

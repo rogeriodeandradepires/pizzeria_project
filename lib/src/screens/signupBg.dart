@@ -34,37 +34,6 @@ class _SignupBgState extends State<SignupBg> {
               alignment: Alignment.topCenter,
               children: <Widget>[
                 WavyHeader(),
-                Padding(
-                  padding: const EdgeInsets.only(top: 10.0),
-                  child: Stack(
-                    children: <Widget>[
-                      Container(
-                        width: 120.0,
-                        height: 120.0,
-                        padding: const EdgeInsets.all(8.0), // borde width
-                        decoration: new BoxDecoration(
-                          color: Colors.white, // border color
-                          shape: BoxShape.circle,
-                        ),
-                        child: CircleAvatar(
-                          radius: 60.0,
-                          backgroundColor: Colors.transparent,
-                          backgroundImage: this.widget.image != null ? FileImage(this.widget.image):this.widget.imgUrl!=null?NetworkImage(this.widget.imgUrl):AssetImage('images/avatar.png'),
-                        ),
-                      ),
-                      Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: this.widget.thisOnTap,
-                            customBorder: new CircleBorder(),
-                            child: CircleAvatar(
-                                radius: 60.0,
-                              backgroundColor: Colors.transparent,
-                            ),
-                          )),
-                    ],
-                  ),
-                ),
               ],
             ),
             Expanded(

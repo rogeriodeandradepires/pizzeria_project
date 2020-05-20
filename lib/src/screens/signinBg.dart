@@ -20,7 +20,7 @@ class SigninBg extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: 10.0),
                   child: Image.asset(
-                    'images/dom_marino_cut_shadow.png',
+                    'images/logo_major.png',
                     width: MediaQuery.of(context).size.width / 1.5,
                   ),
                 ),
