@@ -288,6 +288,9 @@ class _CartPageState extends State<CartPage> {
   }
 
   Future<int> retrieveAllCartItems() async {
+
+    print("cartId: "+cartId.toString());
+
     List<Map<String, dynamic>> tempAllCartItems =
         await widget.dbHelper.retrieveAllCartItems(cartId);
     allCartItemsMap = new List();
@@ -295,12 +298,12 @@ class _CartPageState extends State<CartPage> {
 
     var newMap = new Map();
 
-//    tempAllCartItems.forEach((map) {
-//      //print("item do carrinho: "+map.toString());
-//      newMap.addAll(map);
-//    });
+    tempAllCartItems.forEach((map) {
+      //print("item do carrinho: "+map.toString());
+      newMap.addAll(map);
+    });
 
-//    //print("todos os itens do carrinho: "+newMap.toString());
+    print("todos os itens do carrinho: "+newMap.toString());
 
     allCartItemsMap
         .sort((a, b) => a['productCategory'].compareTo(b['productCategory']));
@@ -315,6 +318,9 @@ class _CartPageState extends State<CartPage> {
   }
 
   Future<int> retrieveCartId() async {
+
+    print("user: "+widget.thisUser['uid'].toString());
+
     Map<String, dynamic> cart =
         await widget.dbHelper.searchCart(widget.thisUser['uid']);
     cartId = cart != null ? await cart['cartId'] : null;

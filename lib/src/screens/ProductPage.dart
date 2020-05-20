@@ -14,6 +14,7 @@ import '../shared/buttons.dart';
 
 import 'ChoosePizzaDialog.dart';
 import 'ChoosePizzaEdgeDialog.dart';
+import 'SignInMainPage.dart';
 
 class ProductPage extends StatefulWidget {
   final String pageTitle;
@@ -24,6 +25,7 @@ class ProductPage extends StatefulWidget {
   final FirebaseUser user;
   String url;
   String uri;
+  Map<String, dynamic> aboutInfo;
 
   ProductPage(
       {Key key,
@@ -34,6 +36,7 @@ class ProductPage extends StatefulWidget {
       this.dbHelper,
       this.url,
       this.uri,
+      this.aboutInfo,
       this.user})
       : super(key: key);
 
@@ -43,6 +46,7 @@ class ProductPage extends StatefulWidget {
 
 class _ProductPageState extends State<ProductPage> {
   int _quantity = 1;
+  String thisPageResult = "";
 
   Widget firstFlavorChosen;
   Widget secondFlavorChosen;
@@ -896,11 +900,25 @@ class _ProductPageState extends State<ProductPage> {
                               await widget.dbHelper
                                   .insert(productRow, "cartItems");
                             }
-                            Navigator.pop(context);
+                            Navigator.of(context, rootNavigator: true)
+                                .pop(thisPageResult);
                           }
                         }
-                      : () {
-                          Navigator.pushNamed(context, '/signin');
+                      : () async {
+                          final result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => new SignInMainPage(
+                                    uri: widget.uri,
+                                    url: widget.url,
+                                    aboutInfo: widget.aboutInfo)),
+                          );
+
+//                              print("4 Result=" + result);
+
+                          if (result == "Ok") {
+                            thisPageResult = "Ok";
+                          }
                         }),
         )
       ],
@@ -1035,6 +1053,7 @@ class _ProductPageState extends State<ProductPage> {
         }
       }
     }
-    Navigator.pop(globalContext);
+    Navigator.of(context, rootNavigator: true)
+        .pop(thisPageResult);
   }
 }

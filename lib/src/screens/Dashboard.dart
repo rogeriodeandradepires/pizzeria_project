@@ -177,13 +177,19 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             IconButton(
               padding: EdgeInsets.all(0),
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => new AboutPage(
-                            aboutInfo: aboutInfo,
-                          )),
-                );
+                if (aboutInfo['address1'] != null &&
+                    aboutInfo['address1'] != "null") {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => new AboutPage(
+                              aboutInfo: aboutInfo,
+                            )),
+                  );
+                } else {
+                  showSnackbarAlert(
+                      "Carregando dados, tente novamente em instantes.");
+                }
               },
               iconSize: 21,
               icon: Icon(Fryo.location),
@@ -238,8 +244,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           await getProduct(favorited['categoryName'], favorited['productId']);
       retrievedProduct.userLiked = true;
       Widget thisItem;
-      thisItem = foodItem(context, retrievedProduct, onTapped: () {
-        Navigator.push(
+      thisItem = foodItem(context, retrievedProduct, onTapped: () async {
+        final result = await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) {
@@ -248,11 +254,20 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                 category: favorited['category'],
                 categoryName: _selectedCategoryName,
                 dbHelper: dbHelper,
+                uri: uri,
+                url: url,
+                aboutInfo: aboutInfo,
                 user: user,
               );
             },
           ),
         );
+
+        print("productPage Result: "+result);
+
+        if (result == "Ok") {
+          checkRegisterComplete();
+        }
       }, onLike: () async {
         bool isLogged = await checkIfUserIsLoggedIn();
         if (isLogged) {
@@ -592,8 +607,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                             }
                           }
 
-                          return foodItem(context, product, onTapped: () {
-                            Navigator.push(
+                          return foodItem(context, product, onTapped: () async {
+                            final result = await Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) {
@@ -602,11 +617,20 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                     category: _selectedCategory,
                                     categoryName: _selectedCategoryName,
                                     dbHelper: dbHelper,
+                                    uri: uri,
+                                    url: url,
+                                    aboutInfo: aboutInfo,
                                     user: user,
                                   );
                                 },
                               ),
                             );
+
+                            print("productPage Result: "+result);
+
+                            if (result == "Ok") {
+                              checkRegisterComplete();
+                            }
                           }, onLike: () async {
                             bool isLogged = await checkIfUserIsLoggedIn();
                             if (isLogged) {
@@ -950,8 +974,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   }
 
   Future<void> retrieveAllOrders(String uid, {bool update}) async {
-
-    print("retrieveAllOrders: "+update.toString());
+    print("retrieveAllOrders: " + update.toString());
 
     if (update != null) {
       if (update) {
@@ -2074,6 +2097,38 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     }
   }
 
+  void showSnackbarAlert(String alert) {
+    if (!isSnackbarVisible) {
+      isSnackbarVisible = true;
+      Scaffold.of(globalScaffoldContext)
+          .showSnackBar(SnackBar(
+            content: Container(
+              height: MediaQuery.of(context).size.height * 0.1,
+              child: Column(
+                children: <Widget>[
+                  Text(
+                    "Aguarde...",
+                    textAlign: TextAlign.center,
+                    style: h6Snackbar,
+                  ),
+                  Text(
+                    alert,
+                    textAlign: TextAlign.justify,
+                    style: h5Snackbar,
+                  ),
+                ],
+              ),
+            ),
+            backgroundColor: Colors.redAccent,
+            duration: Duration(seconds: 3),
+          ))
+          .closed
+          .then((reason) {
+        isSnackbarVisible = false;
+      });
+    }
+  }
+
   Future<void> checkRegisterComplete() async {
 //    print("entrou checkRegisterComplete");
 
@@ -2101,7 +2156,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           showRegisterDialog(localThisUser);
         } else {
 //          print(thisUser.toString());
-
 
           retrieveAllOrders(user.uid, update: true);
 
@@ -2344,8 +2398,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 //              }
             });
           } else if (index == 1 || index == 3) {
-            if (index == 3) {
-            }
+            if (index == 3) {}
             animationController.reverse().then((data) {
               if (!mounted) return;
               setState(() {
